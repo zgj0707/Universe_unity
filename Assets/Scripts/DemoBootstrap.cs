@@ -32,11 +32,11 @@ public partial class DemoBootstrap : MonoBehaviour
     [Serializable] public class Station {
         public int id;
         public string name, customName; public float x, y; public int level; public bool built, closed; public int trafficEvent;
-        public bool portal, county; public string portalTo, portalTo2, city; public int administrativeCode; public string region = "汐港"; public float otherX, otherY, thirdX, thirdY;
+        public bool portal, county; public string portalTo, portalTo2, city; public int administrativeCode; public string region = "月之亮面"; public float otherX, otherY, thirdX, thirdY;
         public float riderBonus; public int facLevel;
         public Station(string n,float px,float py){name=n;x=px;y=py;level=1;}
     }
-    [Serializable] public class Scenery { public string name; public float x,y; public bool natural; public bool found, unlocked; public string triggerStation; public string region = "汐港"; }
+    [Serializable] public class Scenery { public string name; public float x,y; public bool natural; public bool found, unlocked; public string triggerStation; public string region = "月之亮面"; }
     [Serializable] public class Line {
         public int id; public string name; public Color color; public int skin = -1; public List<int> st = new List<int>();
         public int trains = 1;
@@ -67,7 +67,7 @@ public partial class DemoBootstrap : MonoBehaviour
     Dictionary<int, LineVisual> lineVisuals = new Dictionary<int, LineVisual>();
     List<string> techDone = new List<string>();
     Text coinTxt, incomeTxt, diamondTxt, progTxt, rpTxt, dayTxt;
-    string currentRegion = "汐港"; Text regionTitle; GameObject hkMapArt, macauMapArt, guangdongMapArt;
+    string currentRegion = "月之亮面"; Text regionTitle; GameObject hkMapArt, macauMapArt, guangdongMapArt;
     bool macauUnlocked, guangdongUnlocked;
     const float MacauIncomeRequired = 600f, GuangdongIncomeRequired = 1200f;
     RectTransform progFill;
@@ -129,7 +129,7 @@ public partial class DemoBootstrap : MonoBehaviour
     readonly HashSet<int> ownedThemes = new HashSet<int> { 0 };
     readonly Dictionary<string, int> adWatchCounts = new Dictionary<string, int>();
     readonly Dictionary<int, long> themeTrialUntil = new Dictionary<int, long>();
-    string companyName = "山海铁道社";
+    string companyName = "深空轨社";
     int companySeal = 0;
     int companyPolicy = 0;
     int bondDaysLeft = 0;
@@ -263,71 +263,100 @@ public partial class DemoBootstrap : MonoBehaviour
     {
         stations.Clear();
         sceneries.Clear();
-        Add("海晏台", 0.575f, 0.285f); Add("鸣钟街", 0.64f, 0.315f); Add("铜环湾", 0.715f, 0.30f); Add("望海咀", 0.795f, 0.275f);
-        Add("翠竹咀", 0.59f, 0.418f); Add("丹石口", 0.725f, 0.455f); Add("旺市角", 0.64f, 0.505f); Add("龙尾塘", 0.755f, 0.552f);
-        Add("白沙围", 0.815f, 0.635f); Add("南步墟", 0.825f, 0.735f); Add("兰溪湾", 0.45f, 0.61f); Add("镇海门", 0.30f, 0.61f);
-        Add("东山涌", 0.24f, 0.305f); Add("翔翼坪", 0.13f, 0.34f); Add("幻彩湾", 0.315f, 0.24f);
-        var luo = new Station("北桥关", 0.93f, 0.87f); luo.portal = true; luo.portalTo = "榕川"; luo.otherX = 0.70f; luo.otherY = 0.25f; stations.Add(luo);
-        var hz = new Station("跨海虹桥", 0.13f, 0.38f); hz.portal = true; hz.portalTo = "榕川"; hz.otherX = 0.535f; hz.otherY = 0.400f; hz.portalTo2 = "镜屿"; hz.thirdX = MacauX(113.576074f); hz.thirdY = MacauY(22.200356f); stations.Add(hz);
+        // 月之亮面：真实月球正面经纬度 (-35°~+35°, -62°~+62°)
+        AddMoonNear("静海基地", 23.5f, 8.5f);
+        AddMoonNear("阿里亚德港", 17.3f, 6.5f);
+        AddMoonNear("澄海枢纽", 17.5f, 26.0f);
+        AddMoonNear("阿波罗11湾", 23.5f, 0.7f);
+        AddMoonNear("马斯克林湾", 30.1f, 2.2f);
+        AddMoonNear("危海西港", 34.0f, 16.1f);
+        AddMoonNear("酒海前哨", 32.0f, -15.2f);
+        AddMoonNear("皮科洛米尼", 32.2f, -29.7f);
+        AddMoonNear("哥白尼环形山", -20.0f, 9.7f);
+        AddMoonNear("艾拉托斯特尼", -11.3f, 14.5f);
+        AddMoonNear("开普勒港", -33.0f, 8.1f);
+        AddMoonNear("雨海前哨", -15.6f, 32.8f);
+        AddMoonNear("阿基米德站", -4.0f, 29.7f);
+        AddMoonNear("亚平宁岭", -3.7f, 18.9f);
+        AddMoonNear("汽海枢纽", 3.6f, 13.3f);
+        AddMoonNear("中央湾", 2.1f, 1.8f);
+        AddMoonNear("知海站", -20.9f, -10.5f);
+        AddMoonNear("云海港", -17.2f, -21.3f);
+        AddMoonNear("第谷环港", -11.2f, -43.3f);
+        AddMoonNear("沃尔特站", 1.0f, -33.2f);
+        AddMoonNear("斯托弗勒", 6.0f, -41.1f);
+        AddMoonNear("克拉维乌斯", -14.1f, -58.4f);
+        AddMoonNear("高加索山", 10.0f, 38.4f);
+        AddMoonNear("梦湖驿站", 32.8f, 38.0f);
+        AddMoonNear("死湖前哨", 24.4f, 45.0f);
+        AddMoonNear("阿尔卑斯谷", 3.2f, 48.5f);
+        AddMoonNear("冷海北站", 1.4f, 56.0f);
 
-        // 追加车站，保留原有车站索引和既有线路。
-        Add("丰年墟", 0.38f, 0.70f); Add("芦花围", 0.27f, 0.73f);
-        Add("织布埗", 0.48f, 0.67f); Add("清泉围", 0.78f, 0.86f);
-        Add("松岭围", 0.70f, 0.81f); Add("和安里", 0.76f, 0.76f);
-        Add("石梯坡", 0.86f, 0.70f); Add("翠林澳", 0.70f, 0.63f);
-        Add("鞍马山", 0.91f, 0.66f); Add("渔光澳", 0.94f, 0.60f);
-        Add("向阳涌", 0.51f, 0.64f); Add("青衫洲", 0.40f, 0.56f);
-        Add("东湾城", 0.69f, 0.34f, "榕川"); Add("稻田墟", 0.57f, 0.33f, "榕川");
-        Add("吉安墟", 0.47f, 0.42f, "榕川"); Add("百川镇", 0.58f, 0.55f, "榕川");
-        Add("鹅山墟", 0.82f, 0.55f, "榕川"); Add("南羊城", 0.40f, 0.72f, "榕川");
-        Add("明珠镇", 0.23f, 0.66f, "榕川"); Add("锦溪墟", 0.30f, 0.48f, "榕川");
-        Add("青藤湾", 0.23f, 0.34f, "榕川");
-        Add("清波湾", 0.83f, 0.255f);
-        AddMacau("古石围", 113.540845f, 22.197455f);
-        AddMacau("东帆码头", 113.557664f, 22.197471f); AddMacau("莲心仔", 113.556615f, 22.153493f);
-        AddMacau("翠环村", 113.560200f, 22.142700f); AddMacau("木船厂", 113.552522f, 22.117962f);
-        AddMacau("芦苇洲", 113.537554f, 22.211585f); AddMacau("新海堤", 113.550720f, 22.188997f);
-        AddMacau("望海阁", 113.529413f, 22.183668f); AddMacau("钟楼市集", 113.539900f, 22.193650f);
-        AddMacau("白墙巷", 113.541297f, 22.157843f); AddMacau("杏仁街", 113.554546f, 22.150870f);
-        AddMacau("莲东空港", 113.574648f, 22.159403f); AddMacau("双莲渡", 113.559813f, 22.139520f);
-        AddMacau("叠石澳", 113.561542f, 22.131421f); AddMacau("墨沙湾", 113.569345f, 22.118802f);
+        var luo = new Station("柏拉图跃迁港", MoonNearX(-9.3f), MoonNearY(51.6f));
+        luo.portal = true; luo.portalTo = "火星"; luo.otherX = 0.70f; luo.otherY = 0.25f;
+        stations.Add(luo);
+
+        var hz = new Station("虹湾星门", MoonNearX(-31.5f), MoonNearY(44.1f));
+        hz.portal = true; hz.portalTo = "火星"; hz.otherX = 0.535f; hz.otherY = 0.400f;
+        hz.portalTo2 = "月背"; hz.thirdX = MoonFarX(163.9f); hz.thirdY = MoonFarY(50.8f);
+        stations.Add(hz);
+
+        // 月背：真实月球背面经纬度 (145°E~215°E, -62°~+62°)
+        AddMoonFar("冯·卡门港", 176.2f, -44.8f);
+        AddMoonFar("艾特肯深井", 173.4f, -16.8f);
+        AddMoonFar("智海港", 168.0f, -12.3f);
+        AddMoonFar("加加林环", 149.2f, -20.2f);
+        AddMoonFar("巴甫洛夫站", 146.5f, -28.6f);
+        AddMoonFar("伯克兰港", 173.9f, -30.2f);
+        AddMoonFar("南极深井", 175.0f, -52.0f);
+        AddMoonFar("莱曼前哨", 163.6f, -59.5f);
+        AddMoonFar("普朗克站", 145.5f, -57.3f);
+        AddMoonFar("德弗里斯", 183.3f, -19.9f);
+        AddMoonFar("奥本海默", 193.7f, -35.2f);
+        AddMoonFar("博尔曼湾", 211.8f, -38.8f);
+        AddMoonFar("科罗廖夫环", 202.6f, -4.0f);
+        AddMoonFar("马赫驿站", 210.7f, 18.5f);
+        AddMoonFar("莫斯科海", 147.9f, 27.3f);
+        AddMoonFar("白贝罗港", 165.6f, 36.7f);
+        AddMoonFar("坎贝尔站", 151.4f, 45.3f);
+
+        AddMoonFarGateway("达朗贝尔门", 163.9f, 50.8f, 0.466f, 0.416f);
+        AddMoonFarGateway("阿波罗星门", 208.2f, -36.1f, 0.474f, 0.402f);
 
         ApplyGuangdongStations();
-        var zhuhai = stations.Find(s => s.region == "榕川" && s.name == "青藤湾");
-        if (zhuhai != null)
+        var marsNorth = stations.Find(s => s.region == "火星" && s.name == "阿西达利亚海");
+        if (marsNorth != null)
         {
-            zhuhai.name = "青藤（北关）"; zhuhai.portal = true; zhuhai.portalTo = "镜屿";
-            zhuhai.otherX = MacauX(113.549205f); zhuhai.otherY = MacauY(22.215939f);
+            marsNorth.name = "阿西达利亚（月背门）"; marsNorth.portal = true; marsNorth.portalTo = "月背";
+            marsNorth.otherX = MoonFarX(163.9f); marsNorth.otherY = MoonFarY(50.8f);
         }
-        AddMacauGateway("西堤关", 113.534457f, 22.212157f, 0.466f, 0.416f);
-        AddMacauGateway("琴海口", 113.544850f, 22.140669f, 0.474f, 0.402f);
-        luo.otherX = 0.585f; luo.otherY = 0.466f; luo.administrativeCode = 100101; luo.city = "东湾府";
-        // 跨区门户节点。
-        var shenzhen = stations.Find(s => s.region == "榕川" && s.name == "东湾城");
-        if (shenzhen != null)
+        luo.otherX = 0.585f; luo.otherY = 0.466f; luo.administrativeCode = 200101; luo.city = "塔尔西斯星区";
+        var marsPort = stations.Find(s => s.region == "火星" && s.name == "奥林匹斯港");
+        if (marsPort != null)
         {
-            shenzhen.name = "东湾（西渡）"; shenzhen.portal = true; shenzhen.portalTo = "汐港";
-            shenzhen.otherX = 0.548f; shenzhen.otherY = 0.440f;
+            marsPort.name = "奥林匹斯（月面门）"; marsPort.portal = true; marsPort.portalTo = "月之亮面";
+            marsPort.otherX = MoonNearX(-9.3f); marsPort.otherY = MoonNearY(51.6f);
         }
 
-        sceneries.Add(new Scenery{name="望海峰", x=0.478f,y=0.238f,natural=true,triggerStation="海晏台"});
-        sceneries.Add(new Scenery{name="帆影港", x=0.665f,y=0.375f,natural=true,triggerStation="翠竹咀"});
-        sceneries.Add(new Scenery{name="云钟古阁", x=0.20f,y=0.235f,natural=false,triggerStation="东山涌"});
-        sceneries.Add(new Scenery{name="灯笼夜市", x=0.545f,y=0.475f,natural=false,triggerStation="旺市角"});
-        sceneries.Add(new Scenery{name="清波湾", x=0.855f,y=0.185f,natural=true,triggerStation="清波湾"});
-        sceneries.Add(new Scenery{name="卧狮岩", x=0.76f,y=0.60f,natural=true,triggerStation="龙尾塘"});
+        // 月之亮面奇观（9处）
+        sceneries.Add(new Scenery{name="静海纪念碑", x=MoonNearX(23.5f), y=MoonNearY(0.7f), natural=false, triggerStation="阿波罗11湾"});
+        sceneries.Add(new Scenery{name="哥白尼中央峰", x=MoonNearX(-20.0f), y=MoonNearY(9.7f), natural=true, triggerStation="哥白尼环形山"});
+        sceneries.Add(new Scenery{name="第谷辐射纹", x=MoonNearX(-11.2f), y=MoonNearY(-43.3f), natural=true, triggerStation="第谷环港"});
+        sceneries.Add(new Scenery{name="亚平宁绝壁", x=MoonNearX(-3.7f), y=MoonNearY(18.9f), natural=true, triggerStation="亚平宁岭"});
+        sceneries.Add(new Scenery{name="阿尔卑斯月谷", x=MoonNearX(3.2f), y=MoonNearY(48.5f), natural=true, triggerStation="阿尔卑斯谷"});
+        sceneries.Add(new Scenery{name="雨海熔岩海", x=MoonNearX(-15.6f), y=MoonNearY(32.8f), natural=true, triggerStation="雨海前哨"});
+        sceneries.Add(new Scenery{name="虹湾金弧", x=MoonNearX(-31.5f), y=MoonNearY(44.1f), natural=true, triggerStation="虹湾星门"});
+        sceneries.Add(new Scenery{name="克拉维乌斯穹顶", x=MoonNearX(-14.1f), y=MoonNearY(-58.4f), natural=false, triggerStation="克拉维乌斯"});
+        sceneries.Add(new Scenery{name="柏拉图黑曜台", x=MoonNearX(-9.3f), y=MoonNearY(51.6f), natural=false, triggerStation="柏拉图跃迁港"});
 
-        sceneries.Add(new Scenery{name="白鹤古观", x=0.78f,y=0.52f,natural=false,triggerStation="龙尾塘"});
-        sceneries.Add(new Scenery{name="飞鹭芦滩", x=0.23f,y=0.78f,natural=true,triggerStation="芦花围"});
-        sceneries.Add(new Scenery{name="碧海石崖", x=0.98f,y=0.57f,natural=true,triggerStation="渔光澳"});
+        // 月背奇观（5处）
+        sceneries.Add(new Scenery{name="南极艾特肯深渊", x=MoonFarX(173.4f), y=MoonFarY(-16.8f), natural=true, triggerStation="艾特肯深井", region="月背"});
+        sceneries.Add(new Scenery{name="冯·卡门着陆碑", x=MoonFarX(176.2f), y=MoonFarY(-44.8f), natural=false, triggerStation="冯·卡门港", region="月背"});
+        sceneries.Add(new Scenery{name="莫斯科海玄武原", x=MoonFarX(147.9f), y=MoonFarY(27.3f), natural=true, triggerStation="莫斯科海", region="月背"});
+        sceneries.Add(new Scenery{name="科罗廖夫冰丘", x=MoonFarX(202.6f), y=MoonFarY(-4.0f), natural=true, triggerStation="科罗廖夫环", region="月背"});
+        sceneries.Add(new Scenery{name="阿波罗环山观测塔", x=MoonFarX(208.2f), y=MoonFarY(-36.1f), natural=false, triggerStation="阿波罗星门", region="月背"});
 
-        sceneries.Add(new Scenery{name="石门古坊", x=0.31345f,y=0.74189f,natural=false,triggerStation="古石围",region="镜屿"});
-        sceneries.Add(new Scenery{name="望海灯楼", x=0.30253f,y=0.65772f,natural=false,triggerStation="望海阁",region="镜屿"});
-        sceneries.Add(new Scenery{name="饼家老街", x=0.55992f,y=0.42471f,natural=false,triggerStation="莲心仔",region="镜屿"});
-        sceneries.Add(new Scenery{name="墨沙海滩", x=0.68345f,y=0.11927f,natural=true,triggerStation="墨沙湾",region="镜屿"});
-        sceneries.Add(new Scenery{name="白塔山", x=0.42496f,y=0.12521f,natural=false,triggerStation="木船厂",region="镜屿"});
-
-        var l1 = new Line { id = 1, name = "1 号线", color = LineColors[0] };
+        var l1 = new Line { id = 1, name = "1 号星轨", color = LineColors[0] };
         l1.st.Add(0); l1.st.Add(1); l1.st.Add(2);
         lines.Add(l1);
         foreach (int index in l1.st) stations[index].built = true;
@@ -363,38 +392,43 @@ public partial class DemoBootstrap : MonoBehaviour
         if (string.IsNullOrEmpty(region) || !regionStationIndices.TryGetValue(region, out var list)) return null;
         return list;
     }
-    void Add(string n, float x, float y, string region = "汐港") { stations.Add(new Station(n, x, y) { region = region }); }
-    // 镜屿底图范围：经度 113.505–113.605，纬度 22.100–22.235。
-    float MacauX(float longitude) { return (longitude - 113.505f) / 0.100f; }
-    float MacauY(float latitude) { return (latitude - 22.100f) / 0.135f; }
-    void AddMacau(string n, float longitude, float latitude) { Add(n, MacauX(longitude), MacauY(latitude), "镜屿"); }
+    void Add(string n, float x, float y, string region = "月之亮面") { stations.Add(new Station(n, x, y) { region = region }); }
+    // 月之亮面底图范围：经度 -35°~+35°，纬度 -62°~+62°。
+    float MoonNearX(float longitude) { return Mathf.Clamp((longitude + 35.0f) / 70.0f, 0.06f, 0.94f); }
+    float MoonNearY(float latitude) { return Mathf.Clamp((latitude + 62.0f) / 124.0f, 0.14f, 0.86f); }
+    void AddMoonNear(string n, float longitude, float latitude) { Add(n, MoonNearX(longitude), MoonNearY(latitude), "月之亮面"); }
+
+    // 月背底图范围：经度 145°E~215°E，纬度 -62°~+62°。
+    float MoonFarX(float longitude) { return Mathf.Clamp((longitude - 145.0f) / 70.0f, 0.06f, 0.94f); }
+    float MoonFarY(float latitude) { return Mathf.Clamp((latitude + 62.0f) / 124.0f, 0.14f, 0.86f); }
+    void AddMoonFar(string n, float longitude, float latitude) { Add(n, MoonFarX(longitude), MoonFarY(latitude), "月背"); }
 
     [Serializable] sealed class GuangdongStationList { public GuangdongStationRecord[] stations; }
     [Serializable] sealed class GuangdongStationRecord { public string name, city; public int code; public float x, y; public bool legacy; }
     void ApplyGuangdongStations()
     {
-        var file = Resources.Load<TextAsset>("MapData/guangdong_stations");
-        if (!file) { Debug.LogError("榕川乡镇站点数据缺失"); return; }
+        var file = Resources.Load<TextAsset>("MapData/mars_stations");
+        if (!file) { Debug.LogError("火星星港站点数据缺失"); return; }
         var data = JsonUtility.FromJson<GuangdongStationList>(file.text);
         foreach (var record in data.stations)
         {
-            var station = record.legacy ? stations.Find(s => s.region == "榕川" && s.name == record.name) : null;
-            if (station == null) { station = new Station(record.name, record.x, record.y) { region = "榕川" }; stations.Add(station); }
+            var station = record.legacy ? stations.Find(s => s.region == "火星" && s.name == record.name) : null;
+            if (station == null) { station = new Station(record.name, record.x, record.y) { region = "火星" }; stations.Add(station); }
             station.x = record.x; station.y = record.y; station.city = record.city;
             station.county = !record.legacy; station.administrativeCode = record.code;
         }
     }
     void SetMacauGateway(string name, float x, float y)
     {
-        var station = stations.Find(s => s.region == "镜屿" && s.name == name);
+        var station = stations.Find(s => s.region == "月背" && s.name == name);
         if (station == null) return;
-        station.portal = true; station.portalTo = "榕川"; station.otherX = x; station.otherY = y;
+        station.portal = true; station.portalTo = "火星"; station.otherX = x; station.otherY = y;
     }
-    void AddMacauGateway(string name, float longitude, float latitude, float x, float y)
+    void AddMoonFarGateway(string name, float longitude, float latitude, float x, float y)
     {
-        AddMacau(name, longitude, latitude); SetMacauGateway(name, x, y);
+        AddMoonFar(name, longitude, latitude); SetMacauGateway(name, x, y);
     }
-    // 玩家界面统一使用别称；内部地名仍作为既有存档和跨区域连接的稳定标识。
+    // 玩家界面统一使用别称。
     static string DisplayPlaceAliases(string text)
     {
         return text;
@@ -403,14 +437,14 @@ public partial class DemoBootstrap : MonoBehaviour
     {
         var station = stations[index];
         if (!string.IsNullOrEmpty(station.customName)) return station.customName;
-        return station.name == "东湾（西渡）" && region == "汐港" ? "西渡（东湾城）" : station.name;
+        return station.name == "奥林匹斯（月面门）" && region == "月之亮面" ? "月面门（奥林匹斯）" : station.name;
     }
     string PortalSubtitle(Station station, string region)
     {
-        if (station.name == "东湾（西渡）") return region == "汐港" ? "东湾城" : "汐港";
-        if (station.name == "跨海虹桥")
-            return region == "镜屿" ? "榕川/汐港" : region == "汐港" ? "榕川/镜屿" : "汐港/镜屿";
-        if (station.region == "镜屿") return region == "镜屿" ? "榕川" : "镜屿";
+        if (station.name == "奥林匹斯（月面门）") return region == "月之亮面" ? "奥林匹斯港" : "月之亮面";
+        if (station.name == "虹湾星门")
+            return region == "月背" ? "火星/月之亮面" : region == "月之亮面" ? "火星/月背" : "月之亮面/月背";
+        if (station.region == "月背") return region == "月背" ? "火星" : "月背";
         return region == station.region ? station.portalTo : station.region;
     }
 
@@ -537,7 +571,7 @@ public partial class DemoBootstrap : MonoBehaviour
         var tape = Rect("CapTape", cap.transform, 130, 150, 140, 24);
         var tapeIm = Img(tape, new Color(0.88f, 0.78f, 0.62f, 0.75f), spriteRound); tapeIm.type = Image.Type.Sliced; tapeIm.raycastTarget = false;
         tape.transform.localRotation = Quaternion.Euler(0, 0, -1.5f);
-        string regTitle = currentRegion == "汐港" ? "汐 港" : currentRegion == "镜屿" ? "镜 屿" : "榕 川";
+        string regTitle = currentRegion == "月之亮面" ? "月之亮面" : currentRegion == "月背" ? "月 背" : "火 星";
         var title = Txt(cap.transform, regTitle, 48, Ink, 0, 106, 400, 52, TextAnchor.MiddleCenter);
         title.fontSize = ScaledFontSize(48, 1.22f);
         regionTitle = title;
@@ -593,7 +627,7 @@ public partial class DemoBootstrap : MonoBehaviour
         mapWheelZoom = mapZoom;
         mapZoom.map = mapRect; mapZoom.viewport = root;
         mapZoom.canZoom = () => !dragging && !lineInsertActive && pageRoot == null && activePanel == null && sceneryViewer == null;
-        mapZoom.maxZoom = () => currentRegion == "榕川" ? 12f : 2.5f;
+        mapZoom.maxZoom = () => currentRegion == "火星" ? 12f : 2.5f;
         mapZoom.onPanStart = () => { pressing = false; pressIdx = -1; HidePressRing(); };
         hkMapArt = Rect("HongKongArt", map.transform, 0, 0, W, H);
         BuildRasterMap(hkMapArt.transform);
@@ -645,11 +679,11 @@ public partial class DemoBootstrap : MonoBehaviour
         AttachSubCanvas(floaterLayer.gameObject, false);
 
         Label(hkMapArt.GetComponent<RectTransform>(), "北 岭", 34, 0.55f, 0.90f, new Color(0.40f,0.38f,0.32f,0.75f), 180);
-        Label(hkMapArt.GetComponent<RectTransform>(), "汐港本岛", 26, 0.50f, 0.170f, new Color(0.40f,0.38f,0.32f,0.72f), 150);
+        Label(hkMapArt.GetComponent<RectTransform>(), "月之亮面本岛", 26, 0.50f, 0.170f, new Color(0.40f,0.38f,0.32f,0.72f), 150);
         Label(hkMapArt.GetComponent<RectTransform>(), "苍岚岛", 24, 0.20f, 0.105f, new Color(0.40f,0.38f,0.32f,0.70f), 140);
         Label(hkMapArt.GetComponent<RectTransform>(), "银潮湾", 18, 0.40f, 0.360f, new Color(0.33f,0.48f,0.53f,0.80f), 190);
-        PortalLabel(hkMapArt.GetComponent<RectTransform>(), 0.80f, 0.925f, "→ 东湾城");
-        PortalLabel(hkMapArt.GetComponent<RectTransform>(), 0.25f, 0.505f, "→ 青藤湾 / 镜屿");
+        PortalLabel(hkMapArt.GetComponent<RectTransform>(), 0.80f, 0.925f, "→ 火星");
+        PortalLabel(hkMapArt.GetComponent<RectTransform>(), 0.25f, 0.505f, "→ 火星 / 月背");
 
         // 顶部/底部奶油渐隐，让悬浮 UI 压得住地图
         Color fadeCol = Themes[Mathf.Clamp(currentTheme, 0, Themes.Length - 1)].fade;
@@ -669,8 +703,8 @@ public partial class DemoBootstrap : MonoBehaviour
         FreezeRegionTraffic();
         ClearStationOdArcs();
         ClosePage(); CloseLineBubble(); CancelDraft(); ClearFloaters(); currentRegion = destination;
-        hkMapArt.SetActive(currentRegion == "汐港"); macauMapArt.SetActive(currentRegion == "镜屿");
-        guangdongMapArt.SetActive(currentRegion == "榕川");
+        hkMapArt.SetActive(currentRegion == "月之亮面"); macauMapArt.SetActive(currentRegion == "月背");
+        guangdongMapArt.SetActive(currentRegion == "火星");
         SyncRegionMapTextureMemory();
         RequestResourceTrim(false);
         trainsDirty = true;
@@ -692,7 +726,7 @@ public partial class DemoBootstrap : MonoBehaviour
         RefreshSceneryViews();
         LayoutStationLabels();
         UpdateRegionalMarkers(true);
-        regionTitle.text = DisplayPlaceAliases(currentRegion == "汐港" ? "汐 港" : currentRegion == "镜屿" ? "镜 屿" : "榕 川");
+        regionTitle.text = DisplayPlaceAliases(currentRegion == "月之亮面" ? "月之亮面" : currentRegion == "月背" ? "月 背" : "火 星");
         CreateLineVisuals(); RefreshStationDots();
         RecalcIncome(); RefreshHUD();
         PlayRegionCurtain(currentRegion);
@@ -705,7 +739,7 @@ public partial class DemoBootstrap : MonoBehaviour
 
     bool RegionUnlocked(string region)
     {
-        return region == "汐港" || (region == "镜屿" && macauUnlocked) || (region == "榕川" && guangdongUnlocked);
+        return region == "月之亮面" || (region == "月背" && macauUnlocked) || (region == "火星" && guangdongUnlocked);
     }
     int ConnectedOrdinaryStations(string region)
     {
@@ -716,10 +750,10 @@ public partial class DemoBootstrap : MonoBehaviour
     }
     void UpdateRegionUnlocks()
     {
-        if (!macauUnlocked && income >= MacauIncomeRequired && ConnectedOrdinaryStations("汐港") >= 4)
-        { macauUnlocked = true; Toast("镜屿区域已解锁"); QueueStory("macau_open", "海的另一边", "镜屿发来一封简短的邀请：客流已经准备好了，缺的只是一条可靠的线路。\n下一站，去海的另一边。"); }
-        if (macauUnlocked && !guangdongUnlocked && income >= GuangdongIncomeRequired && ConnectedOrdinaryStations("镜屿") >= 2)
-        { guangdongUnlocked = true; Toast("榕川区域已解锁"); QueueStory("guangdong_open", "向北的邀请", "镜屿的站台刚刚热闹起来，榕川的合作邀请便送到了桌上。\n这一次，你要把一座城市的故事，接到更远的地方。"); }
+        if (!macauUnlocked && income >= MacauIncomeRequired && ConnectedOrdinaryStations("月之亮面") >= 4)
+        { macauUnlocked = true; Toast("月背区域已解锁"); QueueStory("macau_open", "海的另一边", "月背发来一封简短的邀请：客流已经准备好了，缺的只是一条可靠的线路。\n下一站，去海的另一边。"); }
+        if (macauUnlocked && !guangdongUnlocked && income >= GuangdongIncomeRequired && ConnectedOrdinaryStations("月背") >= 2)
+        { guangdongUnlocked = true; Toast("火星区域已解锁"); QueueStory("guangdong_open", "向北的邀请", "月背的站台刚刚热闹起来，火星的合作邀请便送到了桌上。\n这一次，你要把一座城市的故事，接到更远的地方。"); }
     }
 
     void BuildStationViews()
@@ -908,7 +942,7 @@ public partial class DemoBootstrap : MonoBehaviour
     }
 
     float regionalMarkerScale = -1f;
-    // 地图放大时，线路 / 火车 / 草稿线按 1/zoom 反向补偿，和站点一样保持屏幕尺寸恒定。
+    // 地图放大时，线路 / 草稿线按 1/zoom 反向补偿，和站点一样保持屏幕尺寸恒定。
     // 只改厚度与图标缩放，不改长度与位置——长度必须留在地图坐标系里。
     void ApplyZoomToOverlays(float scale)
     {
@@ -951,7 +985,7 @@ public partial class DemoBootstrap : MonoBehaviour
     int MarkerRank(int i)
     {
         if (dragging && (i == dragFrom || i == hoverStation)) return -2;
-        if (currentRegion == "榕川" && stations[i].name == "东湾（西渡）") return -1;
+        if (currentRegion == "火星" && stations[i].name == "奥林匹斯（月面门）") return -1;
         if (IsOpen(i) || stations[i].portal) return 0;
         return stations[i].county ? 2 : 1;
     }
@@ -959,8 +993,8 @@ public partial class DemoBootstrap : MonoBehaviour
     bool MatchesStationFilter(int i)
     {
         var station = stations[i];
-        // 汐港/镜屿使用站区而非县级行政区；保留所有交界站与本地站点。
-        if (currentRegion != "榕川" || station.portal || stationFilter == 0) return true;
+        // 月之亮面/月背使用站区而非县级行政区；保留所有交界站与本地站点。
+        if (currentRegion != "火星" || station.portal || stationFilter == 0) return true;
         int code = station.administrativeCode;
         bool prefecture = code > 0 && code % 100 == 0;
         bool countyCity = code > 0 && code % 100 >= 81;
@@ -1728,7 +1762,7 @@ public partial class DemoBootstrap : MonoBehaviour
             string region = SegmentRegion(path[i], path[i + 1]);
             if (region == null) continue;
             float px = Vector2.Distance(PosInRegion(path[i], region), PosInRegion(path[i + 1], region));
-            float kmPerPx = region == "榕川" ? 0.68f : region == "汐港" ? 0.050f : 0.00954f;
+            float kmPerPx = region == "火星" ? 0.68f : region == "月之亮面" ? 0.050f : 0.00954f;
             totalKm += px * kmPerPx;
         }
         return totalKm;
@@ -1928,7 +1962,7 @@ public partial class DemoBootstrap : MonoBehaviour
                 int la = l.st[k], lb = l.st[k + 1];
                 string sr = SegmentRegion(la, lb);
                 if (string.IsNullOrEmpty(sr)) continue;
-                int regCode = sr == "汐港" ? 1 : sr == "镜屿" ? 2 : 3;
+                int regCode = sr == "月之亮面" ? 1 : sr == "月背" ? 2 : 3;
                 int lo = Mathf.Min(la, lb), hi = Mathf.Max(la, lb);
                 long key = ((long)regCode << 40) | ((long)lo << 20) | (uint)hi;
                 if (!sharedSegMap.TryGetValue(key, out var list)) sharedSegMap[key] = list = new List<int>();
@@ -1940,7 +1974,7 @@ public partial class DemoBootstrap : MonoBehaviour
         Vector2 ComputeCachedOffset(int lineId, int a, int b, string sr)
         {
             if (string.IsNullOrEmpty(sr)) return Vector2.zero;
-            int regCode = sr == "汐港" ? 1 : sr == "镜屿" ? 2 : 3;
+            int regCode = sr == "月之亮面" ? 1 : sr == "月背" ? 2 : 3;
             int lo = Mathf.Min(a, b), hi = Mathf.Max(a, b);
             long key = ((long)regCode << 40) | ((long)lo << 20) | (uint)hi;
             if (!sharedSegMap.TryGetValue(key, out var list) || list.Count <= 1) return Vector2.zero;
@@ -2008,7 +2042,7 @@ public partial class DemoBootstrap : MonoBehaviour
     {
         int skin = GetLineSkin(line);
         Color trim = skin >= 0 ? LineSkinTrimColors[skin] : Color.Lerp(line.color, Color.white, 0.40f);
-        // 日式微缩铁道模型（硬朗修长车厢，规避肉感胶囊）
+        // 星际列车车厢（硬朗修长造型，规避肉感胶囊）
         var t = Rect($"Train{line.id}_{carIndex}", trainLayer, 0, 0, 34, 14);
         t.GetComponent<RectTransform>().pivot = new Vector2(0.5f, 0.5f);
         t.transform.localScale = Vector3.one * overlayZoom;
@@ -2218,7 +2252,7 @@ public partial class DemoBootstrap : MonoBehaviour
         if (!string.IsNullOrEmpty(targetReg) && targetReg != currentRegion && RegionUnlocked(targetReg))
             SwitchRegion(targetReg);
         if (!mapWheelZoom) mapWheelZoom = mapRect.GetComponent<MapWheelZoom>();
-        float minFocused = currentRegion == "榕川" ? 2.1f : 1.45f;
+        float minFocused = currentRegion == "火星" ? 2.1f : 1.45f;
         float maxZ = mapWheelZoom != null && mapWheelZoom.maxZoom != null ? mapWheelZoom.maxZoom() : 2.5f;
         float scale = Mathf.Clamp(Mathf.Max(mapRect.localScale.x, minFocused), 1f, maxZ);
         mapRect.localScale = Vector3.one * scale;
@@ -2247,9 +2281,9 @@ public partial class DemoBootstrap : MonoBehaviour
     bool StationInRegion(int i, string region) { return stations[i].region == region || (stations[i].portal && (stations[i].portalTo == region || stations[i].portalTo2 == region)); }
     string SegmentRegion(int a, int b)
     {
-        if (StationInRegion(a, "汐港") && StationInRegion(b, "汐港")) return "汐港";
-        if (StationInRegion(a, "镜屿") && StationInRegion(b, "镜屿")) return "镜屿";
-        if (StationInRegion(a, "榕川") && StationInRegion(b, "榕川")) return "榕川";
+        if (StationInRegion(a, "月之亮面") && StationInRegion(b, "月之亮面")) return "月之亮面";
+        if (StationInRegion(a, "月背") && StationInRegion(b, "月背")) return "月背";
+        if (StationInRegion(a, "火星") && StationInRegion(b, "火星")) return "火星";
         return null;
     }
     Vector2 PosInRegion(int i, string region)
@@ -2325,7 +2359,7 @@ public partial class DemoBootstrap : MonoBehaviour
             TickDragEdgeAutoPan(dt);
 
             Vector2 local; RectTransformUtility.ScreenPointToLocalPointInRectangle(mapRect, Input.mousePosition, null, out local);
-            float snapR = (currentRegion == "榕川" || currentRegion == "镜屿") ? 44f / Mathf.Max(1f, mapRect.localScale.x) : 44f;
+            float snapR = (currentRegion == "火星" || currentRegion == "月背") ? 44f / Mathf.Max(1f, mapRect.localScale.x) : 44f;
             int near = NearestStationAny(local, snapR);
             bool backtracked = HandleDraftRevisit(near);
             int hov = near >= 0 && !draft.Contains(near) && !IsLoop(draft) ? near : -1;
@@ -3436,7 +3470,7 @@ public partial class DemoBootstrap : MonoBehaviour
             backdropTop = new Color(0.52f, 0.70f, 0.84f, 1f), backdropBottom = new Color(0.32f, 0.50f, 0.68f, 1f)
         },
         new ThemeSpec {
-            name = "复古铁道报", shortName = "复古", subtitle = "1920s 特刊 · 怀旧牛皮纸褐配深铅字排印风",
+            name = "复古星轨报", shortName = "复古", subtitle = "1920s 特刊 · 怀旧牛皮纸褐配深铅字排印风",
             paper = new Color(0.925f, 0.865f, 0.765f), paper2 = new Color(0.855f, 0.780f, 0.665f),
             cardBg = new Color(0.965f, 0.925f, 0.845f, 0.96f), headerBg = new Color(0.895f, 0.825f, 0.715f),
             ink = new Color(0.165f, 0.115f, 0.085f), inkSoft = new Color(0.450f, 0.355f, 0.275f),
@@ -3721,7 +3755,7 @@ public partial class DemoBootstrap : MonoBehaviour
     const int BondEarlyPayPerDay = 265;
 
     static readonly string[] CompanySealChars = { "轮", "海", "山", "茗", "星", "金", "御", "龙" };
-    static readonly string[] CompanySealNames = { "轮轨初心", "山海潮声", "南溟峻岳", "早茶茗香", "山海星轨", "鎏金枢纽", "山海御玺", "鎏金龙印" };
+    static readonly string[] CompanySealNames = { "星轨初心", "静海潮声", "南溟峻岳", "星港茗香", "深空星轨", "鎏金枢纽", "太阳系御玺", "鎏金龙印" };
     static readonly string[] CompanyPolicyNames = { "均衡发展", "惠民扩容", "精益运维", "文旅专线" };
     static readonly string[] CompanyPolicyDescs =
     {
@@ -3749,7 +3783,7 @@ public partial class DemoBootstrap : MonoBehaviour
     }
 
     static readonly string[] PartnerNames = { "陈志豪", "阿珍姐", "基建强叔", "林博士", "沈小姐", "何先生", "霍老督办" };
-    static readonly string[] PartnerTitles = { "海湾精算师", "茶楼商业总监", "工程老总工", "高铁调度总监", "跨境招商官", "山海资本推手", "特聘传奇顾问" };
+    static readonly string[] PartnerTitles = { "海湾精算师", "星港商业总监", "工程老总工", "曲速调度总监", "跨境招商官", "深空资本推手", "特聘传奇顾问" };
     static readonly string[] PartnerPros =
     {
         "车辆与轨道维护费 -12%",
@@ -3814,14 +3848,14 @@ public partial class DemoBootstrap : MonoBehaviour
     {
         int connected = DailyConnectedCount();
         int found = FoundCount();
-        if (connected >= 128 && found >= 12 && income >= 200000f) return "全球铁道与交通总署";
+        if (connected >= 128 && found >= 12 && income >= 200000f) return "全星系星轨与深空总署";
         if (connected >= 114 && income >= 100000f) return "东半球轨道枢密院";
         if (connected >= 98 && income >= 50000f) return "欧亚大陆桥控股";
-        if (connected >= 80 && income >= 25000f) return "亚洲泛亚铁道局";
+        if (connected >= 80 && income >= 25000f) return "内太阳系星航局";
         if (connected >= 62 && found >= 8 && income >= 12000f) return "东亚路网财团";
         if (connected >= 44 && found >= 6 && income >= 5000f) return "南溟干线联合体";
-        if (connected >= 28 && found >= 4 && income >= 2000f) return "山海铁路总社";
-        if (connected >= 16 && income >= 600f) return "跨海铁道社";
+        if (connected >= 28 && found >= 4 && income >= 2000f) return "行星际轨道总社";
+        if (connected >= 16 && income >= 600f) return "地月航运社";
         if (connected >= 8 || lines.Count >= 3) return "城市干线局";
         return "初创轻轨社";
     }
@@ -3830,15 +3864,15 @@ public partial class DemoBootstrap : MonoBehaviour
         int connected = DailyConnectedCount();
         int found = FoundCount();
         if (connected < 8 && lines.Count < 3) return "下阶「城市干线局」：连通 8 站或开通 3 条线路";
-        if (connected < 16 || income < 600f) return "下阶「跨海铁道社」：连通 16 站且日利润 ¥600（解锁第 3 董事席）";
-        if (connected < 28 || found < 4 || income < 2000f) return "下阶「山海铁路总社」：28 站 · 4 名胜 · 日利润 ¥2,000";
+        if (connected < 16 || income < 600f) return "下阶「地月航运社」：连通 16 站且日利润 ¥600（解锁第 3 董事席）";
+        if (connected < 28 || found < 4 || income < 2000f) return "下阶「行星际轨道总社」：28 站 · 4 名胜 · 日利润 ¥2,000";
         if (connected < 44 || found < 6 || income < 5000f) return "下阶「南溟干线联合体」：44 站 · 6 名胜 · 日利润 ¥5,000";
         if (connected < 62 || found < 8 || income < 12000f) return "下阶「东亚路网财团」：62 站 · 8 名胜 · 日利润 ¥1.2万";
-        if (connected < 80 || income < 25000f) return "下阶「亚洲泛亚铁道局」：80 站 · 日利润 ¥2.5万";
+        if (connected < 80 || income < 25000f) return "下阶「内太阳系星航局」：80 站 · 日利润 ¥2.5万";
         if (connected < 98 || income < 50000f) return "下阶「欧亚大陆桥控股」：98 站 · 日利润 ¥5万";
         if (connected < 114 || income < 100000f) return "下阶「东半球轨道枢密院」：114 站 · 日利润 ¥10万";
-        if (connected < 128 || found < 12 || income < 200000f) return "终阶「全球铁道与交通总署」：128 站 · 12 名胜 · 日利润 ¥20万";
-        return "已加冕「全球铁道与交通总署」最高荣誉";
+        if (connected < 128 || found < 12 || income < 200000f) return "终阶「全星系星轨与深空总署」：128 站 · 12 名胜 · 日利润 ¥20万";
+        return "已加冕「全星系星轨与深空总署」最高荣誉";
     }
 
     bool HasPartner(int id)
@@ -4025,7 +4059,7 @@ public partial class DemoBootstrap : MonoBehaviour
         int pick = (economyCycle + 1 + ((day + DailyConnectedCount()) % (EconomyCycleNames.Length - 1))) % EconomyCycleNames.Length;
         nextEconomyCycle = pick == economyCycle ? (economyCycle + 1) % EconomyCycleNames.Length : pick;
         EnsureCompanyInitialized();
-        Toast("《山海行风周报》本周进入：" + EconomyCycleNames[economyCycle]);
+        Toast("《深空星风周报》本周进入：" + EconomyCycleNames[economyCycle]);
     }
 
     MunicipalContract RollContract(int slotIdx)
@@ -4129,7 +4163,7 @@ public partial class DemoBootstrap : MonoBehaviour
         }
         else if (dev >= 4)
         {
-            medalName = "山海地产金印";
+            medalName = "星域地产金印";
             reason = "站前商业已达 " + dev + " 处，客流与物业双轮驱动";
             grantCoins = 1500 + dev * 350 + profitBonus; grantDiamonds = 8;
         }
@@ -4141,7 +4175,7 @@ public partial class DemoBootstrap : MonoBehaviour
         }
         else
         {
-            medalName = "山海基建先锋局";
+            medalName = "深空基建先锋局";
             reason = "全网持续扩张，已连通 " + conn + " 座车站";
             grantCoins = 1200 + conn * 55 + profitBonus; grantDiamonds = 6;
         }

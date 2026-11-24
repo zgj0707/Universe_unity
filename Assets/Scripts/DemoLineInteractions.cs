@@ -15,7 +15,7 @@ public partial class DemoBootstrap
         Vector2 local;
         if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(mapRect, screen, null, out local)) return;
         var hits = FindLineHits(local, 24f);
-        if (hits.Count == 0) { Toast("点在线路上可以拆除或查看运营"); return; }
+        if (hits.Count == 0) { Toast("点在航线上可以拆除或查看运营"); return; }
         ShowLineBubbles(local, hits);
     }
 
@@ -50,7 +50,7 @@ public partial class DemoBootstrap
     void QuickBoostLineSegment(Line line)
     {
         if (line == null || !lines.Contains(line)) return;
-        if (!PathTouchesRegion(line.st, currentRegion)) { Toast("请先切换到该线路所在地区调整机车"); return; }
+        if (!PathTouchesRegion(line.st, currentRegion)) { Toast("请先切换到该航线所在区域调整飞车"); return; }
         int slot = DispatchSlot();
         if (line.dispatch[slot] < line.trains)
         {
@@ -68,7 +68,7 @@ public partial class DemoBootstrap
             {
                 string error = LineFleetMoveError(line, v, true);
                 if (error != null) { Toast(error); return; }
-                BeginUndo("热力快捷调车");
+                BeginUndo("热力快捷调配飞车");
                 MoveLineFleetVehicle(line, v, true);
                 line.dispatch[slot] = line.trains;
                 operatingRates.Clear();
@@ -136,7 +136,7 @@ public partial class DemoBootstrap
 
                 int slot = DispatchSlot();
                 bool canAddRun = line.dispatch[slot] < line.trains;
-                string boostLabel = canAddRun ? "⚡ 增班+1" : "⚡ 调配机车";
+                string boostLabel = canAddRun ? "⚡ 增班+1" : "⚡ 调配飞车";
                 Color boostBg = canAddRun ? Matcha : (load >= 0.72f ? Vermilion : Indigo);
                 var boostBtn = Btn(card.transform, "QuickBoost", boostLabel, 22, 354, 108, 182, 52, boostBg, () => {
                     CloseLineBubble();
@@ -169,14 +169,14 @@ public partial class DemoBootstrap
         int a = line.st[seg], b = line.st[seg + 1];
         float d = Vector2.Distance(Pos(a), Pos(b));
         int refund = Mathf.RoundToInt((30f + d * 0.75f) * TrackBuildCostFactor() * DemolishRefundRate());
-        string tail = line.st.Count <= 2 ? "\n该段拆除后，这条线路会消失。" : "\n拆除后退还 ¥" + refund + "。";
+        string tail = line.st.Count <= 2 ? "\n该段拆除后，这条航线会消失。" : "\n拆除后退还 ¥" + refund + "。";
         return StationDisplayName(a, currentRegion) + " ⇄ " + StationDisplayName(b, currentRegion) + tail;
     }
     string LineConfirmText(Line line)
     {
         if (line == null) return "";
         int refund = Mathf.RoundToInt(120f * (UniqueCount(line.st) - 1) * TrackBuildCostFactor() * DemolishRefundRate());
-        return UniqueCount(line.st) + " 站 · " + line.trains + " 列车\n拆除后退还 ¥" + refund + "。";
+        return UniqueCount(line.st) + " 港 · " + line.trains + " 星舰\n拆除后退还 ¥" + refund + "。";
     }
 
     void DoDemolishSegment(Line line, int seg)
@@ -185,16 +185,16 @@ public partial class DemoBootstrap
         int n = line.st.Count;
         if (!IsLoop(line.st) && n > 3 && seg > 0 && seg < n - 2) {
             var head = line.st.GetRange(0, seg + 1); var tailPath = line.st.GetRange(seg + 1, n - seg - 1);
-            foreach (string region in new[] { "汐港", "镜屿", "榕川" }) {
+            foreach (string region in new[] { "月之亮面", "月背", "火星" }) {
                 int after = RegionLineCount(region) - (PathTouchesRegion(line.st, region) ? 1 : 0)
                     + (PathTouchesRegion(head, region) ? 1 : 0) + (PathTouchesRegion(tailPath, region) ? 1 : 0);
-                if (after > RegionLineLimit(region)) { Toast(region + "线路已达上限，无法拆分该段"); return; }
+                if (after > RegionLineLimit(region)) { Toast(region + "航线已达上限，无法拆分该段"); return; }
             }
         }
         int a = line.st[seg], b = line.st[seg + 1];
         float d = Vector2.Distance(Pos(a), Pos(b));
         int refund = Mathf.RoundToInt((30f + d * 0.75f) * TrackBuildCostFactor() * DemolishRefundRate());
-        BeginUndo("拆除线路段");
+        BeginUndo("拆除航线段");
         string msg;
 
         if (IsLoop(line.st))
@@ -203,7 +203,7 @@ public partial class DemoBootstrap
             for (int i = 0; i < n - 1; i++) opened.Add(line.st[(seg + 1 + i) % (n - 1)]);
             line.st = opened;
             coins += refund;
-            msg = "已拆除一段，环线变为普通线路";
+            msg = "已拆除一段，环线变为普通航线";
         }
         else if (n <= 2)
         {
@@ -236,7 +236,7 @@ public partial class DemoBootstrap
             nl.st = tail;
             lines.Add(nl);
             nextLineId++;
-            msg = "线路拆分为 " + line.name + " / " + nl.name;
+            msg = "航线拆分为 " + line.name + " / " + nl.name;
         }
 
         CreateLineVisuals(); RefreshStationDots(); RecalcIncome(); RefreshHUD();
@@ -246,7 +246,7 @@ public partial class DemoBootstrap
     void DoDemolishLine(Line line)
     {
         if (line == null || !lines.Contains(line)) return;
-        BeginUndo("拆除整条线路");
+        BeginUndo("拆除整条航线");
         float refund = 120f * (UniqueCount(line.st) - 1) * TrackBuildCostFactor() * DemolishRefundRate();
         coins += refund; SettleRemovedLineTax(line); ReleaseLineFleet(line); lines.Remove(line);
         CreateLineVisuals(); RefreshStationDots(); RecalcIncome(); RefreshHUD();
@@ -308,15 +308,15 @@ public partial class DemoBootstrap
         }
 
         Txt(p.transform, "运 营", 26, Ink, 36, 470 + extra, 300, 36, TextAnchor.MiddleLeft);
-        Txt(p.transform, "车站 " + unique + " · 列车 " + line.trains + "/8 · 线路长度 " + FormatLineKm(line.st), 23, Ink, 36, 420 + extra, 860, 36, TextAnchor.MiddleLeft);
+        Txt(p.transform, "星港 " + unique + " · 星舰 " + line.trains + "/8 · 航线长度 " + FormatLineKm(line.st), 23, Ink, 36, 420 + extra, 860, 36, TextAnchor.MiddleLeft);
         Txt(p.transform, "最高区段需求 " + Mathf.RoundToInt(LinePeakSectionDemand(line)) + " 人次/日 · 平均速度 " + Mathf.RoundToInt(FleetTrait(line, 2)*100) + "%", 23, InkSoft, 36, 382 + extra, 860, 34, TextAnchor.MiddleLeft);
         if (seg >= 0 && seg < line.st.Count - 1)
             Txt(p.transform, "选中段：" + stations[line.st[seg]].name + " ⇄ " + stations[line.st[seg + 1]].name, 22, line.color, 36, 344 + extra, 860, 34, TextAnchor.MiddleLeft);
         ScrollableText(p.transform, pathText, 22, InkSoft, 36, 296, 860, pathHeight);
 
-        Txt(p.transform, "预计成本：车辆 ¥" + Mathf.RoundToInt(forecast.vehicle) + " · 线路 ¥" + Mathf.RoundToInt(forecast.track) + " · 税 ¥" + Mathf.RoundToInt(forecast.tax), 23, InkSoft, 36, 244, 860, 38, TextAnchor.MiddleLeft);
+        Txt(p.transform, "预计成本：星舰 ¥" + Mathf.RoundToInt(forecast.vehicle) + " · 航线 ¥" + Mathf.RoundToInt(forecast.track) + " · 税 ¥" + Mathf.RoundToInt(forecast.tax), 23, InkSoft, 36, 244, 860, 38, TextAnchor.MiddleLeft);
         var planning = Btn(p.transform, "Operations", "票价与调度", 25, 34, 132, 892, 70, Indigo, () => { ClosePanel(true); OpenLineOperations(line); }); TInk(planning, Color.white);
-        Btn(p.transform, "LineDetail", "线路详情 / 车辆", 26, 34, 34, 430, 82, Indigo, () => {
+        Btn(p.transform, "LineDetail", "航线详情 / 星舰", 26, 34, 34, 430, 82, Indigo, () => {
             ClosePanel(); OpenLineScreen(line.id, () => OpenLineInfo(line, seg));
         });
         var close = Btn(p.transform, "InfoClose", "关 闭", 26, 496, 34, 430, 82, new Color(0.92f,0.89f,0.83f), ClosePanel);
@@ -351,12 +351,12 @@ public partial class DemoBootstrap
         input.text = DisplayPlaceAliases(line.name);
         var save = Btn(editor.transform, "Save", "确定", 26, 482, 0, 120, 76, Matcha, () => {
             string value = input.text.Trim();
-            if (string.IsNullOrWhiteSpace(value)) { Toast("线路名称不能为空"); return; }
-            if (line.name != value) { BeginUndo("修改线路名称"); line.name = value; EndUndo(); }
+            if (string.IsNullOrWhiteSpace(value)) { Toast("航线名称不能为空"); return; }
+            if (line.name != value) { BeginUndo("修改航线名称"); line.name = value; EndUndo(); }
             label.text = DisplayPlaceAliases(line.name) + "  ✎";
             editor.SetActive(false);
             nameButton.gameObject.SetActive(true);
-            Toast("线路名称已修改");
+            Toast("航线名称已修改");
         });
         TInk(save, Color.white);
         var cancel = Btn(editor.transform, "Cancel", "取消", 26, 612, 0, 120, 76,
@@ -405,7 +405,7 @@ public partial class DemoBootstrap
         insertBadge = Rect("InsertCostBadge", root, 0, 0, 330, 62);
         Rounded(insertBadge, new Color(1f, 0.98f, 0.92f, 0.96f));
         insertBadge.GetComponent<Image>().raycastTarget = false;
-        insertBadgeText = Txt(insertBadge.transform, "拖至新站点", 23, Ink, 12, 5, 306, 52, TextAnchor.MiddleCenter);
+        insertBadgeText = Txt(insertBadge.transform, "拖至新星港", 23, Ink, 12, 5, 306, 52, TextAnchor.MiddleCenter);
         Haptic.Vibrate(22); PlayTone(false); UpdateLineInsert(screen);
         return true;
     }
@@ -446,7 +446,7 @@ public partial class DemoBootstrap
         SetInsertPreview(insertPreviewA, Pos(insertingLine.st[insertingSegment]), point);
         SetInsertPreview(insertPreviewB, point, Pos(insertingLine.st[insertingSegment + 1]));
         if (insertBadgeText) insertBadgeText.text = insertTarget >= 0
-            ? "插入造价 ¥" + InsertStationCost(insertingLine, insertingSegment, insertTarget) : "拖至可插入的新站点";
+            ? "插入造价 ¥" + InsertStationCost(insertingLine, insertingSegment, insertTarget) : "拖至可插入的新星港";
         if (insertBadge && RectTransformUtility.ScreenPointToLocalPointInRectangle(root, screen, null, out var badgePoint)) {
             var rect = insertBadge.GetComponent<RectTransform>();
             badgePoint -= root.rect.min;
@@ -459,18 +459,18 @@ public partial class DemoBootstrap
         UpdateLineInsert(screen);
         var line = insertingLine; int segment = insertingSegment, target = insertTarget;
         CancelLineInsert();
-        if (!CanInsertStation(line, segment, target)) { Toast("请拖到本区域内未经过的普通站点"); return; }
+        if (!CanInsertStation(line, segment, target)) { Toast("请拖到本区域内未经过的普通星港"); return; }
         int cost = InsertStationCost(line, segment, target);
         string details = line.name + " · " + StationDisplayName(target, currentRegion) + "\n造价 ¥" + cost + "（含必要开站费用）";
         float detailsHeight = Mathf.Clamp(MeasureTextHeight(details, 25, 620) + 8, 54, H - 410);
-        var p = OpenPopup("插入途经站", detailsHeight + 200, 680);
+        var p = OpenPopup("插入途经港", detailsHeight + 200, 680);
         ScrollableText(p.transform, details, 25, InkSoft, 28, 102, 620, detailsHeight);
         var confirm = Btn(p.transform, "ConfirmInsert", "确认 ¥" + cost, 25, 28, 20, 300, 66, Matcha, () => CommitLineInsertion(line, segment, target)); TInk(confirm, Color.white);
         var cancel = Btn(p.transform, "CancelInsert", "取消", 25, 350, 20, 300, 66, Paper2, ClosePanel); TInk(cancel, Ink);
     }
     void CommitLineInsertion(Line line, int segment, int target)
     {
-        if (!CanInsertStation(line, segment, target)) { ClosePanel(true); Toast("线路或站点已变化，请重新操作"); return; }
+        if (!CanInsertStation(line, segment, target)) { ClosePanel(true); Toast("航线或星港已变化，请重新操作"); return; }
         int cost = InsertStationCost(line, segment, target);
         if (coins < cost) { Toast("金币不足：还差 ¥" + FormatShortfall(cost - coins)); return; }
         BeginUndo("插入途经站"); ClosePanel(true);
@@ -480,22 +480,22 @@ public partial class DemoBootstrap
     }
     bool TryRemoveWaystation(Line line, int station, out List<int> path, out int previous, out int next, out string reason)
     {
-        path = null; previous = next = -1; reason = "线路已发生变化，请重新选择";
+        path = null; previous = next = -1; reason = "航线已发生变化，请重新选择";
         if (line == null || !lines.Contains(line) || station < 0 || station >= stations.Count) return false;
         bool loop = IsLoop(line.st);
         int count = line.st.Count - (loop ? 1 : 0), index = -1, occurrences = 0;
         for (int i = 0; i < count; i++) if (line.st[i] == station) { index = i; occurrences++; }
-        if (occurrences != 1) { reason = "该站在线路中出现多次，暂不能直接移除"; return false; }
-        if (!loop && (index == 0 || index == count - 1)) { reason = "这是线路端点，请使用拆除线路段"; return false; }
-        if (loop && count <= 3) { reason = "环线至少需要保留 3 个站点"; return false; }
+        if (occurrences != 1) { reason = "该港在航线中出现多次，暂不能直接移除"; return false; }
+        if (!loop && (index == 0 || index == count - 1)) { reason = "这是航线端点，请使用拆除航线段"; return false; }
+        if (loop && count <= 3) { reason = "环线至少需要保留 3 座星港"; return false; }
         previous = line.st[(index - 1 + count) % count]; next = line.st[(index + 1) % count];
         string region = SegmentRegion(previous, station);
         if (region != currentRegion || SegmentRegion(station, next) != region || SegmentRegion(previous, next) != region) {
-            reason = "移除后无法在当前区域连接前后站点"; return false;
+            reason = "移除后无法在当前区域连接前后星港"; return false;
         }
         path = line.st.GetRange(0, count); path.RemoveAt(index);
         if (loop) path.Add(path[0]);
-        if (!PortalEndsAreValid(path)) { path = null; reason = "移除后会破坏交界站的连接"; return false; }
+        if (!PortalEndsAreValid(path)) { path = null; reason = "移除后会破坏交界港的连接"; return false; }
         return true;
     }
     int WaystationChangeCost(int previous, int station, int next)
@@ -511,14 +511,14 @@ public partial class DemoBootstrap
     {
         var options = new List<Line>();
         foreach (var line in lines) if (line.st.Contains(station) && PathTouchesRegion(line.st, currentRegion)) options.Add(line);
-        if (options.Count == 0) { ClosePanel(true); Toast("该站暂无途经线路"); return; }
+        if (options.Count == 0) { ClosePanel(true); Toast("该港暂无途经航线"); return; }
         const int pageSize = 5;
         int pages = (options.Count + pageSize - 1) / pageSize; page = Mathf.Clamp(page, 0, pages - 1);
         int count = Mathf.Min(pageSize, options.Count - page * pageSize);
         float bottom = pages > 1 ? 104 : 24;
         float h = bottom + count * 82 + 124;
-        var p = OpenPopup("选择要调整的线路", h, 680, "remove_station_lines_" + station);
-        Txt(p.transform, StationDisplayName(station, currentRegion) + " · 仅从所选线路移除", 24, InkSoft, 28, h - 112, 620, 38, TextAnchor.MiddleLeft);
+        var p = OpenPopup("选择要调整的航线", h, 680, "remove_station_lines_" + station);
+        Txt(p.transform, StationDisplayName(station, currentRegion) + " · 仅从所选航线移除", 24, InkSoft, 28, h - 112, 620, 38, TextAnchor.MiddleLeft);
         for (int i = 0; i < count; i++) {
             var selected = options[page * pageSize + i];
             var button = Btn(p.transform, "RemoveFromLine" + selected.id, selected.name, 26, 28, bottom + (count - 1 - i) * 82, 624, 68, Paper2,
@@ -541,19 +541,19 @@ public partial class DemoBootstrap
         string money = cost > 0 ? "需支付 ¥" + cost : cost < 0 ? "退还 ¥" + (-cost) : "无需费用";
         string body = line.name + "：" + StationDisplayName(previous, currentRegion) + " → " + StationDisplayName(station, currentRegion) + " → " + StationDisplayName(next, currentRegion)
             + "\n调整为：" + StationDisplayName(previous, currentRegion) + " → " + StationDisplayName(next, currentRegion)
-            + "\n" + money + "（拆除旧线路并连接新线路）"
+            + "\n" + money + "（拆除旧航线并连接新航线）"
             + "\n当前时段客流：" + Mathf.RoundToInt(LinePassengerFlow(line)) + " → " + Mathf.RoundToInt(projected) + " 人/日"
-            + "\n站点及其他线路保持不变。";
-        Confirm("移除途经站", body, () => CommitRemoveWaystation(line, station, previous, next));
+            + "\n星港及其他航线保持不变。";
+        Confirm("移除途经港", body, () => CommitRemoveWaystation(line, station, previous, next));
     }
     void CommitRemoveWaystation(Line line, int station, int expectedPrevious, int expectedNext)
     {
         if (!TryRemoveWaystation(line, station, out var path, out int previous, out int next, out string reason) || previous != expectedPrevious || next != expectedNext) {
-            Toast("线路已发生变化，请重新操作"); return;
+            Toast("航线已发生变化，请重新操作"); return;
         }
         int cost = WaystationChangeCost(previous, station, next);
         if (cost > coins) { Toast("金币不足：还差 ¥" + FormatShortfall(cost - coins)); return; }
-        BeginUndo("移除途经站"); coins -= cost; line.st = path;
+        BeginUndo("移除途经港"); coins -= cost; line.st = path;
         CreateLineVisuals(); RefreshStationDots(); RecalcIncome(); RefreshHUD(); EndUndo();
         Toast("已从 " + line.name + " 移除 " + StationDisplayName(station, currentRegion));
     }

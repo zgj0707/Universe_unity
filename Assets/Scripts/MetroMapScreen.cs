@@ -24,7 +24,7 @@ public partial class DemoBootstrap
     Text metroCleanToastTxt;
     CanvasGroup metroCleanToastGroup;
 
-    string metroRegionFilter = "汐港";
+    string metroRegionFilter = "月之亮面";
     bool metroLandscapeMode = false;
     readonly MetroStyleProfile metroStyle = MetroStyleProfile.CreatePreset(MetroPresetTheme.MinimalWhite);
     MetroLayoutResult metroLastLayout;
@@ -39,7 +39,7 @@ public partial class DemoBootstrap
         CloseLineBubble();
         ClearStationOdArcs();
 
-        metroRegionFilter = string.IsNullOrEmpty(currentRegion) ? "汐港" : currentRegion;
+        metroRegionFilter = string.IsNullOrEmpty(currentRegion) ? "月之亮面" : currentRegion;
         metroLandscapeMode = false;
         metroCleanMode = false;
 
@@ -184,7 +184,7 @@ public partial class DemoBootstrap
         var backBtn = Btn(topBar.transform, "MetroBack", "返回", 28, 14, 14, 120, 64, Paper2, CloseMetroMapScreen);
         backBtn.GetComponentInChildren<Text>().color = Ink;
 
-        metroScopeTxt = Txt(topBar.transform, "汐港地铁图", 32, Ink, 148, 12, 410, 68, TextAnchor.MiddleLeft);
+        metroScopeTxt = Txt(topBar.transform, "月之亮面地铁图", 32, Ink, 148, 12, 410, 68, TextAnchor.MiddleLeft);
         metroScopeTxt.resizeTextForBestFit = true;
         metroScopeTxt.resizeTextMinSize = 20;
         metroScopeTxt.resizeTextMaxSize = 32;
@@ -204,7 +204,7 @@ public partial class DemoBootstrap
         metroRegionDropdownList = Rect("MetroRegionList", topBar.transform, 580, -206, 210, 200);
         Rounded(metroRegionDropdownList, CardBg);
         SoftShadow(metroRegionDropdownList);
-        string[] regions = { "汐港", "镜屿", "榕川" };
+        string[] regions = { "月之亮面", "月背", "火星" };
         for (int i = 0; i < regions.Length; i++)
         {
             string rName = regions[i];

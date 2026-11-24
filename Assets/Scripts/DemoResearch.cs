@@ -20,29 +20,40 @@ public partial class DemoBootstrap
     readonly List<HistoryNode> historyNodes = new List<HistoryNode>();
     readonly Dictionary<string, HistoryNode> historyByKey = new Dictionary<string, HistoryNode>();
     static readonly string[] LocoNames = {
-        "潘尼达伦", "萨拉曼卡", "喷气比利", "旅行者一号", "火箭号", "约翰牛", "鹰号", "仙女皇后", "纽约中央 999",
-        "飞翔的苏格兰人", "野鸭号", "大男孩型", "南风 4B 型", "TGV 东南型",
-        "CH-2A 和韵号", "CH-400 天工号",
-        "鳄鱼电力机车", "德铁 01 型", "DRG 05 型", "挑战者型", "GG1 电力机车", "日本 C62 型",
-        "EMD F7 型", "德铁 V200 型", "前进型蒸汽机车", "BB 9004 型", "三角洲型", "东风 1 型",
-        "日本 EF58 型", "城际 125 HST", "东风 5 型", "新干线 100 系", "东风 11 型", "韶山 9 型"
+        "先驱号I型", "月神号", "离子晨星号", "核火远征号", "静海先驱者", "星尘一号", "引力萌芽号", "氦闪信使号", "远日点号",
+        "阿波罗穿梭车", "磁悬星轨号", "奥林匹斯快线", "聚变黎明号", "环月通勤号",
+        "曲速流线号", "光子棱镜号",
+        "星环巡航号", "离子风暴号", "苍穹磁悬浮", "银梭星轨车", "聚变远航号", "极光穿梭号",
+        "深空快递号", "泰坦牵引车", "星门快线", "恒星摆渡号", "引力波特快", "磁暴护航号",
+        "磁轨穿梭者", "月背勘探号", "星轨旗舰号", "超导巡航号", "银河通勤车", "跃迁先锋号"
     };
     static readonly string[] LocoYears = {
-        "1804", "1812", "1813", "1825", "1829", "1831", "1835", "1855", "1893",
-        "1923", "1938", "1941", "1984", "1981",
-        "2007", "2017",
-        "1919", "1925", "1935", "1943", "1943", "1948",
-        "1949", "1953", "1956", "1955", "1961", "1964",
-        "1952", "1976", "1984", "1985", "1992", "1998"
+        "2045", "2049", "2052", "2056", "2060", "2063", "2067", "2071", "2075",
+        "2082", "2088", "2094", "2101", "2108",
+        "2168", "2176",
+        "2112", "2117", "2122", "2127", "2132", "2137",
+        "2141", "2145", "2149", "2153", "2157", "2161",
+        "2114", "2119", "2124", "2129", "2134", "2139"
+    };
+    // 计算基准年：仅用于成本/环位推导，保持与原始经济曲线完全一致；展示层使用 LocoYears 的星历年。
+    static readonly int[] LocoCalcYears = {
+        1804, 1812, 1813, 1825, 1829, 1831, 1835, 1855, 1893,
+        1923, 1938, 1941, 1984, 1981,
+        2007, 2017,
+        1919, 1925, 1935, 1943, 1943, 1948,
+        1949, 1953, 1956, 1955, 1961, 1964,
+        1952, 1976, 1984, 1985, 1992, 1998
     };
     static readonly string[] LocoArt = {
-        "art_train_penydarren_1804", "art_train_salamanca_1812", "art_train_puffing_billy_1813", "art_train_locomotion_no1_1825",
-        "art_train_rocket_1829", "art_train_john_bull_1831", "art_train_adler_1835", "art_train_fairy_queen_1855", "art_train_nyc_999_1893",
-        "art_train_flying_scotsman_1923", "art_train_mallard_1938", "art_train_big_boy_1941", "art_train_new_exp_df4b", "art_train_tgv_sud_est_1981",
-        "art_train_crh2a_2007", "art_train_cr400af",
-        "art_train_crocodile_1919", "art_train_new_eu_db_01", "art_train_new_eu_drg_05", "art_train_challenger_1943", "art_train_pr_gg1_1943", "art_train_c62_1948",
-        "art_train_new_emd_f7", "art_train_new_eu_db_v200", "art_train_china_qj_1956", "art_train_new_eu_bb9004", "art_train_new_eu_deltic", "art_train_new_df1",
-        "art_train_new_j_ef58", "art_train_new_eu_hst", "art_train_new_df5", "art_train_new_j_100", "art_train_new_df11", "art_train_new_exp_ss9"
+        "art_craft_pioneer_2045", "art_craft_luna_2049", "art_craft_iondawn_2052", "art_craft_nuclearex_2056", "art_craft_mare_2060",
+        "art_craft_stardust_2063", "art_craft_gravitas_2067", "art_craft_heliosflash_2071", "art_craft_aphelion_2075",
+        "art_craft_apollo_2082", "art_craft_maglev_2088", "art_craft_olympus_2094", "art_craft_fusion_2101", "art_craft_circumluna_2108",
+        "art_craft_warp_2168", "art_craft_photon_2176",
+        "art_craft_ringcruise_2112", "art_craft_ionstorm_2117", "art_craft_skyvault_2122", "art_craft_silvershuttle_2127",
+        "art_craft_fusionvoyage_2132", "art_craft_aurora_2137", "art_craft_deepcourier_2141", "art_craft_titan_2145",
+        "art_craft_stargate_2149", "art_craft_stellarferry_2153", "art_craft_gravwave_2157", "art_craft_magstorm_2161",
+        "art_craft_orbitshuttle_2114", "art_craft_farside_2119", "art_craft_flagship_2124", "art_craft_superconduct_2129",
+        "art_craft_galaxycommute_2134", "art_craft_leapvanguard_2139"
     };
     static readonly int[] LocoEras = {
         0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -116,7 +127,7 @@ public partial class DemoBootstrap
     void AddEraHistoryLoco(int era, int locoIndex, string description, params string[] parents)
     {
         string key = LocoKey(locoIndex);
-        var node = new HistoryNode { era = era, year = int.Parse(LocoYears[locoIndex]), effect = ResearchEffect.None, loco = locoIndex, key = key, name = LocoNames[locoIndex], description = description, parents = parents };
+        var node = new HistoryNode { era = era, year = LocoCalcYears[locoIndex], effect = ResearchEffect.None, loco = locoIndex, key = key, name = LocoNames[locoIndex], description = description, parents = parents };
         historyNodes.Add(node); historyByKey.Add(key, node);
     }
     string EraRootKey(int era) { return era == 0 ? "pressure" : era == 1 ? "superheated_steam" : "cbtc_signaling"; }
@@ -141,99 +152,99 @@ public partial class DemoBootstrap
     }
     string EraUnlockHint(int era)
     {
-        return era >= 2 ? "暂未开放 · 二十一世纪敬请期待" : "已开放";
+        return era >= 2 ? "暂未开放 · 曲速纪敬请期待" : "已开放";
     }
     void InitHistoryTree()
     {
         if (historyNodes.Count > 0) return;
-        AddHistory("dispatch_basic", "铁路时刻表", 0, 3, 0, "约 1820 年代，铁路开始按时刻组织运行。解锁统一车辆调度。", "pressure");
-        AddHistory("dispatch_peak", "分时列车计划", 0, 8, 0, "19 世纪公共铁路发展推动分时安排列车。解锁早晚高峰与日夜分时调度。", "dispatch_basic", "public");
-        AddHistory("fare_policy", "客运票价制度", 1, 9, 0, "公共铁路客运建立票价制度。解锁线路票价调整。", "dispatch_basic", "public");
-        AddHistory("network_expand1", "铁路网络扩建", 0, 11, 3, "铁路由单线逐渐发展为网络，更多出行选择提升旅客对铁路的需求。", "public");
-        AddHistory("network_expand2", "铁路运营组织", 0, 14, 4, "铁路公司扩大网络并协调各线接续，降低旅客换乘阻力。", "network_expand1", "manufacture");
-        AddHistory("pressure", "高压蒸汽", 3, 0, 3, "高压蒸汽使动力装置更紧凑，为可移动蒸汽机提供了条件。", Array.Empty<string>());
-        AddHistory("rail", "早期铸铁轨", 1, 1, -2, "早期轨道承重有限，重型机车可能压坏铁轨；发展初期须为维修付出代价。", "pressure");
-        AddHistory("piston", "活塞与传动", 3, 1, 2, "汽缸内的蒸汽推动活塞，经机械传动带动车轮。", "pressure");
-        AddHistory("valve", "锅炉安全阀", 5, 1, 2, "安全阀帮助释放过高的锅炉压力，降低蒸汽动力运行的风险。", "pressure");
-        AddHistoryLoco(0, 3, 2, "1804 年的潘尼达伦机车是早期轨道蒸汽牵引的重要里程碑。完成后赠送一辆并解锁购买。", "piston", "rail");
+        AddHistory("dispatch_basic", "星轨时刻表", 0, 3, 0, "约 2055 年代，星轨开始按时刻组织运行。解锁统一车辆调度。", "pressure");
+        AddHistory("dispatch_peak", "分时航线计划", 0, 8, 0, "核热纪公共星轨发展推动分时安排星车。解锁早晚高峰与日夜分时调度。", "dispatch_basic", "public");
+        AddHistory("fare_policy", "客运船票制度", 1, 9, 0, "公共星轨客运建立票价制度。解锁航线票价调整。", "dispatch_basic", "public");
+        AddHistory("network_expand1", "星轨网络扩建", 0, 11, 3, "星轨由单线逐渐发展为网络，更多出行选择提升旅客对星轨的需求。", "public");
+        AddHistory("network_expand2", "星轨运营组织", 0, 14, 4, "星轨公司扩大网络并协调各线接续，降低旅客换乘阻力。", "network_expand1", "manufacture");
+        AddHistory("pressure", "高压等离子", 3, 0, 3, "高压等离子使动力装置更紧凑，为可移动等离子机提供了条件。", Array.Empty<string>());
+        AddHistory("rail", "早期磁轨", 1, 1, -2, "早期磁轨承重有限，重型飞车可能压坏磁轨；发展初期须为维修付出代价。", "pressure");
+        AddHistory("piston", "活塞与传动", 3, 1, 2, "汽缸内的等离子推动活塞，经机械传动带动悬浮轮。", "pressure");
+        AddHistory("valve", "聚变炉安全阀", 5, 1, 2, "安全阀帮助释放过高的聚变炉压力，降低等离子动力运行的风险。", "pressure");
+        AddHistoryLoco(0, 3, 2, "2045 年的先驱号I型飞车是早期磁轨等离子牵引的重要里程碑。完成后赠送一辆并解锁购买。", "piston", "rail");
         AddHistory("rack", "齿轨牵引", 1, 3, 2, "早期工程师曾借助齿轮与齿轨传递牵引力，以解决对轮轨黏着力不足的担忧。", LocoKey(0));
-        AddHistory("adhesion", "轮轨黏着", 5, 3, 3, "利用车轮与轨道之间的摩擦传递牵引力，为不依赖齿轨的机车提供路径。", LocoKey(0));
-        AddHistory("damage", "轨道受损", 0, 4, -2, "早期机车重量与脆弱轨道之间的矛盾造成轨道损坏，显示新技术需要配套改进。", "rack");
-        AddHistoryLoco(1, 1, 4, "1812 年萨拉曼卡采用齿轨传动，是早期商业蒸汽机车的代表之一。", "rack");
-        AddHistory("coupled", "多轮分担载重", 4, 4, 2, "通过多轮及传动安排分担重量，改善早期机车对脆弱轨道的适应。", "adhesion");
-        AddHistoryLoco(2, 5, 5, "喷气比利于 1813—1814 年在怀勒姆煤矿使用，是现存最古老的蒸汽机车之一。", "adhesion", "coupled");
-        AddHistory("twocyl", "双汽缸驱动", 2, 5, 3, "双汽缸布置改善动力传递，帮助机车从不同曲柄位置起动。", LocoKey(1), "piston");
-        AddHistory("rods", "连杆驱动", 4, 6, 3, "连杆把汽缸往复运动转化为车轮旋转，并可带动多个动轮。", "twocyl", "coupled");
-        AddHistoryLoco(3, 3, 7, "旅行者一号在 1825 年斯托克顿—达灵顿铁路开通时牵引列车。", "rods", LocoKey(2));
-        AddHistory("public", "公共铁路运营", 1, 8, 3, "蒸汽牵引进入公共铁路，客货运输开始形成更广阔的运营场景。", LocoKey(3));
-        AddHistory("blast", "排汽引风", 3, 8, 3, "将排汽引向烟囱能够加强炉膛通风；这一做法在早期机车的发展中不断改进。", LocoKey(3));
-        AddHistory("tubes", "多烟管锅炉", 5, 8, 4, "多根烟管增加受热面积，提升锅炉产汽能力，成为火箭号的重要设计特征。", LocoKey(3), "valve");
-        AddHistoryLoco(4, 4, 9, "1829 年火箭号参加雷恩希尔机车竞赛，多烟管锅炉与引风设计影响了后来的机车。", "blast", "tubes");
-        AddHistory("speedrisk", "速度与安全", 1, 10, -3, "速度增加也放大制动和轨道不平顺带来的风险，技术进步伴随着新的运行代价。", "public", LocoKey(4));
-        AddHistory("guide", "导轮与曲线", 3, 10, 3, "约翰牛在美国运行时增设前导轮，以改善机车通过曲线和不平顺轨道的表现。", LocoKey(4), "rods");
-        AddHistoryLoco(5, 4, 11, "约翰牛于 1831 年抵达美国，后续增设导轮以减少脱轨问题。", "guide");
-        AddHistoryLoco(6, 6, 11, "鹰号是 1835 年德国首条铁路运营的早期蒸汽机车代表。", LocoKey(4), "public");
-        AddHistory("manufacture", "机车工厂", 1, 12, 2, "机车工厂和维修体系的发展有助于制造、维护并持续改进机车。", "public", LocoKey(5));
-        AddHistory("braking", "连续制动探索", 3, 12, 2, "列车长度和速度增加后，如何让整列车更可靠地制动成为重要问题。", "speedrisk", "guide");
-        AddHistory("feed", "锅炉给水", 5, 12, 2, "可靠地向锅炉补水是持续运行蒸汽机车的基础。", "tubes", LocoKey(6));
-        AddHistoryLoco(7, 6, 13, "仙女皇后是一台 1855 年建造、服务于印度铁路的早期蒸汽机车。", "feed", "manufacture");
-        AddHistory("injector", "蒸汽注水器", 5, 14, 3, "蒸汽注水器利用蒸汽将水送入锅炉，简化了锅炉给水装置。", "feed", LocoKey(7));
-        AddHistory("straightbrake", "直通空气制动", 2, 14, 2, "直通空气制动将制动力传向整列车，但管路破损时存在失去制动力的风险。", "braking");
+        AddHistory("adhesion", "轮轨黏着", 5, 3, 3, "利用悬浮轮与磁轨之间的摩擦传递牵引力，为不依赖齿轨的飞车提供路径。", LocoKey(0));
+        AddHistory("damage", "磁轨受损", 0, 4, -2, "早期飞车重量与脆弱磁轨之间的矛盾造成磁轨损坏，显示新技术需要配套改进。", "rack");
+        AddHistoryLoco(1, 1, 4, "2050 年月神号采用齿轨传动，是早期商业等离子飞车的代表之一。", "rack");
+        AddHistory("coupled", "多轮分担载重", 4, 4, 2, "通过多轮及传动安排分担重量，改善早期飞车对脆弱磁轨的适应。", "adhesion");
+        AddHistoryLoco(2, 5, 5, "离子晨星号于 2050—2051 年在静海矿区使用，是现存最古老的等离子飞车之一。", "adhesion", "coupled");
+        AddHistory("twocyl", "双汽缸驱动", 2, 5, 3, "双汽缸布置改善动力传递，帮助飞车从不同曲柄位置起动。", LocoKey(1), "piston");
+        AddHistory("rods", "连杆驱动", 4, 6, 3, "连杆把汽缸往复运动转化为悬浮轮旋转，并可带动多个动轮。", "twocyl", "coupled");
+        AddHistoryLoco(3, 3, 7, "核火远征号在 2058 年静海—危海航线开通时牵引星车。", "rods", LocoKey(2));
+        AddHistory("public", "公共星轨运营", 1, 8, 3, "等离子牵引进入公共星轨，客货运输开始形成更广阔的运营场景。", LocoKey(3));
+        AddHistory("blast", "排汽引风", 3, 8, 3, "将排汽引向烟囱能够加强炉膛通风；这一做法在早期飞车的发展中不断改进。", LocoKey(3));
+        AddHistory("tubes", "多散热管聚变炉", 5, 8, 4, "多根散热管增加受热面积，提升聚变炉产汽能力，成为静海先驱者的重要设计特征。", LocoKey(3), "valve");
+        AddHistoryLoco(4, 4, 9, "2060 年静海先驱者参加月面竞速大赛，多散热管聚变炉与引风设计影响了后来的飞车。", "blast", "tubes");
+        AddHistory("speedrisk", "速度与安全", 1, 10, -3, "速度增加也放大制动和磁轨不平顺带来的风险，技术进步伴随着新的运行代价。", "public", LocoKey(4));
+        AddHistory("guide", "导轮与曲线", 3, 10, 3, "星尘一号在泛星运行时增设前导轮，以改善飞车通过曲线和不平顺磁轨的表现。", LocoKey(4), "rods");
+        AddHistoryLoco(5, 4, 11, "星尘一号于 2061 年抵达泛星，后续增设导轮以减少脱轨问题。", "guide");
+        AddHistoryLoco(6, 6, 11, "引力萌芽号是 2064 年环月首条星轨运营的早期等离子飞车代表。", LocoKey(4), "public");
+        AddHistory("manufacture", "飞车工厂", 1, 12, 2, "飞车工厂和维修体系的发展有助于制造、维护并持续改进飞车。", "public", LocoKey(5));
+        AddHistory("braking", "连续制动探索", 3, 12, 2, "星车长度和速度增加后，如何让整星车更可靠地制动成为重要问题。", "speedrisk", "guide");
+        AddHistory("feed", "聚变炉给水", 5, 12, 2, "可靠地向聚变炉补水是持续运行等离子飞车的基础。", "tubes", LocoKey(6));
+        AddHistoryLoco(7, 6, 13, "氦闪信使号是一台 2076 年建造、服务于南港星轨的早期等离子飞车。", "feed", "manufacture");
+        AddHistory("injector", "等离子注水器", 5, 14, 3, "等离子注水器利用等离子将水送入聚变炉，简化了聚变炉给水装置。", "feed", LocoKey(7));
+        AddHistory("straightbrake", "直通空气制动", 2, 14, 2, "直通空气制动将制动力传向整星车，但管路破损时存在失去制动力的风险。", "braking");
         AddHistory("brakefault", "制动管破损", 1, 15, -2, "直通空气制动的管路若破损，制动空气可能流失；这一局限促使工程师继续改良。", "straightbrake");
         AddHistory("autobrake", "自动空气制动", 3, 16, 4, "自动空气制动利用管路压力变化控制制动，针对断管等问题提供更可靠的制动方式。", "straightbrake", "brakefault");
-        AddHistory("running", "高速走行", 5, 16, 3, "改进车轮、车架与导向布置，有助于高速运行；安全制动仍然是必要配套。", "guide", "manufacture");
-        AddHistoryLoco(8, 4, 17, "纽约中央铁路 999 号是 19 世纪末快速蒸汽机车的代表之一。", "running", "autobrake", "injector");
-        AddHistory("steamengine", "紧凑型蒸汽机", 2, 2, 2, "高压蒸汽有助于缩小动力装置，为机车上安装蒸汽机创造条件。", "pressure");
-        AddHistory("minehaul", "矿山蒸汽运输", 0, 3, 2, "早期蒸汽机车在矿山运输中与马匹牵引并存，逐渐积累轨道运输经验。", LocoKey(0));
-        AddHistory("walking", "机械步行机车", 0, 5, -2, "布伦顿的机械步行机车试图以机械腿推动机车；1815 年其锅炉爆炸造成严重伤亡。", "rack");
-        AddHistory("cylinder", "汽缸与锅炉布置", 3, 4, 2, "早期设计将汽缸与锅炉结构结合，利用锅炉支承汽缸和相关作用力。", "piston", "steamengine");
-        AddHistory("firetube", "单烟道锅炉", 3, 5, 2, "早期机车采用单一烟道输送热气，受热面积有限，后续设计继续扩大换热面积。", "cylinder");
-        AddHistory("returnflue", "回程烟道", 3, 8, 2, "通过回程烟道增加热气经过锅炉的路程和受热面积，是多烟管普及前的改进方向之一。", "firetube", LocoKey(3));
-        AddHistory("pressureloss", "蒸汽消耗", 4, 6, -1, "蒸汽动力的燃料和水消耗增加了早期运输成本，也推动锅炉效率持续改进。", "firetube");
-        AddHistory("boilerburst", "旅行者号锅炉事故", 0, 9, -3, "1828 年旅行者一号锅炉爆炸，司机约翰·克里遇难；事故显示安全操作的重要性。", LocoKey(3), "valve");
-        AddHistory("rebuild", "事故后的重建", 0, 10, 2, "锅炉爆炸后机车得到重建，运行经验推动早期铁路继续改进设备与维护。", "boilerburst");
-        AddHistory("rainhill", "雷恩希尔试验", 5, 10, 2, "1829 年的雷恩希尔机车竞赛为铁路比较机车方案提供了公开试验场。", LocoKey(4));
-        AddHistory("twinreturn", "双回程烟道", 4, 9, 2, "旅行者一号后来的双回程烟道扩大了受热面积，体现了持续改造的工程实践。", "returnflue");
-        AddHistory("locoworks", "斯蒂芬森机车厂", 0, 8, 2, "1823 年设立的机车制造厂为铁路机车生产与工程积累提供了组织基础。", "rods");
-        AddHistory("leadingtruck", "美国导向轮改装", 4, 12, 2, "约翰牛为适应曲线和不平顺轨道增加前导轮，反映出不同铁路条件下的改装。", LocoKey(5), "guide");
-        AddHistory("linkmotion", "联杆配汽机构", 2, 13, 3, "1842 年的机车工作图纸记录了联杆配汽机构；这类机构用于控制蒸汽进排及反向。", "rods", "manufacture");
-        AddHistory("firebox", "火箱受热面", 4, 13, 2, "19 世纪中叶的工程图比较不同机车火箱和锅炉受热面积，帮助工程师研究蒸汽发生能力。", "tubes", "feed");
-        AddHistory("ramsvalve", "弹簧式安全阀", 1, 14, 3, "1856 年拉姆斯博顿设计的安全阀采用弹簧加压，旨在减少人为调整安全阀的风险。", "valve", "boilerburst");
-        AddHistory("giffard", "吉法尔注水器", 6, 15, 3, "1858 年的吉法尔注水器利用蒸汽向运行中的锅炉供水。", "injector");
-        AddHistory("directair", "空气制动推广", 1, 15, 2, "1869 年西屋公司成立，制造空气制动装置；制动技术随后经历多次改良。", "straightbrake");
-        AddHistory("tripvalve", "自动制动控制", 2, 17, 3, "自动空气制动通过列车管压力变化控制制动，使断管等情况下的制动更可靠。", "autobrake");
-        AddHistory("cylinderdrain", "汽缸排水与泄压", 4, 16, 2, "霍尔特 1878 年的汽缸排水与泄压阀将两类安全功能合并，以应对汽缸内的积水和超压。", "piston", "ramsvalve");
-        AddHistory("safetyact", "铁路安全装置", 0, 18, 2, "1893 年美国铁路安全装置法推动空气制动器与自动车钩等安全设备的应用。", "autobrake", "manufacture");
+        AddHistory("running", "高速走行", 5, 16, 3, "改进悬浮轮、车架与导向布置，有助于高速运行；安全制动仍然是必要配套。", "guide", "manufacture");
+        AddHistoryLoco(8, 4, 17, "远日点号是 核热纪末快速等离子飞车的代表之一。", "running", "autobrake", "injector");
+        AddHistory("steamengine", "紧凑型等离子机", 2, 2, 2, "高压等离子有助于缩小动力装置，为飞车上安装等离子机创造条件。", "pressure");
+        AddHistory("minehaul", "矿山等离子运输", 0, 3, 2, "早期等离子飞车在矿山运输中与马匹牵引并存，逐渐积累磁轨运输经验。", LocoKey(0));
+        AddHistory("walking", "机械步行飞车", 0, 5, -2, "布伦特的机械步行飞车试图以机械腿推动飞车；2052 年其聚变炉爆炸造成严重伤亡。", "rack");
+        AddHistory("cylinder", "汽缸与聚变炉布置", 3, 4, 2, "早期设计将汽缸与聚变炉结构结合，利用聚变炉支承汽缸和相关作用力。", "piston", "steamengine");
+        AddHistory("firetube", "单散热道聚变炉", 3, 5, 2, "早期飞车采用单一散热道输送热气，受热面积有限，后续设计继续扩大换热面积。", "cylinder");
+        AddHistory("returnflue", "回程散热道", 3, 8, 2, "通过回程散热道增加热气经过聚变炉的路程和受热面积，是多散热管普及前的改进方向之一。", "firetube", LocoKey(3));
+        AddHistory("pressureloss", "等离子消耗", 4, 6, -1, "等离子动力的燃料和水消耗增加了早期运输成本，也推动聚变炉效率持续改进。", "firetube");
+        AddHistory("boilerburst", "旅行者号聚变炉事故", 0, 9, -3, "2060 年核火远征号聚变炉爆炸，驾驶员约翰·克里遇难；事故显示安全操作的重要性。", LocoKey(3), "valve");
+        AddHistory("rebuild", "事故后的重建", 0, 10, 2, "聚变炉爆炸后飞车得到重建，运行经验推动早期星轨继续改进设备与维护。", "boilerburst");
+        AddHistory("rainhill", "月面竞速试验", 5, 10, 2, "2060 年的月面竞速大赛为星轨比较飞车方案提供了公开试验场。", LocoKey(4));
+        AddHistory("twinreturn", "双回程散热道", 4, 9, 2, "核火远征号后来的双回程散热道扩大了受热面积，体现了持续改造的工程实践。", "returnflue");
+        AddHistory("locoworks", "先驱飞飞车厂", 0, 8, 2, "2057 年设立的飞车制造厂为星轨飞车生产与工程积累提供了组织基础。", "rods");
+        AddHistory("leadingtruck", "泛星导向轮改装", 4, 12, 2, "星尘一号为适应曲线和不平顺磁轨增加前导轮，反映出不同星轨条件下的改装。", LocoKey(5), "guide");
+        AddHistory("linkmotion", "联杆配汽机构", 2, 13, 3, "2068 年的飞车工作图纸记录了联杆配汽机构；这类机构用于控制等离子进排及反向。", "rods", "manufacture");
+        AddHistory("firebox", "燃烧室受热面", 4, 13, 2, "核热纪中叶的工程图比较不同飞车燃烧室和聚变炉受热面积，帮助工程师研究等离子发生能力。", "tubes", "feed");
+        AddHistory("ramsvalve", "弹簧式安全阀", 1, 14, 3, "2077 年拉姆设计的安全阀采用弹簧加压，旨在减少人为调整安全阀的风险。", "valve", "boilerburst");
+        AddHistory("giffard", "星泵注水器", 6, 15, 3, "2078 年的星泵注水器利用等离子向运行中的聚变炉供水。", "injector");
+        AddHistory("directair", "空气制动推广", 1, 15, 2, "2085 年星门动力成立，制造空气制动装置；制动技术随后经历多次改良。", "straightbrake");
+        AddHistory("tripvalve", "自动制动控制", 2, 17, 3, "自动空气制动通过星车管压力变化控制制动，使断管等情况下的制动更可靠。", "autobrake");
+        AddHistory("cylinderdrain", "汽缸排水与泄压", 4, 16, 2, "赫尔墨斯 2090 年的汽缸排水与泄压阀将两类安全功能合并，以应对汽缸内的积水和超压。", "piston", "ramsvalve");
+        AddHistory("safetyact", "星轨安全装置", 0, 18, 2, "2099 年泛星星轨安全装置法推动空气制动器与自跃迁车钩等安全设备的应用。", "autobrake", "manufacture");
 
         ConfigureResearchEffects();
         AddOperatingStudies();
 
-        // 二十世纪 · 内燃电气卷册（1900—1999）
-        AddEraHistory(1, 1905, ResearchEffect.Speed, "superheated_steam", "过热蒸汽锅炉", 4, "二十世纪初广泛采用过热器提升蒸汽干度与热效率，奠定大型高速干线机车基础。");
-        AddEraHistoryLoco(1, 9, "1923 年投入伦敦—爱丁堡不停站特快，开启长途高速蒸汽客运经典时代。", "superheated_steam");
-        AddEraHistory(1, 1932, ResearchEffect.Speed, "streamline_body", "流线型减阻车体", 4, "风洞实验修型大幅削减高速气动阻力，降低特快列车高区段能耗。", "superheated_steam");
-        AddEraHistory(1, 1936, ResearchEffect.Capacity, "auto_block", "自动闭塞信号", 5, "轨道电路配合色灯自动闭塞缩减追踪间隔，成倍提升繁忙干线断面通过力。", LocoKey(9));
-        AddEraHistoryLoco(1, 10, "1938 年创下 203 km/h 蒸汽机车世界极速纪录，成为流线型蒸汽时代的永恒丰碑。", LocoKey(9), "streamline_body");
-        AddEraHistoryLoco(1, 11, "4-8-8-4 铰接式巨型重载机车，专为大坡度与超长编组重型干线牵引而生。", "superheated_steam");
-        AddEraHistory(1, 1955, ResearchEffect.Transfer, "double_track", "复线双向调度", 4, "干线双线分向组织搭配大型枢纽疏解，减少会车延误并缩短跨线换乘等待。", "auto_block", LocoKey(11));
-        AddEraHistory(1, 1964, ResearchEffect.Vehicle, "diesel_traction", "大功率内燃牵引", 5, "柴油机配合电传动取代繁重蒸汽整备，明显压缩日常维保工时与成本。", "double_track");
-        AddEraHistory(1, 1972, ResearchEffect.Track, "ac_electrification", "工频交流电气化", 5, "25 kV 架空接触网为干线注入稳定高功率，构筑高速动车组能源底座。", "diesel_traction", LocoKey(10));
-        AddEraHistoryLoco(1, 13, "1981 年开启商业高速铁路纪元，以 270 km/h 级电力动车组重塑城际通勤。", "ac_electrification");
-        AddEraHistoryLoco(1, 12, "大功率电传动内燃主力机车代表，兼顾繁忙客运特快与重型干线编组。", "diesel_traction");
-        AddEraHistory(1, 1992, ResearchEffect.Demand, "bay_intercity_comm", "区域跨城直通联运", 5, "推动沧溟跨湾干线票务互认与跨城直通时刻协调，激发山海城际出行动能。", LocoKey(13), LocoKey(12));
+        // 聚变纪 · 内燃电气卷册（1900—1999）
+        AddEraHistory(1, 1905, ResearchEffect.Speed, "superheated_steam", "等离子过热流聚变炉", 4, "聚变纪初广泛采用等离子散热器提升等离子干度与热效率，奠定大型高速主干航线飞车基础。");
+        AddEraHistoryLoco(1, 9, "2118 年投入月面—环月不停站特快，开启长途高速等离子客运经典时代。", "superheated_steam");
+        AddEraHistory(1, 1932, ResearchEffect.Speed, "streamline_body", "流线型减阻车体", 4, "风洞实验修型大幅削减高速气动阻力，降低特快星车高区段能耗。", "superheated_steam");
+        AddEraHistory(1, 1936, ResearchEffect.Capacity, "auto_block", "自动闭塞信标", 5, "量子信标电路配合色灯自动闭塞缩减追踪间隔，成倍提升繁忙主干航线断面通过力。", LocoKey(9));
+        AddEraHistoryLoco(1, 10, "2127 年创下 203 km/h 等离子飞车世界极速纪录，成为流线型等离子时代的永恒丰碑。", LocoKey(9), "streamline_body");
+        AddEraHistoryLoco(1, 11, "4-8-8-4 铰接式巨型重载飞车，专为大坡度与超长编队重型主干航线牵引而生。", "superheated_steam");
+        AddEraHistory(1, 1955, ResearchEffect.Transfer, "double_track", "复线双向调度", 4, "主干航线双线分向组织搭配大型枢纽疏解，减少会车延误并缩短跨线换乘等待。", "auto_block", LocoKey(11));
+        AddEraHistory(1, 1964, ResearchEffect.Vehicle, "diesel_traction", "大功率内燃牵引", 5, "柴油机配合电传动取代繁重等离子整备，明显压缩日常维保工时与成本。", "double_track");
+        AddEraHistory(1, 1972, ResearchEffect.Track, "ac_electrification", "工频交流能量化", 5, "25 kV 高空供能网为主干航线注入稳定高功率，构筑高速跃迁车组能源底座。", "diesel_traction", LocoKey(10));
+        AddEraHistoryLoco(1, 13, "2153 年开启商业火星跃迁主干航线纪元，以 270 km/h 级电力跃迁车组重塑城际通勤。", "ac_electrification");
+        AddEraHistoryLoco(1, 12, "大功率电传动内燃主力飞车代表，兼顾繁忙客运特快与重型主干航线编队。", "diesel_traction");
+        AddEraHistory(1, 1992, ResearchEffect.Demand, "bay_intercity_comm", "区域跨城直通联运", 5, "推动沧溟跨湾主干航线票务互认与跨城直通时刻协调，激发星域城际出行动能。", LocoKey(13), LocoKey(12));
         InitEra20HistoryExpansion();
 
-        // 二十一世纪 · 高速智行卷册（2000—2025+）
+        // 曲速纪 · 高速智行卷册（2000—2025+）
         AddEraHistory(2, 2002, ResearchEffect.Capacity, "cbtc_signaling", "CBTC 移动闭塞列控", 6, "无线车地双向通信实现精细追踪间隔控制，让高峰高密发车从容高效。");
-        AddEraHistory(2, 2005, ResearchEffect.Track, "ballastless_track", "无砟轨道精调技术", 5, "毫米级高精度无砟道床兼顾 300+ km/h 平顺舒适度与更低长周期养护开销。", "cbtc_signaling");
-        AddEraHistoryLoco(2, 14, "轻量化铝合金动力分散型高速动车组，加速迅猛且兼顾大客流城际公交化运营。", "cbtc_signaling", "ballastless_track");
+        AddEraHistory(2, 2005, ResearchEffect.Track, "ballastless_track", "无砟磁轨精调技术", 5, "毫米级高精度无砟道床兼顾 300+ km/h 平顺舒适度与更低长周期养护开销。", "cbtc_signaling");
+        AddEraHistoryLoco(2, 14, "轻量化铝合金动力分散型高速跃迁车组，加速迅猛且兼顾大客流城际公交化运营。", "cbtc_signaling", "ballastless_track");
         AddEraHistory(2, 2010, ResearchEffect.Vehicle, "regen_braking", "再生制动能量回馈", 6, "进站制动电能高效回馈牵引供电网供邻车复用，大幅压低整线牵引电耗。", LocoKey(14));
         AddEraHistory(2, 2013, ResearchEffect.Demand, "immersed_tunnel", "跨海沉管隧道工程", 5, "深水沉管隧道与超长跨海大桥彻底打通沧海湾口天堑，激活跨湾超级客流走廊。", "ballastless_track");
-        AddEraHistoryLoco(2, 15, "智能高速标准动车组标杆，极低气动阻力与高可靠冗余裕度领衔山海主干网。", LocoKey(14), "regen_braking");
-        AddEraHistory(2, 2019, ResearchEffect.Station, "smart_hub_ato", "智慧站台与 ATO 自动驾驶", 6, "全自动折返、精准停靠与站内智慧导乘协同，显著放大综合枢纽日吞吐容量。", "immersed_tunnel", LocoKey(15));
-        AddEraHistory(2, 2021, ResearchEffect.Transfer, "seamless_transfer", "四网融合一码无感换乘", 6, "国铁干线、城际铁路与城市地铁安检互认、票制融通，消弭跨线换乘时间摩擦。", "smart_hub_ato");
-        AddEraHistory(2, 2023, ResearchEffect.Speed, "ai_dynamic_dispatch", "AI 潮汐动态重联", 6, "根据实时客流热力自动重联加开潮汐班次，全面拉升跨湾列车全网直达旅行速度。", LocoKey(15), "seamless_transfer");
-        AddEraHistory(2, 2025, ResearchEffect.Demand, "bay_integrated_grid", "山海一小时超级铁路圈", 7, "双屿与榕川九城轨道全域闭环直通，开创同城化山海湾新纪元。", "ai_dynamic_dispatch", "seamless_transfer");
+        AddEraHistoryLoco(2, 15, "智能高速标准跃迁车组标杆，极低气动阻力与高可靠冗余裕度领衔星域主干网。", LocoKey(14), "regen_braking");
+        AddEraHistory(2, 2019, ResearchEffect.Station, "smart_hub_ato", "智慧登船台与 ATO 自动驾驶", 6, "全自动折返、精准停靠与站内智慧导乘协同，显著放大综合枢纽日吞吐容量。", "immersed_tunnel", LocoKey(15));
+        AddEraHistory(2, 2021, ResearchEffect.Transfer, "seamless_transfer", "四网融合一码无感换乘", 6, "国铁主干航线、城际星轨与城市地铁安检互认、票制融通，消弭跨线换乘时间摩擦。", "smart_hub_ato");
+        AddEraHistory(2, 2023, ResearchEffect.Speed, "ai_dynamic_dispatch", "AI 潮汐动态重联", 6, "根据实时客流热力自动重联加开潮汐班次，全面拉升跨湾星车全网直达旅行速度。", LocoKey(15), "seamless_transfer");
+        AddEraHistory(2, 2025, ResearchEffect.Demand, "bay_integrated_grid", "星域一小时超级星轨圈", 7, "双屿与火星九城磁轨全域闭环直通，开创同城化星域新纪元。", "ai_dynamic_dispatch", "seamless_transfer");
 
     }
     bool HistoryVisible(HistoryNode node)
@@ -294,7 +305,7 @@ public partial class DemoBootstrap
         if (node == null || node.key == "pressure") return 0;
         if (node.era == 1)
         {
-            int y1 = HistoryYear(node.key);
+            int y1 = HistoryCalcYear(node.key);
             float t1 = Mathf.Clamp01((y1 - 1900f) / 99f);
             float raw1 = 140000f * Mathf.Pow(22f, t1) * (node.loco >= 0 ? 1.25f : 1f);
             int step1 = raw1 >= 500000f ? 10000 : 5000;
@@ -302,7 +313,7 @@ public partial class DemoBootstrap
         }
         if (node.era == 2)
         {
-            int y2 = HistoryYear(node.key);
+            int y2 = HistoryCalcYear(node.key);
             float t2 = Mathf.Clamp01((y2 - 2000f) / 25f);
             float raw2 = 160000f * Mathf.Pow(8.5f, t2) * (node.loco >= 0 ? 1.2f : 1f);
             return Mathf.Clamp(Mathf.RoundToInt(raw2 / 10000f) * 10000, 150000, 1500000);
@@ -313,7 +324,7 @@ public partial class DemoBootstrap
         }
         if (node.loco == 0) return 260;
         // 单节点消费上限 100 万，从 1899 年向 1800 年按年代平滑递减
-        int year = HistoryYear(node.key);
+        int year = HistoryCalcYear(node.key);
         float t = Mathf.Clamp01((year - 1800f) / 99f);
         float raw = 180f * Mathf.Pow(5500f, t) * (node.loco >= 0 ? 1.25f : 1f);
         int step = raw >= 10000f ? 1000 : raw >= 1000f ? 100 : 10;
@@ -325,36 +336,36 @@ public partial class DemoBootstrap
         if (node.era == 1)
         {
             if (node.key == "superheated_steam") return 40;
-            float t1 = Mathf.Clamp01((HistoryYear(node.key) - 1900f) / 99f);
+            float t1 = Mathf.Clamp01((HistoryCalcYear(node.key) - 1900f) / 99f);
             float raw1 = (45f + 255f * Mathf.Pow(t1, 1.35f)) * (node.loco >= 0 ? 1.2f : 1f);
             return Mathf.Clamp(Mathf.RoundToInt(raw1 / 5f) * 5, 40, 320);
         }
         if (node.era == 2)
         {
-            float t2 = Mathf.Clamp01((HistoryYear(node.key) - 2000f) / 25f);
+            float t2 = Mathf.Clamp01((HistoryCalcYear(node.key) - 2000f) / 25f);
             float raw2 = 240f + 280f * t2;
             return Mathf.Clamp(Mathf.RoundToInt(raw2 / 10f) * 10, 240, 520);
         }
-        int year = HistoryYear(node.key);
+        int year = HistoryCalcYear(node.key);
         float t = Mathf.Clamp01((year - 1800f) / 99f);
         return Mathf.Clamp(Mathf.RoundToInt(1f + t * 14f), 1, 15);
     }
     string HistoryEffectText(HistoryNode node)
     {
-        if (node.loco >= 0) return "赠送机车 ×1，解锁购买；配属后影响该线路运力、速度与维护费";
+        if (node.loco >= 0) return "赠送飞车 ×1，解锁购买；配属后影响该航线运力、速度与维护费";
         switch (node.key) {
             case "dispatch_basic": return "解锁全天统一调度";
-            case "dispatch_peak": return "解锁四时段列车调度";
-            case "fare_policy": return "解锁线路票价调整";
+            case "dispatch_peak": return "解锁四时段星车调度";
+            case "fare_policy": return "解锁航线票价调整";
         }
         string label;
         switch (node.effect) {
             case ResearchEffect.Demand: label = "潜在客流"; break;
-            case ResearchEffect.Capacity: label = "列车区段运力"; break;
-            case ResearchEffect.Speed: label = "列车速度"; break;
+            case ResearchEffect.Capacity: label = "星车区段运力"; break;
+            case ResearchEffect.Speed: label = "星车速度"; break;
             case ResearchEffect.Station: label = "站点吞吐上限"; break;
             case ResearchEffect.Vehicle: label = "车辆维护费"; break;
-            case ResearchEffect.Track: label = "线路维护费"; break;
+            case ResearchEffect.Track: label = "航线维护费"; break;
             case ResearchEffect.Transfer: label = "换乘阻力"; break;
             default: label = "票务收入"; break;
         }
@@ -365,9 +376,9 @@ public partial class DemoBootstrap
     string HistoryCardShortLabel(HistoryNode node)
     {
         // Short labels only affect the 188×34 card badge; details keep full terms.
-        return HistoryEffectText(node).Replace("列车区段运力", "运力").Replace("站点吞吐上限", "吞吐")
-            .Replace("潜在客流", "客流").Replace("列车速度", "速度").Replace("车辆维护费", "车维")
-            .Replace("线路维护费", "线维").Replace("换乘阻力", "换乘").Replace("票务收入", "票收")
+        return HistoryEffectText(node).Replace("星车区段运力", "运力").Replace("站点吞吐上限", "吞吐")
+            .Replace("潜在客流", "客流").Replace("星车速度", "速度").Replace("车辆维护费", "车维")
+            .Replace("航线维护费", "线维").Replace("换乘阻力", "换乘").Replace("票务收入", "票收")
             .Replace(" +", "+").Replace(" -", "-");
     }
     static string CleanHistoryInfoText(string value, bool singleLine = false)
@@ -659,14 +670,20 @@ public partial class DemoBootstrap
         coins -= cost; rp -= rpCost; techDone.Add(key); techSessionUnlocked.Add(key);
         if (node.loco >= 0) {
             researchVehicles.Add(new ResearchVehicle { node = node.loco });
-            if (node.loco == 0 || node.loco == 4 || node.loco == 8) { diamonds += 50; Toast("机车里程碑：钻石 +50"); }
-            else if (node.loco == 10 || node.loco == 13 || node.loco == 15) { diamonds += 60; Toast("跨时代旗舰机车：钻石 +60"); }
+            if (node.loco == 0 || node.loco == 4 || node.loco == 8) { diamonds += 50; Toast("飞车里程碑：钻石 +50"); }
+            else if (node.loco == 10 || node.loco == 13 || node.loco == 15) { diamonds += 60; Toast("跨时代旗舰飞车：钻石 +60"); }
         }
         historyJustUnlocked = key;
         TriggerHaptic(20);
         PlayTechSfx();
         SyncStoryProgression(true);
         RecalcIncome(); EndUndo(); RefreshHUD(); RefreshTechTreeIncremental(false, key);
+    }
+    int HistoryCalcYear(string key)
+    {
+        if (historyByKey.TryGetValue(key, out var node) && node.loco >= 0)
+            return LocoCalcYears[Mathf.Clamp(node.loco, 0, LocoCalcYears.Length - 1)];
+        return HistoryYear(key);
     }
     int HistoryYear(string key)
     {
@@ -704,21 +721,21 @@ public partial class DemoBootstrap
         if (node.era == 2) return year + " 年 · 高速智行";
         switch (node.key)
         {
-            case "boilerburst": return "1828 年";
-            case "walking": return "1815 年";
-            case "rainhill": return "1829 年";
-            case "locoworks": return "1823 年";
-            case "linkmotion": return "1842 年";
-            case "ramsvalve": return "1856 年";
-            case "injector": case "giffard": return "1858 年";
-            case "straightbrake": case "directair": return "1869 年";
-            case "autobrake": case "tripvalve": return "1870 年代";
-            case "cylinderdrain": return "1878 年";
-            case "safetyact": return "1893 年";
+            case "boilerburst": return "2060 年";
+            case "walking": return "2052 年";
+            case "rainhill": return "2060 年";
+            case "locoworks": return "2057 年";
+            case "linkmotion": return "2068 年";
+            case "ramsvalve": return "2077 年";
+            case "injector": case "giffard": return "2078 年";
+            case "straightbrake": case "directair": return "2085 年";
+            case "autobrake": case "tripvalve": return "2085 年代";
+            case "cylinderdrain": return "2090 年";
+            case "safetyact": return "2099 年";
             default: return (year / 10 * 10) + " 年代前后";
         }
     }
-    int HistoryEra(string key) => TreeRingIndex(HistoryYear(key), historyByKey.TryGetValue(key, out var node) ? node.era : 0);
+    int HistoryEra(string key) => TreeRingIndex(HistoryCalcYear(key), historyByKey.TryGetValue(key, out var node) ? node.era : 0);
 
     static int TreeRingIndex(int year, int eraGroup)
     {
@@ -918,11 +935,11 @@ public partial class DemoBootstrap
 
         string[] eras = activeEra == 1
             ? (isCorporate
-                ? new[] { "1900s · 科层与章程", "1920s · 托拉斯融资", "1940s · 统一集团化", "1960s · 站城商业街", "1980s · 跨区联运网", "1990s · 现代治理" }
-                : new[] { "1900s · 过热蒸汽", "1920s · 流线与电化", "1940s · 重载与内燃", "1960s · 交流电气化", "1980s · 高速与城际", "1990s · 干线提速" })
+                ? new[] { "聚变纪 · 科层与章程", "聚变纪 · 托拉斯融资", "聚变纪 · 统一集团化", "聚变纪 · 站城商业街", "聚变纪 · 跨区联运网", "聚变纪 · 现代治理" }
+                : new[] { "聚变纪 · 等离子过热流", "聚变纪 · 流线与电化", "聚变纪 · 重载与内燃", "聚变纪 · 交流能量化", "聚变纪 · 高速与城际", "聚变纪 · 主干航线提速" })
             : (isCorporate
-                ? new[] { "1800s · 契约立社", "1810s · 商办初试", "1820s · 合股募资", "1830—1849 · 清算与票制", "1850—1869 · 干线经营", "1870—1899 · 治理与风控" }
-                : new[] { "1800s · 蒸汽萌芽", "1810s · 矿道初试", "1820s · 公共铁路", "1830—1849 · 制式确立", "1850—1869 · 干线时代", "1870—1899 · 电气前夜" });
+                ? new[] { "核热纪 · 契约立社", "核热纪 · 商办初试", "核热纪 · 合股募资", "核热纪 · 清算与票制", "核热纪 · 主干航线经营", "核热纪 · 治理与风控" }
+                : new[] { "核热纪 · 等离子萌芽", "核热纪 · 矿道初试", "核热纪 · 公共星轨", "核热纪 · 制式确立", "核热纪 · 主干航线时代", "核热纪 · 电气前夜" });
         var ringLayer = Rect("HistoryRings", content.transform, 0, 0, cw, ch); ResearchSubCanvas(ringLayer);
         for (int i = 5; i >= 0; i--)
         {
@@ -990,7 +1007,7 @@ public partial class DemoBootstrap
             var innerDisc = Rect("HubInner", hubGo.transform, 18, 18, hubSize - 36, hubSize - 36);
             Img(innerDisc, new Color(0.985f, 0.968f, 0.928f), historyHubDiscSprite).raycastTarget = true;
 
-            string eraRoman = activeEra == 0 ? "— XIX CENTURY —" : activeEra == 1 ? "— XX CENTURY —" : "— XXI CENTURY —";
+            string eraRoman = activeEra == 0 ? "— 核热纪 —" : activeEra == 1 ? "— 聚变纪 —" : "— 曲速纪 —";
             string subLabel = sessionSet.Count > 0 ? "本次新解 " + sessionSet.Count + " 项外留" : eraRoman;
             var hubSub = Txt(hubGo.transform, subLabel, 21, new Color(0.56f, 0.42f, 0.22f), 24, 256, hubSize - 48, 34, TextAnchor.MiddleCenter);
             hubSessionText = hubSub;
@@ -1085,11 +1102,18 @@ public partial class DemoBootstrap
             if (locoIdx >= 0)
             {
                 var art = Rect("Locomotive", card.transform, 12, 36, 176, 46).AddComponent<RawImage>();
-                art.texture = ResearchTrainTexture(LocoArt[locoIdx]); art.raycastTarget = false;
-                if (locked) art.color = new Color(1f, 1f, 1f, 0.35f);
-                if (art.texture)
+                art.raycastTarget = false;
+                var artTexture = ResearchTrainTexture(LocoArt[locoIdx]);
+                if (!artTexture)
                 {
-                    float ratio = (float)art.texture.width / art.texture.height;
+                    // 飞车美术资源已下线：隐藏图片节点，卡片以纯色底显示，避免空白贴图报错或白块。
+                    art.gameObject.SetActive(false);
+                }
+                else
+                {
+                    art.texture = artTexture;
+                    if (locked) art.color = new Color(1f, 1f, 1f, 0.35f);
+                    float ratio = (float)artTexture.width / artTexture.height;
                     float iw = Mathf.Min(176, 46 * ratio), ih = iw / ratio;
                     art.rectTransform.sizeDelta = new Vector2(iw, ih);
                     art.rectTransform.anchoredPosition = new Vector2((200 - iw) / 2, 36 + (46 - ih) / 2);
@@ -1140,7 +1164,7 @@ public partial class DemoBootstrap
                 if (node.era != activeEra || !HistoryVisible(node) || isInHub(node.key)) continue;
                 bool done = techDone.Contains(node.key), ready = HistoryAvailable(node);
                 string key = node.key;
-                string label = node.loco >= 0 ? "机车" : node.effect == ResearchEffect.None ? "运营解锁" : HistoryCardShortLabel(node);
+                string label = node.loco >= 0 ? "飞车" : node.effect == ResearchEffect.None ? "运营解锁" : HistoryCardShortLabel(node);
                 spawnNodeCard(key, node.name, HistoryEra(key), node.parents, HistoryEffectColor(node), done, ready, node.loco, HistoryYear(key) + " · " + label,
                     () => TapHistoryNode(key), () => HoldHistoryNode(key));
             }
@@ -1210,7 +1234,7 @@ public partial class DemoBootstrap
         titleCardBg.type = Image.Type.Sliced; titleCardBg.raycastTarget = false;
         SoftShadow(titleCard);
         var titleRt = titleCard.GetComponent<RectTransform>(); titleRt.anchorMin = titleRt.anchorMax = new Vector2(0,1); titleRt.pivot = new Vector2(0,1); titleRt.anchoredPosition = new Vector2(254,-45);
-        var title = Txt(titleCard.transform, isCorporate ? "商道典籍 · 公司树" : "铁路典籍 · 科技树", 34, Ink, 0, 0, 0, 0, TextAnchor.MiddleLeft);
+        var title = Txt(titleCard.transform, isCorporate ? "商道典籍 · 公司树" : "星轨典籍 · 科技树", 34, Ink, 0, 0, 0, 0, TextAnchor.MiddleLeft);
         title.fontStyle = FontStyle.Normal; title.raycastTarget = false;
         title.resizeTextForBestFit = true; title.resizeTextMinSize = 18; title.resizeTextMaxSize = ScaledFontSize(34);
         var titleTextRt = title.rectTransform; titleTextRt.anchorMin = Vector2.zero; titleTextRt.anchorMax = Vector2.one;
@@ -1268,8 +1292,8 @@ public partial class DemoBootstrap
         rpTouch.onTap = () => Toast("长按科研点徽章查看获取规则（当前日产 " + EstimatedDailyRpRate().ToString("0.0") + " RP）");
 
         string eraBtnLabel = isCorporate
-            ? (activeEra == 0 ? "19世纪 · 合股与商办  ▾" : activeEra == 1 ? "20世纪 · 电气集团网  ▾" : "21世纪 · 智慧湾枢纽  ▾")
-            : (activeEra == 0 ? "19世纪 · 蒸汽与轨交  ▾" : activeEra == 1 ? "20世纪 · 内燃与电气  ▾" : "21世纪 · 高速智行  ▾");
+            ? (activeEra == 0 ? "核热纪 · 合股与商办  ▾" : activeEra == 1 ? "聚变纪 · 电气集团网  ▾" : "曲速纪 · 智慧湾枢纽  ▾")
+            : (activeEra == 0 ? "核热纪 · 等离子与轨交  ▾" : activeEra == 1 ? "聚变纪 · 内燃与电气  ▾" : "曲速纪 · 高速智行  ▾");
         var eraBadge = Btn(historyControls.transform, "EraRoadmapBadge", eraBtnLabel, 23, 24, 0, 328, 54, new Color(1f, 0.99f, 0.96f, 0.99f), () => OpenEraJournalModal(page.transform, isCorporate));
         eraBadge.GetComponentInChildren<Text>().fontStyle = FontStyle.Normal;
         TInk(eraBadge, new Color(0.45f, 0.31f, 0.16f));
@@ -1313,7 +1337,7 @@ public partial class DemoBootstrap
         var legendRt = legend.GetComponent<RectTransform>(); legendRt.anchorMin = legendRt.anchorMax = new Vector2(0.5f, 0); legendRt.pivot = new Vector2(0.5f, 0); legendRt.anchoredPosition = new Vector2(0, 20);
         headerLayout.bottomSafeTarget = legendRt; headerLayout.bottomSafeMargin = 20f;
         Rounded(legend, new Color(1f, 0.99f, 0.96f, 0.97f)); SoftShadow(legend);
-        string[] legendNames = isCorporate ? CoTechBranchNames : new[] { "收入", "客流", "运力", "速度", "站点吞吐", "车辆维护", "线路维护", "换乘", "机车", "运营解锁" };
+        string[] legendNames = isCorporate ? CoTechBranchNames : new[] { "收入", "客流", "运力", "速度", "站点吞吐", "车辆维护", "航线维护", "换乘", "飞车", "运营解锁" };
         ResearchEffect[] legendKinds = { ResearchEffect.Revenue, ResearchEffect.Demand, ResearchEffect.Capacity, ResearchEffect.Speed, ResearchEffect.Station, ResearchEffect.Vehicle, ResearchEffect.Track, ResearchEffect.Transfer, ResearchEffect.None, ResearchEffect.None };
         for (int i = 0; i < legendNames.Length; i++)
         {
@@ -1346,7 +1370,7 @@ public partial class DemoBootstrap
             collapseButton.gameObject.SetActive(showCollapse);
             ensureSwitchTree();
             if (switchTreeRect) headerLayout.AddSafeTopLeftTarget(switchTreeRect, new Vector2(showCollapse ? 612f : 366f, -206));
-            string eraRomanRefresh = activeEra == 0 ? "— XIX CENTURY —" : activeEra == 1 ? "— XX CENTURY —" : "— XXI CENTURY —";
+            string eraRomanRefresh = activeEra == 0 ? "— 核热纪 —" : activeEra == 1 ? "— 聚变纪 —" : "— 曲速纪 —";
             if (collapsed && hubGoForRefresh) hubSessionText.text = sessionSet.Count > 0 ? "本次新解 " + sessionSet.Count + " 项外留" : eraRomanRefresh;
             justUnlockedKey = null;
         };
@@ -1379,9 +1403,9 @@ public partial class DemoBootstrap
         frameInner.GetComponent<Image>().raycastTarget = false;
         JournalTape(sheet.transform, cardW * 0.5f - 95f, cardH - 18f, 190f);
 
-        var cnHeader = Txt(sheet.transform, isCorporate ? "— ◆ 商道百年 · 治理手帐 ◆ —" : "— ◆ 铁道百年 · 时代手帐 ◆ —", 38, Ink, 44, cardH - 122, cardW - 88, 52, TextAnchor.MiddleCenter);
+        var cnHeader = Txt(sheet.transform, isCorporate ? "— ◆ 商道百年 · 治理手帐 ◆ —" : "— ◆ 星轨百年 · 时代手帐 ◆ —", 38, Ink, 44, cardH - 122, cardW - 88, 52, TextAnchor.MiddleCenter);
         cnHeader.fontStyle = FontStyle.Normal;
-        var subHeader = Txt(sheet.transform, "十九与二十世纪卷已开卷 · 二十一世纪暂未开放", 22, InkSoft, 44, cardH - 166, cardW - 88, 32, TextAnchor.MiddleCenter);
+        var subHeader = Txt(sheet.transform, "核热与聚变纪卷已开卷 · 曲速纪暂未开放", 22, InkSoft, 44, cardH - 166, cardW - 88, 32, TextAnchor.MiddleCenter);
 
         var xClose = Btn(sheet.transform, "CloseJournal", "×", 34, cardW - 96, cardH - 96, 62, 62, new Color(0.92f, 0.87f, 0.78f), () => {
             if (eraJournalModal) Destroy(eraJournalModal); eraJournalModal = null;
@@ -1389,8 +1413,8 @@ public partial class DemoBootstrap
         TInk(xClose, Ink);
 
         string[] titles = isCorporate
-            ? new[] { "十九世纪 · 合股与商办", "二十世纪 · 电气集团网", "二十一世纪 · 智慧湾枢纽" }
-            : new[] { "十九世纪 · 蒸汽奠基", "二十世纪 · 内燃电气", "二十一世纪 · 高速智行" };
+            ? new[] { "核热纪 · 合股与商办", "聚变纪 · 电气集团网", "曲速纪 · 智慧湾枢纽" }
+            : new[] { "核热纪 · 等离子奠基", "聚变纪 · 内燃电气", "曲速纪 · 高速智行" };
         string[] subStatus = new string[3];
         for (int e = 0; e < 3; e++)
         {
@@ -1473,7 +1497,7 @@ public partial class DemoBootstrap
         if (!techDone.Contains(LocoKey(index)))
         {
             int era = LocoEra(index);
-            Toast(!IsTechEraUnlocked(era) ? "该车型所属 21 世纪科技树暂未开放" : $"请先在 {19 + era} 世纪科技树解锁对应机车节点");
+            Toast(!IsTechEraUnlocked(era) ? "该车型所属 曲速纪科技树暂未开放" : $"请先在 {19 + era} 世纪科技树解锁对应飞车节点");
             return;
         }
         int unitPrice = LocoPrice(index);
@@ -1484,7 +1508,7 @@ public partial class DemoBootstrap
             return;
         }
         int price = (int)totalLong;
-        BeginUndo(count > 1 ? ("批量购买机车 ×" + count) : "购买机车");
+        BeginUndo(count > 1 ? ("批量购买飞车 ×" + count) : "购买飞车");
         coins -= price;
         for (int i = 0; i < count; i++) researchVehicles.Add(new ResearchVehicle { node = index });
         SyncCulturalCollection(true); EndUndo(); RefreshHUD(); OpenLocoShop();

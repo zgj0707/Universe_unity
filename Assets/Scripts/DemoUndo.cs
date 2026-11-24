@@ -142,7 +142,7 @@ public partial class DemoBootstrap
         researchProfitEstimates.Clear(); hasResearchProfitSignature = false;
         RefreshSceneryViews(); RefreshPendingBadge(); RefreshFeatureGateVisuals(); UpdateStoryObjectiveBanner();
         CreateLineVisuals(); RefreshStationDots(); RecalcIncome();
-        if (!RegionUnlocked(currentRegion)) SwitchRegion("汐港");
+        if (!RegionUnlocked(currentRegion)) SwitchRegion("月之亮面");
         RefreshHUD(); RefreshUndoButton(); SaveGame(); Toast("已撤销：" + state.label);
     }
 }

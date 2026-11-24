@@ -219,7 +219,7 @@ public partial class DemoBootstrap
         string modeDesc = bgmPlayMode == 1
             ? "始终播放经典长曲《Between the Bow and Breath》"
             : bgmPlayMode == 2
-                ? "始终随「汐港 / 镜屿 / 榕川」切换区域配乐"
+                ? "始终随「月之亮面 / 月背 / 火星」切换区域配乐"
                 : "地图播区域曲，进入内页自动淡入经典长曲（记忆进度）";
         var modeHint = Txt(bgmCard.transform, modeDesc, 23, InkSoft, cardPad, 92f, cardInnerW, 38f, TextAnchor.MiddleLeft);
         FitSingleLine(modeHint, 23);
@@ -227,18 +227,18 @@ public partial class DemoBootstrap
 
         var sfxCard = Rect("SfxCard", parent, pad, 330f, innerW, 256f);
         Rounded(sfxCard, Color.Lerp(CardBg, Ink, 0.04f));
-        Txt(sfxCard.transform, "触点与汽笛音效（SFX）", 28, Ink, cardPad, 194f, 540f, 44f, TextAnchor.MiddleLeft);
+        Txt(sfxCard.transform, "触点与鸣笛音效（SFX）", 28, Ink, cardPad, 194f, 540f, 44f, TextAnchor.MiddleLeft);
         var sfxToggle = Btn(sfxCard.transform, "SfxSwitch", sfxEnabled ? "已开启 ✓" : "已关闭", 25, innerW - cardPad - 210f, 184f, 210f, 60f,
             sfxEnabled ? Indigo : Paper2, () => { SetSfxEnabled(!sfxEnabled); if (sfxEnabled) PlayTechSfx(); OpenAudioSettings(); });
         TInk(sfxToggle, sfxEnabled ? Color.white : Ink);
-        Txt(sfxCard.transform, "包含：按压吸附、线路开通汽笛、金币营收、研发共鸣", 24, InkSoft, cardPad, 128f, cardInnerW, 42f, TextAnchor.MiddleLeft);
+        Txt(sfxCard.transform, "包含：按压吸附、航线开通鸣笛、金币营收、研发共鸣", 24, InkSoft, cardPad, 128f, cardInnerW, 42f, TextAnchor.MiddleLeft);
         BuildVolumeSlider(sfxCard.transform, "SfxVolSlider", cardPad, 54f, cardInnerW - 190f, sfxVolume, Indigo, SetSfxVolume);
         var testSfxBtn = Btn(sfxCard.transform, "TestSfx", "试听", 24, innerW - cardPad - 166f, 48f, 166f, 60f, Gold, () => PlayBuildSfx());
         TInk(testSfxBtn, Color.white);
 
         var hapCard = Rect("HapticCard", parent, pad, 152f, innerW, 154f);
         Rounded(hapCard, Color.Lerp(CardBg, Ink, 0.04f));
-        Txt(hapCard.transform, "站台吸附轻震动反馈", 27, Ink, cardPad, 86f, 560f, 42f, TextAnchor.MiddleLeft);
+        Txt(hapCard.transform, "星港吸附轻震动反馈", 27, Ink, cardPad, 86f, 560f, 42f, TextAnchor.MiddleLeft);
         Txt(hapCard.transform, "拖线吸附与完成里程碑时触发轻微震动提示", 23, InkSoft, cardPad, 26f, 560f, 44f, TextAnchor.MiddleLeft);
         var hapBtn = Btn(hapCard.transform, "HapSwitch", hapticEnabled ? "开启 ✓" : "关闭", 25, innerW - cardPad - 210f, 40f, 210f, 74f,
             hapticEnabled ? Matcha : Paper2, () => { SetHapticEnabled(!hapticEnabled); TriggerHaptic(18); OpenAudioSettings(); });
@@ -254,12 +254,12 @@ public partial class DemoBootstrap
         var summaryCard = Rect("ArchiveSummaryCard", parent, pad, 696f, innerW, 250f);
         Rounded(summaryCard, Color.Lerp(CardBg, Indigo, 0.05f));
         Txt(summaryCard.transform, $"{companyName} · 营运志档案", 29, Ink, cardPad, 188f, cardInnerW, 44f, TextAnchor.MiddleLeft);
-        Txt(summaryCard.transform, $"当前第 {day} 日 · 运营 {lines.Count} 条线路 · 已连 {DailyConnectedCount()} 站\n工程科技 {EraTechDoneCount(0)}/{EraTechNodeCount(0)} 项 · 企业治理 {CoTechEraDoneCount(0)}/{CoTechEraNodeCount(0)} 项 · 人才 {talents.Count} 名", 24, InkSoft, cardPad, 90f, cardInnerW, 86f, TextAnchor.UpperLeft);
+        Txt(summaryCard.transform, $"当前第 {day} 日 · 运营 {lines.Count} 条航线 · 已连 {DailyConnectedCount()} 港\n工程科技 {EraTechDoneCount(0)}/{EraTechNodeCount(0)} 项 · 企业治理 {CoTechEraDoneCount(0)}/{CoTechEraNodeCount(0)} 项 · 人才 {talents.Count} 名", 24, InkSoft, cardPad, 90f, cardInnerW, 86f, TextAnchor.UpperLeft);
         Txt(summaryCard.transform, "游戏每 5 秒及关键操作时自动保存至本地档案", 23, Matcha, cardPad, 24f, cardInnerW, 40f, TextAnchor.MiddleLeft);
 
         var storyCardBox = Rect("StoryControlCard", parent, pad, 430f, innerW, 242f);
         Rounded(storyCardBox, Color.Lerp(CardBg, Gold, 0.07f));
-        Txt(storyCardBox.transform, "章节剧情与新手系统引导", 28, Ink, cardPad, 180f, cardInnerW, 44f, TextAnchor.MiddleLeft);
+        Txt(storyCardBox.transform, "章节剧情与星际航行引导", 28, Ink, cardPad, 180f, cardInnerW, 44f, TextAnchor.MiddleLeft);
         string guideStatus = tutorialSkipped ? "自由经营模式（全系统已开放）" : $"剧情进行中：第 {Mathf.Min(storyStage + 1, 5)}/5 章";
         Txt(storyCardBox.transform, guideStatus, 24, Indigo, cardPad, 128f, cardInnerW, 40f, TextAnchor.MiddleLeft);
         float halfBtnW = (cardInnerW - 24f) * 0.5f;
@@ -269,7 +269,7 @@ public partial class DemoBootstrap
             tutorialSkipped ? Paper2 : Gold, () => {
                 if (!tutorialSkipped)
                 {
-                    Confirm("跳过新手引导", "将立即解锁「列车、名胜、公司、科技树」全部游戏系统并进入自由经营模式，剧情仍可在档案中回放。是否确认？", SkipTutorialFlow);
+                    Confirm("跳过星际航行引导", "将立即解锁「星舰、名胜、公司、科技树」全部游戏系统并进入自由经营模式，剧情仍可在档案中回放。是否确认？", SkipTutorialFlow);
                 }
                 else Toast("当前已开放全部系统，可随时在「剧情篇章回放」重温故事");
             });
@@ -304,7 +304,7 @@ public partial class DemoBootstrap
         }
 
         var resetBtn = Btn(parent, "ResetLocalSave", "开启新周目（清空本机存档）", 25, pad, curY, innerW, 82f, Vermilion, () => {
-            Confirm("开启新周目", "确认从第 1 日序章《青湾初笛》重新开始体验完整剧情引导吗？当前本机进度将被重置。", () => {
+            Confirm("开启新周目", "确认从第 1 日序章《星港初笛》重新开始体验完整剧情引导吗？当前本机进度将被重置。", () => {
 #if UNITY_EDITOR
                 // A new local run isolates its source without overwriting the user sync preference.
                 // Loading the bundled test save or toggling sync exits this mode.
@@ -445,7 +445,7 @@ public partial class DemoBootstrap
                 NotifySolarTermRollover();
                 SyncCulturalCollection(true);
                 if (day % 15 == 0 && lastAwardDay < day)
-                    Toast("《山海年度铁道大赏》第 " + day + " 日颁奖开启，去「公司」领奖！");
+                    Toast("《年度星轨大赏》第 " + day + " 日颁奖开启，去「公司」领奖！");
                 dailyStationBaseline = DailyConnectedCount();
                 RollTrafficEvents();
                 RefreshNoticeUnreadDot();
@@ -514,14 +514,14 @@ public partial class DemoBootstrap
     string StationTrafficDescription(int index)
     {
         var station = stations[index]; int lineCount = StationLineCount(index);
-        string state = !station.built ? "未开站 · 开站费用 ¥" + StationOpeningCost(index) : station.closed ? "已关停 · 列车通过不停站" : lineCount == 0 ? "已开站 · 等待线路接入" : "运营中 · " + lineCount + " 条线路";
+        string state = !station.built ? "未开港 · 开港费用 ¥" + StationOpeningCost(index) : station.closed ? "已关停 · 星舰通过不停港" : lineCount == 0 ? "已开港 · 等待航线接入" : "运营中 · " + lineCount + " 条航线";
         string lineNames = "";
         foreach (var line in lines) if (line.st.Contains(index)) lineNames += (lineNames.Length == 0 ? "" : "、") + line.name;
         float demand = StationRequestedFlow(index), served = StationPassengerFlow(index), cap = StationCapacity(index);
-        string pressure = demand > cap ? "站台候车爆满（" + Mathf.RoundToInt(demand / Mathf.Max(1f, cap) * 100f) + "%），建议扩建升级" : "站台负荷 " + Mathf.RoundToInt(demand / Mathf.Max(1f, cap) * 100f) + "%（运力宽裕）";
+        string pressure = demand > cap ? "星港候船爆满（" + Mathf.RoundToInt(demand / Mathf.Max(1f, cap) * 100f) + "%），建议扩建升级" : "星港负荷 " + Mathf.RoundToInt(demand / Mathf.Max(1f, cap) * 100f) + "%（运力宽裕）";
         string diag = StationFlowDiagnostics(index);
         return state + (lineNames.Length > 0 ? "\n途经：" + lineNames : "") + "\n日均需求 " + StationEstimatedDemand(index) + " 人 · 当前输送 " + Mathf.RoundToInt(served) + " / 需求 " + Mathf.RoundToInt(demand) + "\n" +
-            "站内容量 " + Mathf.RoundToInt(cap) + " · " + pressure + "\n" +
+            "港内容量 " + Mathf.RoundToInt(cap) + " · " + pressure + "\n" +
             "站场动态：" + TrafficEventNames[station.trafficEvent] + "（需求 " +
             (TrafficEventFactors[station.trafficEvent] >= 1 ? "+" : "") + Mathf.RoundToInt((TrafficEventFactors[station.trafficEvent]-1)*100) + "%）\n" +
             StationAreaHint(index) + (string.IsNullOrEmpty(diag) ? "" : "\n" + diag);
@@ -539,7 +539,7 @@ public partial class DemoBootstrap
         SpawnMapRipple(Pos(index), Matcha, 128f);
         SyncStoryProgression(true);
         EndUndo(); RefreshHUD();
-        Toast(StationDisplayName(index, currentRegion) + " 已开站" + (cost > 0 ? " · ¥" + cost : ""));
+        Toast(StationDisplayName(index, currentRegion) + " 已开港" + (cost > 0 ? " · ¥" + cost : ""));
         return true;
     }
     string StationIntroduction(int index)
@@ -548,10 +548,10 @@ public partial class DemoBootstrap
         switch (station.name)
         {
             case "南羊城": return "沧海之畔的商贸名城，街巷烟火与繁华市集交融。";
-            case "东湾（西渡）": return "连接汐港与榕川的跨区域交通节点。";
-            case "青藤（北关）": return "海岛与海湾相映的滨海城镇，邻接镜屿。";
+            case "奥林匹斯（月面门）": return "连接月之亮面与火星的跨区域交通节点。";
+            case "阿西达利亚（月背门）": return "海岛与海湾相映的滨海城镇，邻接月背。";
             case "百川镇": return "水乡与手工作坊交织，城镇生活充满活力。";
-            case "鹅山墟": return "山海相依，湖光与海岸风景相伴。";
+            case "鹅山墟": return "星域相依，湖光与海岸风景相伴。";
             case "明珠镇": return "南溟水乡与传统手艺相映的城市。";
             case "锦溪墟": return "水网密布的滨海侨乡，延续着古朴文脉。";
             case "五岭口": return "山水环绕的北岭门户，奇峰丹崖风光闻名。";
@@ -568,20 +568,20 @@ public partial class DemoBootstrap
             case "金凤城": return "青溪之畔的古城，保留着传统古街风韵。";
             case "榕荫墟": return "海滨平原上的城镇，绿榕水穿城而过。";
             case "石鼓墟": return "群山之间的采石之乡，依西川而展。";
-            case "北桥关": return "连接两地的口岸站，旅客往来频繁。";
-            case "跨海虹桥": return "跨越海湾的交通节点，连接三地。";
-            case "海晏台": return "海港边的商业街区，都市与山景相邻。";
+            case "柏拉图跃迁港": return "连接两地的口岸站，旅客往来频繁。";
+            case "虹湾星门": return "跨越海湾的交通节点，连接三地。";
+            case "静海基地": return "海港边的商业街区，都市与山景相邻。";
             case "翠竹咀": return "临海的繁华街区，可远眺帆影港。";
-            case "东山涌": return "苍岚岛北岸的社区，邻近山海风景。";
+            case "东山涌": return "苍岚岛北岸的社区，邻近星域风景。";
             case "旺市角": return "街市与商铺密集，生活气息浓厚。";
-            case "古石围": return "老城街巷环绕，留存着历史建筑风貌。";
+            case "哥白尼环形山": return "老城街巷环绕，留存着历史建筑风貌。";
             case "莲心仔": return "海岛社区与街巷美食交融的区域。";
             case "木船厂": return "海岸与山林相伴，保留宁静的岛屿风貌。";
         }
         if (!string.IsNullOrEmpty(station.city))
             return "位于" + station.city + "，连接周边城镇与社区。";
-        if (station.region == "镜屿") return "镜屿的沿线区域，山海古韵交融。";
-        if (station.region == "汐港") return "汐港的沿线区域，山海与城市相伴。";
+        if (station.region == "月背") return "月背的沿线区域，星域古韵交融。";
+        if (station.region == "月之亮面") return "月之亮面的沿线区域，星域与城市相伴。";
         return "沿线城镇与社区相连的地区。";
     }
 
@@ -592,10 +592,10 @@ public partial class DemoBootstrap
         Vector3 world = mapRect.TransformPoint(Pos(index)); Vector2 anchor = root.InverseTransformPoint(world);
         string status = "预估客流 " + StationEstimatedDemand(index) + " 人/日";
         int lineCount = StationLineCount(index);
-        if (!station.built) status += " · 开站 ¥" + StationOpeningCost(index);
+        if (!station.built) status += " · 开港 ¥" + StationOpeningCost(index);
         else if (station.closed) status += " · 已关停";
         else if (lineCount > 0) status += "\n当前客流 " + Mathf.RoundToInt(StationPassengerFlow(index)) + " 人/日";
-        else status += " · 已开站";
+        else status += " · 已开港";
         status += "\n" + StationAreaHint(index);
         float statusY = lineCount > 0 ? 190 : 104;
         float statusH = Mathf.Max(64, MeasureTextHeight(status, 24, 492) + 10);
@@ -626,16 +626,16 @@ public partial class DemoBootstrap
         var statusTxt = Txt(p.transform, status, 24, InkSoft, 28, statusY, 492, statusH, TextAnchor.UpperLeft);
         statusTxt.raycastTarget = false;
         if (lineCount > 0) {
-            var remove = Btn(p.transform, "RemoveWaystation", "移除线路途经站", 25, 28, 102, 492, 74, Paper2, () => OpenRemoveStationLines(index, 0));
+            var remove = Btn(p.transform, "RemoveWaystation", "移除航线途经港", 25, 28, 102, 492, 74, Paper2, () => OpenRemoveStationLines(index, 0));
             TInk(remove, Ink);
         }
         bool canOpen = !station.built || station.closed;
         if (canOpen)
         {
-            var open = Btn(p.transform, "OpenStation", station.built ? "重新开站" : "开站 ¥" + StationOpeningCost(index), 26, 28, 18, 238, 74, Matcha, () => { if (OpenStation(index)) { ClosePanel(true); ShowStationActions(index); } });
+            var open = Btn(p.transform, "OpenStation", station.built ? "重新开港" : "开港 ¥" + StationOpeningCost(index), 26, 28, 18, 238, 74, Matcha, () => { if (OpenStation(index)) { ClosePanel(true); ShowStationActions(index); } });
             TInk(open, Color.white);
         }
-        var detail = Btn(p.transform, "StationInfo", "站点详情", 26, canOpen ? 282 : 28, 18, canOpen ? 238 : 492, 74, Indigo, () => OpenStationInfo(index));
+        var detail = Btn(p.transform, "StationInfo", "星港详情", 26, canOpen ? 282 : 28, 18, canOpen ? 238 : 492, 74, Indigo, () => OpenStationInfo(index));
         TInk(detail, Color.white);
         ShowStationOdArcs(index);
     }
@@ -738,10 +738,10 @@ public partial class DemoBootstrap
 
         var lineCard = Rect("LinePerfCard", p.transform, 38f, y - 140f, 864f, 140f);
         Rounded(lineCard, Paper2);
-        Txt(lineCard.transform, "线路效益风向", 24, Ink, 24f, 94f, 400f, 36f, TextAnchor.MiddleLeft);
+        Txt(lineCard.transform, "航线效益风向", 24, Ink, 24f, 94f, 400f, 36f, TextAnchor.MiddleLeft);
         string lineText = lines.Count == 0
-            ? "尚未开通任何运营线路，长按地图车站并拖向下一站即可铺线。"
-            : "领跑线路：" + rep.bestLineName + "（日净利 ¥" + Mathf.RoundToInt(rep.bestLineNet) + "）\n待优线路：" + rep.worstLineName + "（日净利 ¥" + Mathf.RoundToInt(rep.worstLineNet) + "）";
+            ? "尚未开通任何运营航线，长按地图星港并拖向下一港即可开线。"
+            : "领跑航线：" + rep.bestLineName + "（日净利 ¥" + Mathf.RoundToInt(rep.bestLineNet) + "）\n待优航线：" + rep.worstLineName + "（日净利 ¥" + Mathf.RoundToInt(rep.worstLineNet) + "）";
         Txt(lineCard.transform, lineText, 22, InkSoft, 24f, 12f, 816f, 80f, TextAnchor.UpperLeft);
         y -= 162f;
 
@@ -750,7 +750,7 @@ public partial class DemoBootstrap
         Txt(flowCard.transform, "客流归因体检（全网多路径评估）", 24, Ink, 24f, 142f, 640f, 36f, TextAnchor.MiddleLeft);
         string flowSummary =
             "当前时段全网实载：" + Mathf.RoundToInt(rep.passengers) + " 人次\n" +
-            "· 站台/车厢满载受阻：约 " + Mathf.RoundToInt(rep.crowdLost) + " 人次\n" +
+            "· 星港/星舱满载受阻：约 " + Mathf.RoundToInt(rep.crowdLost) + " 人次\n" +
             "· 热门目的尚无直达：约 " + Mathf.RoundToInt(rep.unreachedLost) + " 人次\n" +
             "· 绕行耗时/票价敏感流失：约 " + Mathf.RoundToInt(rep.elasticLost) + " 人次";
         Txt(flowCard.transform, flowSummary, 22, InkSoft, 24f, 12f, 816f, 126f, TextAnchor.UpperLeft);
@@ -762,7 +762,7 @@ public partial class DemoBootstrap
             string stName = StationDisplayName(targetIdx, stations[targetIdx].region);
             var bnCard = Rect("BottleneckCard", p.transform, 38f, y - 118f, 864f, 118f);
             Rounded(bnCard, new Color(0.98f, 0.92f, 0.86f));
-            Txt(bnCard.transform, "首要瓶颈站：" + stName + "（" + DisplayPlaceAliases(stations[targetIdx].region) + "）", 24, Vermilion, 24f, 70f, 560f, 38f, TextAnchor.MiddleLeft);
+            Txt(bnCard.transform, "首要瓶颈港：" + stName + "（" + DisplayPlaceAliases(stations[targetIdx].region) + "）", 24, Vermilion, 24f, 70f, 560f, 38f, TextAnchor.MiddleLeft);
             Txt(bnCard.transform, rep.bottleneckNote, 24, InkSoft, 24f, 12f, 560f, 58f, TextAnchor.UpperLeft);
             var locBtn = Btn(bnCard.transform, "FocusBottleneck", "定位查看", 24, 614f, 24f, 226f, 70f, Indigo, () => { ClosePanel(true); FocusMapOnStation(targetIdx); });
             TInk(locBtn, Color.white);
@@ -788,16 +788,16 @@ public partial class DemoBootstrap
         int step = rawCost >= 5000 ? 100 : 10;
         int cost = Mathf.Max(10, Mathf.RoundToInt((float)rawCost / step) * step);
         var upgrade = Btn(p.transform, "UpgradeStation", station.level >= 10 ? "已满级" : "扩建升级  ¥" + cost, 27, 38, 275, 420, 92, Matcha, () => {
-            if (!station.built) { Toast("请先开站"); return; }
-            if (station.level >= 10) { Toast("车站已满级"); return; }
+            if (!station.built) { Toast("请先开港"); return; }
+            if (station.level >= 10) { Toast("星港已满级"); return; }
             if (coins < cost) { Toast("金币不足"); return; }
-            BeginUndo("升级车站"); coins -= cost; station.level++; RecalcIncome(); EndUndo(); RefreshHUD(); OpenStationInfo(index); Toast("车站升级成功");
+            BeginUndo("升级星港"); coins -= cost; station.level++; RecalcIncome(); EndUndo(); RefreshHUD(); OpenStationInfo(index); Toast("星港升级成功");
         }); TInk(upgrade, Color.white);
         bool needsOpening = !station.built || station.closed;
-        string toggleLabel = !station.built ? "开站 ¥" + StationOpeningCost(index) : station.closed ? "重新开站" : "关停";
+        string toggleLabel = !station.built ? "开港 ¥" + StationOpeningCost(index) : station.closed ? "重新开港" : "关停";
         var toggle = Btn(p.transform, "ToggleStation", toggleLabel, 27, 500, 275, 420, 92, needsOpening ? Indigo : Vermilion, () => {
             if (needsOpening) { if (!OpenStation(index)) return; }
-            else { BeginUndo("关停车站"); station.closed = true; RefreshStationDots(); RecalcIncome(); EndUndo(); RefreshHUD(); Toast(StationDisplayName(index, currentRegion) + " 已关停"); }
+            else { BeginUndo("关停星港"); station.closed = true; RefreshStationDots(); RecalcIncome(); EndUndo(); RefreshHUD(); Toast(StationDisplayName(index, currentRegion) + " 已关停"); }
             OpenStationInfo(index);
         }); TInk(toggle, Color.white);
         int curFac = Mathf.Clamp(station.facLevel, 0, StationFacilityNames.Length - 1);
@@ -807,14 +807,14 @@ public partial class DemoBootstrap
         int nextPct = curFac < 3 ? Mathf.RoundToInt((StationFacilityDemandMults[curFac + 1] - 1f) * 100f) : 0;
         int curPct = Mathf.RoundToInt((FacilityDemandFactor(station) - 1f) * 100f);
         string facLabel = curFac < 3
-            ? "站前物业 · 建「" + StationFacilityNames[curFac + 1] + "」(¥" + facCost + " · 客流+" + nextPct + "% · 租¥" + nextRent + ")"
-            : "站前物业 · " + StationFacilityNames[curFac] + "（满级 · 客流+" + curPct + "% · 日租¥" + Mathf.RoundToInt(curRent * TechMult() * (HasPartner(1) ? 1.25f : 1f)) + "）";
+            ? "港前物业 · 建「" + StationFacilityNames[curFac + 1] + "」(¥" + facCost + " · 客流+" + nextPct + "% · 租¥" + nextRent + ")"
+            : "港前物业 · " + StationFacilityNames[curFac] + "（满级 · 客流+" + curPct + "% · 日租¥" + Mathf.RoundToInt(curRent * TechMult() * (HasPartner(1) ? 1.25f : 1f)) + "）";
         var facBtn = Btn(p.transform, "StationFacility", facLabel, 24, 38, 155, 882, 92, curFac < 3 ? new Color(0.76f, 0.50f, 0.16f) : new Color(0.86f, 0.84f, 0.78f), () => {
             if (!IsFeatureUnlocked(GameFeature.SceneryAndCommercial)) { PlayErrorSfx(); Toast(FeatureLockHint(GameFeature.SceneryAndCommercial)); return; }
-            if (!station.built) { Toast("请先开站"); return; }
-            if (curFac >= 3) { Toast("站前商业已达最高等级"); return; }
+            if (!station.built) { Toast("请先开港"); return; }
+            if (curFac >= 3) { Toast("港前商业已达最高等级"); return; }
             if (coins < facCost) { PlayErrorSfx(); Toast("金币不足"); return; }
-            BeginUndo("站前商业升级");
+            BeginUndo("港前商业升级");
             coins -= facCost;
             station.facLevel = curFac + 1;
             station.riderBonus = StationFacilityRents[station.facLevel];
@@ -823,10 +823,10 @@ public partial class DemoBootstrap
             EndUndo();
             RefreshHUD();
             OpenStationInfo(index);
-            Toast("站前商业升至" + StationFacilityNames[station.facLevel]);
+            Toast("港前商业升至" + StationFacilityNames[station.facLevel]);
         });
         TInk(facBtn, curFac < 3 ? Color.white : InkSoft);
-        var rename = Btn(p.transform, "StationRename", "修改站名", 26, 38, 36, 420, 80, Indigo, () => OpenStationRenamePopup(index));
+        var rename = Btn(p.transform, "StationRename", "修改港名", 26, 38, 36, 420, 80, Indigo, () => OpenStationRenamePopup(index));
         TInk(rename, Color.white);
         var close = Btn(p.transform, "StationClose", "关闭", 26, 500, 36, 420, 80, new Color(0.92f,0.89f,0.83f), () => { ClosePanel(true); ShowStationActions(index); });
         TInk(close, Ink);
@@ -835,11 +835,11 @@ public partial class DemoBootstrap
     {
         if (index < 0 || index >= stations.Count) return;
         var station = stations[index];
-        var p = OpenPopup("修改站点名称", 430, 840, "station_rename_" + index);
-        Txt(p.transform, "默认站名：" + station.name + "（最多 12 字，不影响线路与存档绑定）", 23, InkSoft, 36, 286, 768, 38, TextAnchor.MiddleLeft);
+        var p = OpenPopup("修改星港名称", 430, 840, "station_rename_" + index);
+        Txt(p.transform, "默认港名：" + station.name + "（最多 12 字，不影响航线与存档绑定）", 23, InkSoft, 36, 286, 768, 38, TextAnchor.MiddleLeft);
         var inputBox = Rect("StationNameInput", p.transform, 36, 174, 768, 86);
         Rounded(inputBox, new Color(1f, 0.99f, 0.97f)); SoftShadow(inputBox);
-        var placeholder = Txt(inputBox.transform, "请输入新的站点名称", 28, new Color(InkSoft.r, InkSoft.g, InkSoft.b, 0.45f), 22, 8, 724, 70, TextAnchor.MiddleLeft);
+        var placeholder = Txt(inputBox.transform, "请输入新的星港名称", 28, new Color(InkSoft.r, InkSoft.g, InkSoft.b, 0.45f), 22, 8, 724, 70, TextAnchor.MiddleLeft);
         var inputText = Txt(inputBox.transform, "", 30, Ink, 22, 8, 724, 70, TextAnchor.MiddleLeft);
         inputText.supportRichText = false;
         var input = inputBox.AddComponent<InputField>();
@@ -852,29 +852,29 @@ public partial class DemoBootstrap
         Action<string> applyName = raw => {
             string cleaned = string.IsNullOrWhiteSpace(raw) ? "" : raw.Replace("\r", "").Replace("\n", "").Replace(":", "").Trim();
             if (cleaned.Length > 12) cleaned = cleaned.Substring(0, 12);
-            if (string.IsNullOrEmpty(cleaned)) { PlayErrorSfx(); Toast("站名不能为空"); return; }
+            if (string.IsNullOrEmpty(cleaned)) { PlayErrorSfx(); Toast("港名不能为空"); return; }
             string nextCustom = cleaned == station.name ? "" : cleaned;
             if ((station.customName ?? "") == nextCustom) { OpenStationInfo(index); return; }
-            BeginUndo("修改站名");
+            BeginUndo("修改港名");
             station.customName = nextCustom;
             if (stationLabels.TryGetValue(index, out var lbl) && lbl) lbl.text = StationDisplayName(index, currentRegion);
             LayoutStationLabels();
             EndUndo();
             PlayClickSfx();
             OpenStationInfo(index);
-            Toast("站名已更新为「" + StationDisplayName(index, currentRegion) + "」");
+            Toast("港名已更新为「" + StationDisplayName(index, currentRegion) + "」");
         };
         var ok = Btn(p.transform, "ConfirmRename", "确认改名", 26, 36, 42, 248, 84, Matcha, () => applyName(input.text));
         TInk(ok, Color.white);
         var reset = Btn(p.transform, "ResetRename", "恢复默认", 25, 296, 42, 248, 84, Gold, () => {
             if (string.IsNullOrEmpty(station.customName)) { OpenStationInfo(index); return; }
-            BeginUndo("恢复默认站名");
+            BeginUndo("恢复默认港名");
             station.customName = "";
             if (stationLabels.TryGetValue(index, out var lbl) && lbl) lbl.text = StationDisplayName(index, currentRegion);
             LayoutStationLabels();
             EndUndo();
             OpenStationInfo(index);
-            Toast("已恢复默认站名「" + station.name + "」");
+            Toast("已恢复默认港名「" + station.name + "」");
         });
         TInk(reset, Color.white);
         var cancel = Btn(p.transform, "CancelRename", "取消", 25, 556, 42, 248, 84, Paper2, () => OpenStationInfo(index));
@@ -885,7 +885,7 @@ public partial class DemoBootstrap
         if (!storySeen.Add(key)) return;
         storyQueue.Enqueue(new StoryEvent {
             chapterTag = "沿途风物",
-            speaker = "铁道手记",
+            speaker = "星航手记",
             title = title,
             text = content,
             objectiveHint = "",
@@ -919,8 +919,8 @@ public partial class DemoBootstrap
 
         if (story.allowSkip)
         {
-            var skipBtn = Btn(storyCard.transform, "SkipGuide", "跳过新手引导", 24, 34f, 22f, 246f, 70f, Paper2, () => {
-                Confirm("跳过新手引导", "将直接解锁全部系统并进入自由经营，稍后仍可在设置中重温剧情。确认跳过？", SkipTutorialFlow);
+            var skipBtn = Btn(storyCard.transform, "SkipGuide", "跳过星际航行引导", 24, 34f, 22f, 246f, 70f, Paper2, () => {
+                Confirm("跳过星际航行引导", "将直接解锁全部系统并进入自由经营，稍后仍可在设置中重温剧情。确认跳过？", SkipTutorialFlow);
             });
             TInk(skipBtn, InkSoft);
         }
@@ -956,10 +956,10 @@ public partial class DemoBootstrap
         dragCostBadge = Rect("DragCostBadge", root, 0, 0, 308, 138);
         Rounded(dragCostBadge, CardBg);
         dragCostBadge.GetComponent<Image>().raycastTarget = false; SoftShadow(dragCostBadge);
-        dragCostHeading = Txt(dragCostBadge.transform, "线路造价", 23, InkSoft, 14, 98, 280, 30, TextAnchor.MiddleCenter);
+        dragCostHeading = Txt(dragCostBadge.transform, "航线造价", 23, InkSoft, 14, 98, 280, 30, TextAnchor.MiddleCenter);
         FitSingleLine(dragCostHeading, 23);
         dragCostNumber = Txt(dragCostBadge.transform, "¥0", 40, Ink, 14, 42, 280, 52, TextAnchor.MiddleCenter);
-        dragCostSubText = Txt(dragCostBadge.transform, "拖向站点查看预计客流", 20, Matcha, 14, 10, 280, 28, TextAnchor.MiddleCenter);
+        dragCostSubText = Txt(dragCostBadge.transform, "拖向星港查看预计客流", 20, Matcha, 14, 10, 280, 28, TextAnchor.MiddleCenter);
         FitSingleLine(dragCostSubText, 20);
         dragCostBadge.SetActive(false);
     }
@@ -993,12 +993,12 @@ public partial class DemoBootstrap
             }
             else if (preview)
             {
-                dragCostSubText.text = draftPreviewNeed >= 0.72f ? "高潜直达方向 · 建议延伸" : draftPreviewNeed >= 0.40f ? "客需适中 · 可继续拖向站台" : "拖向目标站查看预计客流";
+                dragCostSubText.text = draftPreviewNeed >= 0.72f ? "高潜直达方向 · 建议延伸" : draftPreviewNeed >= 0.40f ? "客需适中 · 可继续拖向星港" : "拖向目标港查看预计客流";
                 dragCostSubText.color = draftPreviewNeed >= 0.72f ? Vermilion : InkSoft;
             }
             else
             {
-                dragCostSubText.text = "松手即按草案成线（" + draft.Count + " 站）";
+                dragCostSubText.text = "松手即按草案成线（" + draft.Count + " 港）";
                 dragCostSubText.color = Indigo;
             }
         }
@@ -1159,13 +1159,13 @@ public partial class DemoBootstrap
     void StartDraw(int idx)
     {
         if (dragging || idx < 0 || idx >= stations.Count) return;
-        // 线路已满时，从「不属于任何线路」的车站起手只能新开线 —— 在长按开始就拦住，别等拖完才说
+        // 航线已满时，从「不属于任何航线」的星港起手只能新开线 —— 在长按开始就拦住，别等拖完才说
         bool onLine = false;
         foreach (var line in lines) if (line.st.Contains(idx)) { onLine = true; break; }
         if (!onLine && RegionLineCount(currentRegion) >= LineLimit())
         {
             HidePressRing();
-            Toast(currentRegion + "线路已达上限（" + LineLimit() + " 条）");
+            Toast(currentRegion + "航线已达上限（" + LineLimit() + " 条）");
             return;
         }
         CloseLineBubble();

@@ -18,8 +18,8 @@ public class DemoBuild
         EditorSceneManager.SaveScene(scene, scenePath);
         EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(scenePath, true) };
 
-        PlayerSettings.companyName = "山海铁道社";
-        PlayerSettings.productName = "山海铁道志";
+        PlayerSettings.companyName = "深空轨社";
+        PlayerSettings.productName = "星轨纪行：出发去月球！";
         PlayerSettings.defaultScreenWidth = 1080;
         PlayerSettings.defaultScreenHeight = 1920;
         PlayerSettings.WebGL.compressionFormat = WebGLCompressionFormat.Gzip;

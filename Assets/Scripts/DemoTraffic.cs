@@ -4,7 +4,7 @@ using UnityEngine;
 
 public partial class DemoBootstrap
 {
-    // 多目的动态客流仿真：通勤/观光/休闲三目的分层 OD + 发车间隔等待成本 + 两轮拥堵感知多路径分流 + 流失归因。
+    // 多目的动态客流仿真：通勤/观光/休闲三目的分层 OD + 发班间隔等待成本 + 两轮拥堵感知多路径分流 + 流失归因。
     sealed class TrafficDestFlow
     {
         public int dest;
@@ -76,13 +76,13 @@ public partial class DemoBootstrap
     float CityDemandWeight(Station station)
     {
         if (station.portal) return 1.6f;
-        if (station.region == "汐港") return 1.25f;
-        if (station.region == "镜屿") return 0.75f;
+        if (station.region == "月之亮面") return 1.25f;
+        if (station.region == "月背") return 0.75f;
         switch (station.city)
         {
-            case "南羊府": case "东湾府": return station.county ? 1.45f : 2.35f;
-            case "明珠府": case "百川府": return station.county ? 1.25f : 1.95f;
-            case "鹅山府": case "青藤府": case "锦溪府": case "银江府": return station.county ? 1.05f : 1.65f;
+            case "塔尔西斯星区": case "克律塞星区": return station.county ? 1.45f : 2.35f;
+            case "水手谷中区": case "水手谷西区": return station.county ? 1.25f : 1.95f;
+            case "北方高地": case "索利斯星区": return station.county ? 1.05f : 1.65f;
             default: return station.county ? 0.95f : 1.45f;
         }
     }
@@ -93,7 +93,7 @@ public partial class DemoBootstrap
         switch (s.name)
         {
             case "白沙围": case "翠林澳": case "芦花围": case "丰年墟": case "清泉围": case "松岭围": case "兰溪湾": case "镇海门": case "莲心仔": case "芦苇洲": case "叠石澳": baseValue *= 1.25f; break;
-            case "海晏台": case "鸣钟街": case "翠竹咀": case "旺市角": case "铜环湾": case "古石围": case "望海阁": case "莲东空港": case "东湾（西渡）": case "南羊城": baseValue *= 1.30f; break;
+            case "静海基地": case "阿里亚德港": case "澄海枢纽": case "哥白尼环形山": case "第谷环港": case "冯·卡门港": case "莫斯科海": case "奥林匹斯（月面门）": case "米拉斯深谷": case "克律塞平原": baseValue *= 1.30f; break;
         }
         foreach (var sc in sceneries) if (sc.triggerStation == s.name && s.region == sc.region) { baseValue *= 1.15f; break; }
         return baseValue * CityDemandWeight(s);
@@ -116,7 +116,7 @@ public partial class DemoBootstrap
         switch (name)
         {
             case "白沙围": case "翠林澳": case "芦花围": case "丰年墟": case "清泉围": case "松岭围": case "兰溪湾": case "镇海门": case "莲心仔": case "芦苇洲": case "叠石澳": return 1;
-            case "海晏台": case "鸣钟街": case "翠竹咀": case "旺市角": case "铜环湾": case "南羊城": case "东湾（西渡）": return 2;
+            case "静海基地": case "阿里亚德港": case "澄海枢纽": case "哥白尼环形山": case "第谷环港": case "冯·卡门港": case "莫斯科海": case "奥林匹斯（月面门）": case "米拉斯深谷": case "克律塞平原": return 2;
         }
         foreach (var sc in sceneries) if (sc.triggerStation == name && sc.region == stations[i].region) return 3;
         return stations[i].portal ? 4 : 0;
@@ -127,8 +127,8 @@ public partial class DemoBootstrap
             case 1: return "该站附近多为居住区，客流早出晚归";
             case 2: return "周边商业与办公集中，早高峰到达、晚高峰出发较多";
             case 3: return "周边景点较多，白天游客较集中";
-            case 4: return "区域交界枢纽，适合衔接跨区线路";
-            default: return "周边以日常出行为主，客流取决于线路连接";
+            case 4: return "区域交界枢纽，适合衔接跨区航线";
+            default: return "周边以日常出行为主，客流取决于航线连接";
         }
     }
     float DirectionFactor(int index, bool origin)
@@ -163,7 +163,7 @@ public partial class DemoBootstrap
     }
     float OdDistanceDenominator(string regA, string regB, float direct, int purpose)
     {
-        bool bothProvincial = regA == "榕川" && regB == "榕川";
+        bool bothProvincial = regA == "火星" && regB == "火星";
         if (purpose == 1) return bothProvincial ? (180f + direct * 0.35f) : (95f + direct * 0.55f);
         if (purpose == 2) return bothProvincial ? (150f + direct * 0.42f) : (48f + direct);
         return bothProvincial ? (160f + direct * 0.42f) : (55f + direct);
@@ -195,7 +195,7 @@ public partial class DemoBootstrap
     }
     int DispatchSlot() { float h = dayClock / GameDaySeconds * 24f; return h >= 6f && h < 10f ? 0 : h >= 10f && h < 16f ? 1 : h >= 16f && h < 20f ? 2 : 3; }
     int RunningTrains(Line line) { return Mathf.Clamp(line.dispatch[DispatchSlot()], 0, line.trains); }
-    // 默认车为经济型；研究实物按特性影响维护、运力与长线收益（0..15 为初代基础车型，16..33 为 20 世纪扩展车型）。
+    // 默认舰为经济型；研究实物按特性影响维护、运力与长线收益（0..15 为初代基础舰型，16..33 为二代扩展舰型）。
     static readonly float[] FleetMaintenanceTraits = {
         0.75f, 0.85f, 0.9f, 1f, 1.12f, 1.05f, 1.1f, 1.3f, 4.5f,
         2.2f, 2.6f, 3.1f, 1.95f, 2.8f,
@@ -219,7 +219,7 @@ public partial class DemoBootstrap
         int needed = runningOnly ? RunningTrains(line) : line.trains;
         if (needed <= 0) return 1f;
         float total = 0f; int count = 0;
-        // 已配属的研究机车优先运行；不足的名额由线路基础车辆补足。
+        // 已配属的研究星舰优先运行；不足的名额由航线基础星舰补足。
         foreach (var v in researchVehicles) if (v.lineId == line.id && v.node >= 0 && v.node < LocoNames.Length && count < needed) {
             total += trait == 0 ? FleetMaintenanceTraits[v.node] : trait == 1 ? FleetCapacityTraits[v.node] : FleetSpeedTraits[v.node]; count++;
         }
@@ -250,7 +250,7 @@ public partial class DemoBootstrap
         int lvl = Mathf.Clamp(stations[i].level, 1, 10);
         // 随等级递增步长（Lv.1=180, Lv.5=1200, Lv.10=4500），匹配指数级扩建成本投入。
         float levelCap = 180f + 120f * (lvl - 1) + 45f * (lvl - 1) * (lvl - 2);
-        // 高客流枢纽与跨区口岸自带更大的站场规模底盘，避免满级仍必然爆满。
+        // 高客流枢纽与跨区口岸自带更大的港场规模底盘，避免满级仍必然爆满。
         float hubScale = Mathf.Clamp(Mathf.Sqrt(Mathf.Max(80f, StationBaselineDemand(i)) / 100f), 1f, 1.85f);
         return levelCap * hubScale * PassengerScale * ResearchFactor(ResearchEffect.Station) * CoTechStationCapMult() * StationTalentCapMult(i);
     }
@@ -261,26 +261,26 @@ public partial class DemoBootstrap
     Vector2 EconomicPosition(int index)
     {
         var station=stations[index];
-        if (StationInRegion(index,"榕川")) return PosInRegion(index,"榕川");
-        if (station.region == "汐港") {
-            if (hkEconomicAnchor == -2) hkEconomicAnchor = stations.FindIndex(x=>x.name=="东湾（西渡）");
+        if (StationInRegion(index,"火星")) return PosInRegion(index,"火星");
+        if (station.region == "月之亮面") {
+            if (hkEconomicAnchor == -2) hkEconomicAnchor = stations.FindIndex(x=>x.name=="奥林匹斯（月面门）");
             int anchor = hkEconomicAnchor;
-            Vector2 origin=anchor>=0 ? PosInRegion(anchor,"榕川") : new Vector2(615,900);
-            Vector2 localAnchor=anchor>=0 ? PosInRegion(anchor,"汐港") : new Vector2(590,865);
-            return origin+(PosInRegion(index,"汐港")-localAnchor)*0.4f;
+            Vector2 origin=anchor>=0 ? PosInRegion(anchor,"火星") : new Vector2(615,900);
+            Vector2 localAnchor=anchor>=0 ? PosInRegion(anchor,"月之亮面") : new Vector2(590,865);
+            return origin+(PosInRegion(index,"月之亮面")-localAnchor)*0.4f;
         }
-        if (station.region == "镜屿") {
-            if (macauEconomicAnchor == -2) macauEconomicAnchor = stations.FindIndex(x=>x.name=="青藤（北关）");
+        if (station.region == "月背") {
+            if (macauEconomicAnchor == -2) macauEconomicAnchor = stations.FindIndex(x=>x.name=="阿西达利亚（月背门）");
             int anchor = macauEconomicAnchor;
-            Vector2 origin=anchor>=0 ? PosInRegion(anchor,"榕川") : new Vector2(540,850);
-            Vector2 localAnchor=anchor>=0 ? PosInRegion(anchor,"镜屿") : new Vector2(540,900);
-            return origin+(PosInRegion(index,"镜屿")-localAnchor)*0.4f;
+            Vector2 origin=anchor>=0 ? PosInRegion(anchor,"火星") : new Vector2(540,850);
+            Vector2 localAnchor=anchor>=0 ? PosInRegion(anchor,"月背") : new Vector2(540,900);
+            return origin+(PosInRegion(index,"月背")-localAnchor)*0.4f;
         }
         return Pos(index);
     }
     float EconomicSegmentDistance(int a,int b,string region)
     {
-        float scale = region == "榕川" ? 1f : 0.4f;
+        float scale = region == "火星" ? 1f : 0.4f;
         return Vector2.Distance(PosInRegion(a,region),PosInRegion(b,region))*scale;
     }
     float EconomicPathLength(List<int> path)
@@ -669,7 +669,7 @@ public partial class DemoBootstrap
                 yield return null;
                 if (dest == origin || stations[dest].closed) continue;
                 float direct = Vector2.Distance(originPos, positions[dest]);
-                // 抑制两个交界站之间的直达需求，防止多条线路绕经交界站互相刷客流。
+                // 抑制两个交界站之间的直达需求，防止多条航线绕经交界港互相刷客流。
                 float portalPairMult = (stations[origin].portal && stations[dest].portal) ? 0.12f : 1f;
                 string destReg = stationRegArr[dest];
                 w0[dest] = destCommAttr[dest] * portalPairMult / OdDistanceDenominator(originReg, destReg, direct, 0); tot0 += w0[dest];
@@ -732,7 +732,7 @@ public partial class DemoBootstrap
             originPendingEnd[origin] = pending.Count;
         }
 
-        // 检查是否存在高负荷区段或车站；存在拥堵时按起始站流式复用缓冲，执行第 2 轮拥堵感知多路径分流（MSA）。
+        // 检查是否存在高负荷区段或星港；存在拥堵时按起始港流式复用缓冲，执行第 2 轮拥堵感知多路径分流（MSA）。
         float maxLoadRatio = 0f;
         for (int s = 0; s < capacity.Count; s++)
             if (capacity[s] > 0f) maxLoadRatio = Mathf.Max(maxLoadRatio, pass1SecDemand[s] / capacity[s]);
@@ -881,7 +881,7 @@ public partial class DemoBootstrap
             result.totalPassengers += served; result.totalRevenue += tripTotalRev;
         }
 
-        // 整理每座车站的热门去向 Top 3（O(K) 线性选拔替代全量排序）
+        // 整理每座星港的热门去向 Top 3（O(K) 线性选拔替代全量排序）
         foreach (var kv in destTrackers)
         {
             TrafficDestFlow t0 = null, t1 = null, t2 = null;
@@ -988,7 +988,7 @@ public partial class DemoBootstrap
             if (list.Count >= maxCount) return list;
         }
 
-        // 未接入路网（或跨区站名额不足）时，补充本区潜在意愿最高的 OD 目标以便在地图预览
+        // 未接入星轨网（或跨区港名额不足）时，补充本区潜在意愿最高的 OD 目标以便在地图预览
         int count = stations.Count;
         var baseD = new float[count];
         var destDir = new float[count];
@@ -1049,11 +1049,11 @@ public partial class DemoBootstrap
                 bottleneckScore = score;
                 bottleneckStation = i;
                 if (c >= u && c >= 25f)
-                    bottleneckNote = "站台或车厢超载，日均流失约 " + Mathf.RoundToInt(c) + " 人次（建议加车/扩容）";
+                    bottleneckNote = "星港或星舱超载，日均流失约 " + Mathf.RoundToInt(c) + " 人次（建议加舰/扩容）";
                 else if (wait >= 0.72f)
-                    bottleneckNote = "站台候车负荷达 " + Mathf.RoundToInt(wait * 100f) + "%，已接近排队上限";
+                    bottleneckNote = "星港候船负荷达 " + Mathf.RoundToInt(wait * 100f) + "%，已接近排队上限";
                 else if (u >= 30f)
-                    bottleneckNote = "尚有约 " + Mathf.RoundToInt(u) + " 人次热门去向未接入路网";
+                    bottleneckNote = "尚有约 " + Mathf.RoundToInt(u) + " 人次热门去向未接入星轨网";
                 else
                     bottleneckNote = "绕行耗时或票价偏高流失约 " + Mathf.RoundToInt(e) + " 人次";
             }
@@ -1087,7 +1087,7 @@ public partial class DemoBootstrap
             int fl = Mathf.Clamp(stations[index].facLevel, 0, StationFacilityNames.Length - 1);
             int pct = Mathf.RoundToInt((FacilityDemandFactor(stations[index]) - 1f) * 100f);
             float leisX = FacilityLeisureAttrFactor(stations[index]);
-            linesOut.Append("\n站前商业：").Append(StationFacilityNames[fl])
+            linesOut.Append("\n港前商业：").Append(StationFacilityNames[fl])
                 .Append("（客流 +").Append(pct).Append("% · 商业虹吸 ").Append(leisX.ToString("0.0")).Append("x）");
         }
 
@@ -1118,12 +1118,12 @@ public partial class DemoBootstrap
             {
                 float waitR = StationWaitRatio(index);
                 linesOut.Append(waitR >= 1f
-                    ? "\n流失原因：站台超载，约 " + Mathf.RoundToInt(crowd) + " 人次/日滞留（建议扩建站台）"
-                    : "\n流失原因：列车满载，约 " + Mathf.RoundToInt(crowd) + " 人次/日难以上车（建议增车或分流）");
+                    ? "\n流失原因：星港超载，约 " + Mathf.RoundToInt(crowd) + " 人次/日滞留（建议扩建星港）"
+                    : "\n流失原因：星舰满载，约 " + Mathf.RoundToInt(crowd) + " 人次/日难以登舰（建议增舰或分流）");
             }
             else if (unreached >= 40f && unreached >= elastic)
             {
-                linesOut.Append("\n流失原因：约 " + Mathf.RoundToInt(unreached) + " 人次/日想去的热门站尚未联网");
+                linesOut.Append("\n流失原因：约 " + Mathf.RoundToInt(unreached) + " 人次/日想去的热门港尚未联网");
             }
             else if (elastic >= 40f)
             {
@@ -1484,7 +1484,7 @@ public partial class DemoBootstrap
     string draftNeedRegion = "";
     readonly HashSet<int> draftNeedExcluded = new HashSet<int>();
 
-    // 根据锚点站点的 OD 欲望、未直达缺口、站点饱和度与既有共线拥挤度，预计算同区各候选站的铺线需求强度 [0, 1]。
+    // 根据锚点星港的 OD 欲望、未直达缺口、星港饱和度与既有共线拥挤度，预计算同区各候选港的铺航线需求强度 [0, 1]。
     void PrepareDraftNeedField(int anchorIdx, List<int> currentDraft)
     {
         int n = stations.Count;
@@ -1593,7 +1593,7 @@ public partial class DemoBootstrap
         return 0.25f;
     }
 
-    // 轻量估算连接候选站点后可新增的日均直达客流（人次/日），用于拖拽徽标即时决策提示。
+    // 轻量估算连接候选星港后可新增的日均直达客流（人次/日），用于拖拽徽标即时决策提示。
     int EstimateDraftAddedPassengers(List<int> currentDraft, int candToIdx)
     {
         if (candToIdx < 0 || candToIdx >= stations.Count || currentDraft == null || currentDraft.Count == 0) return 0;

@@ -12,61 +12,61 @@ public partial class DemoBootstrap
     {
         switch (sc.name)
         {
-            case "帆影港":
-                imagePath = "Scenery/victoria_harbour";
-                description = "帆影港夹于汐港本岛与九曲岸之间，入夜后两岸灯火映照海面，展现汐港独特的港湾风景。";
+            case "静海纪念碑":
+                imagePath = "Scenery/moon_tranquility";
+                description = "静海纪念碑矗立于静海南部玄武岩平原，见证人类首次踏足月球正面的历史瞬间，如今已成为月之亮面最核心的星港地标。";
                 return true;
-            case "望海峰":
-                imagePath = "Scenery/victoria_peak";
-                description = "望海峰俯瞰汐港本岛与帆影港，山径和观景点展现山海相连的海湾景色。";
+            case "哥白尼中央峰":
+                imagePath = "Scenery/moon_copernicus";
+                description = "哥白尼环形山中央峰高达千米，周围辐射出壮观的亮白撞击溅射纹，是月之亮面最具辨识度的地质奇观。";
                 return true;
-            case "卧狮岩":
-                imagePath = "Scenery/lion_rock";
-                description = "卧狮岩位于九曲岸与北郊之间，山脊形似伏狮，是汐港的山水地标之一。";
+            case "第谷辐射纹":
+                imagePath = "Scenery/moon_tycho";
+                description = "第谷环形山位于月球南半球高地，长达千余公里的明亮辐射纹纵横交错，在星舰俯瞰下宛如银白星芒。";
                 return true;
-            case "灯笼夜市":
-                imagePath = "Scenery/temple_street_clean";
-                description = "入夜后的千灯街灯火渐亮，摊档、招牌与骑楼街巷交织，展现汐港热闹的市井风情。";
+            case "亚平宁绝壁":
+                imagePath = "Scenery/moon_apennines";
+                description = "亚平宁山脉绵延数百公里环抱雨海东缘，陡峭的山脊与深邃月谷构成月之亮面最雄伟的天然屏障。";
                 return true;
-            case "云钟古阁":
-                imagePath = "Scenery/tian_tan_buddha_clean";
-                description = "云钟古阁坐落于苍岚岛山巅，云雾群山环绕，是汐港著名的古迹人文景观。";
+            case "阿尔卑斯月谷":
+                imagePath = "Scenery/moon_alpes";
+                description = "阿尔卑斯大月谷如利剑般劈开山脉，连接雨海与冷海，是早期月球轨道穿梭车最惊险的天然航道。";
                 return true;
-            case "清波湾":
-                imagePath = "Scenery/repulse_bay_clean";
-                description = "清波湾位于汐港本岛南部，海湾与青翠山坡相映，沿岸可以欣赏悠闲的海滨风光。";
+            case "雨海熔岩海":
+                imagePath = "Scenery/moon_imbrium";
+                description = "雨海是月球正面最大的玄武岩盆地之一，平坦开阔的暗色熔岩海面最适合高速磁轨星舰长距离巡航。";
                 return true;
-            case "白鹤古观":
-                imagePath = "Scenery/baihe_ancient_temple";
-                description = "白鹤古观依山而建，飞檐黛瓦隐于松柏烟岚之间，是汐港北郊颇具古韵的人文胜景。";
+            case "虹湾金弧":
+                imagePath = "Scenery/moon_sinus_iridum";
+                description = "虹湾呈完美的半圆形湾岸镶嵌在雨海西北缘，当阳光斜照湾口绝壁时，整座星港会泛起金色弧光。";
                 return true;
-            case "飞鹭芦滩":
-                imagePath = "Scenery/egret_reed_marsh";
-                description = "飞鹭芦滩水网交错、芦苇连绵，暮色时分常有成群白鹭掠水归巢，尽显海湾湿地生机。";
+            case "克拉维乌斯穹顶":
+                imagePath = "Scenery/moon_clavius";
+                description = "克拉维乌斯环形山巨型生态穹顶建于古老高地之上，内部保留着全月最完整的地下冰川与科研温室。";
                 return true;
-            case "碧海石崖":
-                imagePath = "Scenery/emerald_sea_cliff";
-                description = "碧海石崖矗立于汐港东岸，六角柱状海蚀峭壁直面苍茫碧浪，是观海听涛的绝佳去处。";
+            case "柏拉图黑曜台":
+                imagePath = "Scenery/moon_plato";
+                description = "柏拉图环形山平坦如镜的暗色盆底被称为“黑曜台”，也是通往火星星域的重要深空跃迁节点。";
                 return true;
-            case "石门古坊":
-                imagePath = "Scenery/stone_arch_gate";
-                description = "石门古坊雄踞镜屿老城石阶之上，雕花石壁历经海风洗礼，见证数百年海港市集变迁。";
+            case "南极艾特肯深渊":
+                imagePath = "Scenery/moon_aitken";
+                description = "南极-艾特肯盆地是太阳系已知最古老、最深邃的撞击盆地之一，蕴藏着丰富的月幔深层矿脉。";
                 return true;
-            case "望海灯楼":
-                imagePath = "Scenery/sea_beacon_pavilion";
-                description = "望海灯楼临海岬而立，古树垂荫、石阶蜿蜒，自古为镜屿南岸归航渔船指引航向。";
+            case "冯·卡门着陆碑":
+                imagePath = "Scenery/moon_vonkarman";
+                description = "冯·卡门撞击坑位于月背南极-艾特肯盆地内，是人类首座背面软着陆探测器的纪念星港。";
                 return true;
-            case "饼家老街":
-                imagePath = "Scenery/bakery_old_street";
-                description = "饼家老街青石铺路、骑楼相连，入夜后灯笼暖光与饼香飘散街巷，满载镜屿烟火气。";
+            case "莫斯科海玄武原":
+                imagePath = "Scenery/moon_moscoviense";
+                description = "莫斯科海是月球背面极少数拥有广阔暗色玄武岩平原的月海，也是月背北线星轨的核心中转区。";
                 return true;
-            case "墨沙海滩":
-                imagePath = "Scenery/ink_sand_beach";
-                description = "墨沙海滩以细腻乌亮的黑沙闻名镜屿南端，松林环抱新月海湾，潮汐拍岸清幽宁静。";
+            case "科罗廖夫冰丘":
+                imagePath = "Scenery/moon_korolev";
+                description = "科罗廖夫环形山常年受极地阴影庇护，坑底保存着数米厚的纯净水冰层，为深空星舰提供宝贵燃料。";
                 return true;
-            case "白塔山":
-                imagePath = "Scenery/white_pagoda_hill";
-                description = "白塔山高踞镜屿翠岭之上，素雅白塔远眺木船湾与海天一色，是镜屿最醒目的登高地标。";
+            case "阿波罗环山观测塔":
+                imagePath = "Scenery/moon_apollo";
+                description = "阿波罗环山观测塔矗立于双环撞击盆地边缘，彻底屏蔽了地球无线电干扰，是深空射电天文的圣地。";
                 return true;
             default:
                 imagePath = null; description = null;

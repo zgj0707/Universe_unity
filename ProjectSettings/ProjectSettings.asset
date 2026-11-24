@@ -12,8 +12,8 @@ PlayerSettings:
   targetDevice: 2
   useOnDemandResources: 0
   accelerometerFrequency: 60
-  companyName: "\u5C71\u6D77\u94C1\u9053\u793E"
-  productName: "\u5C71\u6D77\u94C1\u9053\u5FD7"
+  companyName: "\u6DF1\u7A7A\u8F68\u793E"
+  productName: "\u661F\u8F68\u7EAA\u884C\uFF1A\u51FA\u53D1\u53BB\u6708\u7403\uFF01"
   defaultCursor: {fileID: 0}
   cursorHotspot: {x: 0, y: 0}
   m_SplashScreenBackgroundColor: {r: 0.12156863, g: 0.12156863, b: 0.1254902, a: 1}
@@ -170,7 +170,7 @@ PlayerSettings:
   androidMaxAspectRatio: 2.4
   androidMinAspectRatio: 1
   applicationIdentifier:
-    Android: com.shanhairail.railwaytwo
+    Android: com.starrail.cosmosline
   buildNumber:
     Standalone: 0
     VisionOS: 0

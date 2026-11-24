@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 public partial class DemoBootstrap
 {
-    // ---------- 动态「山海铁道驿报」与本地「山海群雄榜」 ----------
+    // ---------- 动态「深空星轨公报」与本地「星际群雄榜」 ----------
     sealed class BulletinEntry
     {
         public string tag, title, date, body, actionLabel;
@@ -53,8 +53,8 @@ public partial class DemoBootstrap
         var hotSegs = CollectTopCongestedSegments(3);
         if (hotSegs.Count == 0)
         {
-            var pEmpty = OpenPopup("全网卡点急报", 340f, 760f, "congestion_alert_quick");
-            Txt(pEmpty.transform, "全网路网当前运行通畅，暂无满载率超过 78% 的高负荷区段。", 26, InkSoft, 40f, 130f, 680f, 110f, TextAnchor.MiddleLeft);
+            var pEmpty = OpenPopup("全星域拥堵急报", 340f, 760f, "congestion_alert_quick");
+            Txt(pEmpty.transform, "全网星轨当前运行通畅，暂无满载率超过 78% 的高负荷区段。", 26, InkSoft, 40f, 130f, 680f, 110f, TextAnchor.MiddleLeft);
             var okBtn = Btn(pEmpty.transform, "CloseAlertEmpty", "知道了", 25, 220f, 30f, 320f, 74f, Indigo, ClosePanel);
             TInk(okBtn, Color.white);
             return;
@@ -67,10 +67,10 @@ public partial class DemoBootstrap
             segLines += (hs > 0 ? "\n" : "") + (hs + 1) + ". " + DisplayPlaceAliases(cg.region) + " · " + cg.line.name
                 + "（" + StationDisplayName(cg.stA, cg.region) + " ↔ " + StationDisplayName(cg.stB, cg.region) + "）满载 " + pctLoad + "%";
         }
-        segLines += "\n\n越堵的线路色相越偏红，可直接跳转对应区段快速增班或调入备车。";
+        segLines += "\n\n越堵的航线色相越偏红，可直接跳转对应区段快速增班或调入备用飞车。";
         float textH = Mathf.Clamp(MeasureTextHeight(segLines, 26, 740) + 20f, 160f, 440f);
         var firstSeg = hotSegs[0];
-        var p = OpenPopup("全网卡点急报（" + hotSegs.Count + " 处高负荷）", textH + 220f, 820f, "congestion_alert_quick");
+        var p = OpenPopup("全星域拥堵急报（" + hotSegs.Count + " 处高负荷）", textH + 220f, 820f, "congestion_alert_quick");
         ScrollableText(p.transform, segLines, 26, InkSoft, 40f, 126f, 740f, textH);
         var jumpBtn = Btn(p.transform, "JumpWorstSeg", "直飞最堵区段", 25, 40f, 30f, 360f, 76f, Vermilion, () => {
             ClosePanel(true);
@@ -95,7 +95,7 @@ public partial class DemoBootstrap
                 title = "督办考成：" + readyPlaques + " 方牌匾待领",
                 date = "可请颁",
                 accentColor = Gold,
-                body = "总办考核目标已达成！请前往「山海舆图志 · 钦颁匾额」请领赏银、科研点与永久经营加成。",
+                body = "总办考核目标已达成！请前往「星图志 · 钦颁匾额」请领赏银、科研点与永久经营加成。",
                 actionLabel = "前往请匾",
                 onAction = () => OpenCultureJournalModal(0)
             });
@@ -109,16 +109,16 @@ public partial class DemoBootstrap
             list.Add(new BulletinEntry
             {
                 tag = "嘉奖",
-                title = "第 " + awardCycle + " 日山海年度铁道大赏已揭晓",
+                title = "第 " + awardCycle + " 日年度星轨大赏已揭晓",
                 date = "第 " + day + " 日",
                 accentColor = Gold,
-                body = "评审团已完成本周期路网评估，贺礼现已备妥，请前往「公司」页签领赏。",
+                body = "评审团已完成本周期星轨网评估，贺礼现已备妥，请前往「公司」页签领赏。",
                 actionLabel = "前往领赏",
                 onAction = () => { ClosePanel(true); OpenCompanyScreen(); }
             });
         }
 
-        // 2. 当前车站突发客流/施工事件（带直达定位按钮）
+        // 2. 当前星港突发客流/施工事件（带直达定位按钮）
         var eventStations = new List<int>();
         for (int i = 0; i < stations.Count; i++)
         {
@@ -150,20 +150,20 @@ public partial class DemoBootstrap
                 date = "今日",
                 accentColor = surge ? Matcha : Vermilion,
                 focusStation = stIdx,
-                actionLabel = "定位站台",
-                body = stName + "站周边今日出现「" + TrafficEventNames[ev] + "」，客流需求波动 " + pctStr + "。\n"
+                actionLabel = "定位星港",
+                body = stName + "港周边今日出现「" + TrafficEventNames[ev] + "」，客流需求波动 " + pctStr + "。\n"
                      + (surge
-                         ? (st.built ? "建议留意该站候车拥挤度，必要时加密途经线路班次。" : "尚未接通该站，正是趁热延线扩站的好时机！")
-                         : "该站客流短期回落，可适当调减富余车次节省维保成本。")
+                         ? (st.built ? "建议留意该港候船拥挤度，必要时加密途经航线航班。" : "尚未接通该港，正是趁热延线扩港的好时机！")
+                         : "该港客流短期回落，可适当调减富余航班节省维保成本。")
             });
         }
 
-        // 3. 山海行风周报
+        // 3. 深空航行周报
         int weekNum = ((day - 1) / 7) + 1;
         list.Add(new BulletinEntry
         {
             tag = "周报",
-            title = "《山海行风周报》第 " + weekNum + " 周 · " + EconomyCycleNames[economyCycle],
+            title = "《深空航行周报》第 " + weekNum + " 周 · " + EconomyCycleNames[economyCycle],
             date = "还剩 " + CycleDaysRemaining() + " 日",
             accentColor = Indigo,
             body = "本周态势：" + EconomyCycleDescs[economyCycle] + "\n下周风向预告：" + EconomyCycleNames[nextEconomyCycle] + " — " + EconomyCycleDescs[nextEconomyCycle]
@@ -178,18 +178,18 @@ public partial class DemoBootstrap
             accentColor = Matcha,
             body = links > 0
                 ? CrossBaySynergySummary() + "\n继续贯通其余跨区门户可进一步叠加口岸补贴与全网客流吸引力。"
-                : "当汐港、镜屿与榕川的运营线路在「北桥关 / 东湾（西渡）」「青藤（北关）/ 琴海口」「跨海虹桥」等门户两侧同时接通时，即可激活每日跨区联运补贴与客流加成。"
+                : "当月之亮面、月背与火星的运营航线在「柏拉图跃迁港 / 奥林匹斯（月面门）」「阿西达利亚（月背门）/ 阿波罗星门」「虹湾星门」等门户两侧同时接通时，即可激活每日跨区联运补贴与客流加成。"
         });
 
         // 5. 常规社务公告
         list.Add(new BulletinEntry
         {
             tag = "社务",
-            title = companyName + " · 站务手帐编年备忘",
+            title = companyName + " · 港务手帐编年备忘",
             date = "常态",
             accentColor = InkSoft,
-            body = "· 长按地图任意站点拖拽可实时预览走廊客需（翠绿→琥珀→赤红）与预计新增日客流。\n"
-                 + "· 越堵的线路色相越偏红，点选繁忙路段即可快捷调班或加车。"
+            body = "· 长按地图任意星港拖拽可实时预览走廊客需（翠绿→琥珀→赤红）与预计新增日客流。\n"
+                 + "· 越堵的航线色相越偏红，点选繁忙航段即可快捷调班或加飞车。"
         });
 
         // 6. 近期版本更新汇总（未点读前带红点置顶，点完取消红点并置底）
@@ -202,10 +202,10 @@ public partial class DemoBootstrap
             accentColor = Vermilion,
             isPatchNote = true,
             hasUnreadDot = !patchRead,
-            body = "1. 新增「线路图」界面：顶部栏新增入口，全屏白底展示区域八方向地铁拓扑图，支持区域下拉切换、横竖屏布局切换、自由缩放拖拽及清屏截图。\n"
-                 + "2. 常驻拥堵色相偏移：取消热力切换，直接按区段负荷将线路色相平滑向红色偏移（越堵越红），底部常驻提示。\n"
-                 + "3. 新增「一键升级」入口：右侧公告栏下方新增入口，支持观看广告一键升级红色爆满城市，以及一键为高拥堵线路增班（不调度机车）。\n"
-                 + "4. 调配与基础车优化：线路不止 1 辆车时可撤回基础车辆，腾出满编 8 列名额；调配机车新增「填满」，调度新增「全时段满班」一键操作；地图每条线仅保留 1 辆代表列车。\n"
+            body = "1. 新增「航线图」界面：顶部栏新增入口，全屏白底展示区域八方向星图航线拓扑图，支持区域下拉切换、横竖屏布局切换、自由缩放拖拽及清屏截图。\n"
+                 + "2. 常驻拥堵色相偏移：取消热力切换，直接按区段负荷将航线色相平滑向红色偏移（越堵越红），底部常驻提示。\n"
+                 + "3. 新增「一键升级」入口：右侧公告栏下方新增入口，支持观看广告一键升级红色爆满城市，以及一键为高拥堵航线增班（不调配飞车）。\n"
+                 + "4. 调配与基础车优化：航线不止 1 艘飞车时可撤回基础飞车，腾出满编 8 艘名额；调配飞车新增「填满」，调度新增「全时段满班」一键操作；地图每条航线仅保留 1 艘代表飞车。\n"
                  + "5. 分帧性能与刷新修复：全部调配、调度与撤销操作走后台分帧切片测算，算完自动刷新预计收益，顶部实时显示更新倒计时。"
         };
         if (patchRead) list.Add(patchEntry);
@@ -226,11 +226,11 @@ public partial class DemoBootstrap
 
         const float popupW = 880f;
         const float popupH = 980f;
-        var panel = OpenPopup("山海铁道驿报", popupH, popupW, "notice_board");
+        var panel = OpenPopup("深空星轨公报", popupH, popupW, "notice_board");
         JournalTape(panel.transform, popupW * 0.5f - 82f, popupH - 18f, 164f);
         StampBotanicalSprig(panel.transform, "orn_cloud_fret", 10f, 10f, 38f, 38f, 0.35f, false, true);
         StampBotanicalSprig(panel.transform, "orn_cloud_fret", popupW - 48f, 10f, 38f, 38f, 0.35f, true, true);
-        Txt(panel.transform, "第 " + day + " 日 · 沿线动态与运营简报（共 " + total + " 则）", 23, InkSoft, 28, popupH - 108, popupW - 56, 32, TextAnchor.MiddleLeft);
+        Txt(panel.transform, "第 " + day + " 日 · 航线动态与运营简报（共 " + total + " 则）", 23, InkSoft, 28, popupH - 108, popupW - 56, 32, TextAnchor.MiddleLeft);
         Img(Rect("NoticeHeaderLine", panel.transform, 28, popupH - 120, popupW - 56, 2), new Color(InkSoft.r, InkSoft.g, InkSoft.b, 0.16f)).raycastTarget = false;
 
         float viewW = popupW - 56f;
@@ -401,8 +401,8 @@ public partial class DemoBootstrap
                 isPlayer = true
             },
             new LeaderboardOperator {
-                name = "汐港电铁局",
-                tag = "老牌港岛干线",
+                name = "月之亮面星航局",
+                tag = "老牌港岛主航线",
                 motto = "青湾南岸高密度通勤网络",
                 stations = 4 + Mathf.Min(18, d / 3),
                 linesCount = 1 + Mathf.Min(6, d / 7),
@@ -410,16 +410,16 @@ public partial class DemoBootstrap
                 score = 1100 + d * 195
             },
             new LeaderboardOperator {
-                name = "榕川快轨集团",
-                tag = "南溟城际联营",
-                motto = "主打百花—东湾城—莞香跨城大站快线",
+                name = "火星快航集团",
+                tag = "南溟城际航运",
+                motto = "主打塔尔西斯—水手谷—克律塞跨城大港快线",
                 stations = 3 + Mathf.Min(26, d / 2),
                 linesCount = 1 + Mathf.Min(8, d / 6),
                 dailyProfit = 240 + d * 56,
                 score = 920 + d * 245
             },
             new LeaderboardOperator {
-                name = "镜屿轻轨社",
+                name = "月背轻航社",
                 tag = "海湾文旅专线",
                 motto = "深耕半岛与连汀海湾接驳",
                 stations = 2 + Mathf.Min(12, d / 4),
@@ -429,17 +429,17 @@ public partial class DemoBootstrap
             },
             new LeaderboardOperator {
                 name = "沧海客运总社",
-                tag = "百年商埠车队",
-                motto = "老街商业与站前物业稳健派",
+                tag = "百年商埠航队",
+                motto = "老街商业与港前物业稳健派",
                 stations = 5 + Mathf.Min(20, d / 3),
                 linesCount = 2 + Mathf.Min(7, d / 7),
                 dailyProfit = 380 + d * 38,
                 score = 1480 + d * 185
             },
             new LeaderboardOperator {
-                name = "山海星铁联营",
+                name = "深空星航联营",
                 tag = "高速智行先驱",
-                motto = "瞄准新纪元山海湾环形快网",
+                motto = "瞄准新纪元地月环线环形快线网",
                 stations = 6 + Mathf.Min(32, d / 2),
                 linesCount = 2 + Mathf.Min(10, d / 5),
                 dailyProfit = 460 + d * 68,
@@ -452,8 +452,8 @@ public partial class DemoBootstrap
 
     void OpenLeaderboard()
     {
-        var page = OpenPage("排行榜", "查看山海铁路同行名录与本社建设编年史。", "PageArt/album_watercolor");
-        Txt(page.transform, "山海群雄榜", 38, Ink, 36, PgH - 255, 800, 54, TextAnchor.MiddleLeft);
+        var page = OpenPage("排行榜", "查看星际航运同盟名录与本社建设编年史。", "PageArt/album_watercolor");
+        Txt(page.transform, "星际群雄榜", 38, Ink, 36, PgH - 255, 800, 54, TextAnchor.MiddleLeft);
 
         var list = BuildBayLeaderboard();
         int playerRank = 1;
@@ -470,7 +470,7 @@ public partial class DemoBootstrap
         float y = topY - 12f - heroH;
         var hero = Rect("RankingHeroCard", content, 4f, y, innerW, heroH);
         Rounded(hero, CardBg); SoftShadow(hero); JournalTape(hero.transform, innerW * 0.5f - 72f, heroH - 17f, 144f);
-        int palette = currentRegion == "镜屿" ? 2 : currentRegion == "榕川" ? 1 : 0;
+        int palette = currentRegion == "月背" ? 2 : currentRegion == "火星" ? 1 : 0;
         var posterTex = EraPosterGenerator.GetCustomPoster("rank_" + currentRegion, "RAILWAY", palette, 4, 768, 220, 1);
         var posterFrame = CreateNeonPosterFrame(hero.transform, "RankingNeonPoster", 24f, 134f, innerW - 48f, 214f, posterTex, 9f);
         var badge = Rect("RegionTag", posterFrame.transform, 18f, 16f, 240f, 38f);
@@ -482,7 +482,7 @@ public partial class DemoBootstrap
         Txt(hero.transform, "已连 " + DailyConnectedCount() + " 站  ·  运营 " + lines.Count + " 线  ·  预期日利 " + FormatSignedCoins(income) + "  ·  口岸走廊 " + CrossBaySynergyLinkCount() + "/3",
             22, InkSoft, 28f, 22f, innerW - 56f, 38f, TextAnchor.MiddleLeft);
 
-        // 2. 山海同行阶梯榜
+        // 2. 星际同行阶梯榜
         for (int i = 0; i < list.Count; i++)
         {
             var op = list[i];
@@ -509,11 +509,11 @@ public partial class DemoBootstrap
         Rounded(chron, CardBg); SoftShadow(chron);
         Txt(chron.transform, "公司史册 · 里程碑碑林", 30, Ink, 28f, 256f, innerW - 56f, 44f, TextAnchor.MiddleLeft);
         string[] milestones = {
-            (lines.Count >= 1 ? "✓ " : "○ ") + "青湾初笛：开通首条商业线路",
-            (FoundCount() >= 3 ? "✓ " : "○ ") + "山海留影：累计收录 3 处以上名胜风光（当前 " + FoundCount() + " 处）",
-            (macauUnlocked ? "✓ " : "○ ") + "越海镜屿：解锁并通车镜屿版图",
-            (guangdongUnlocked ? "✓ " : "○ ") + "北上榕川：解锁并贯通榕川路网",
-            (CrossBaySynergyLinkCount() >= 1 ? "✓ " : "○ ") + "山海直通：打通跨区口岸联运走廊（" + CrossBaySynergyLinkCount() + "/3）",
+            (lines.Count >= 1 ? "✓ " : "○ ") + "青湾初笛：开通首条商业航线",
+            (FoundCount() >= 3 ? "✓ " : "○ ") + "星轨留影：累计收录 3 处以上名胜风光（当前 " + FoundCount() + " 处）",
+            (macauUnlocked ? "✓ " : "○ ") + "越空月背：解锁并通航月背版图",
+            (guangdongUnlocked ? "✓ " : "○ ") + "北上火星：解锁并贯通火星航线网",
+            (CrossBaySynergyLinkCount() >= 1 ? "✓ " : "○ ") + "星轨直通：打通跨区口岸联运走廊（" + CrossBaySynergyLinkCount() + "/3）",
             (income >= 2000f ? "✓ " : "○ ") + "金字招牌：全网预期日利润突破 ¥2,000（当前 " + FormatSignedCoins(income) + "）"
         };
         for (int m = 0; m < milestones.Length; m++)

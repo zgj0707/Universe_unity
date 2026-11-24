@@ -101,7 +101,7 @@ public static class WebGLBuilder
         {
             string outDir = Path.GetFullPath("Build/Windows");
             Directory.CreateDirectory(outDir);
-            string exePath = Path.Combine(outDir, "Railway2.exe");
+            string exePath = Path.Combine(outDir, "StarlineMoon.exe");
             PlayerSettings.fullScreenMode = FullScreenMode.Windowed;
             PlayerSettings.defaultScreenWidth = 720;
             PlayerSettings.defaultScreenHeight = 1280;
@@ -134,10 +134,10 @@ public static class WebGLBuilder
         {
             string outDir = Path.GetFullPath("Build/Android");
             Directory.CreateDirectory(outDir);
-            string apkPath = Path.Combine(outDir, "Railway2-v1.2.0.apk");
+            string apkPath = Path.Combine(outDir, "StarlineMoon-v1.0.0.apk");
             EditorUserBuildSettings.buildAppBundle = false;
             PlayerSettings.defaultInterfaceOrientation = UIOrientation.Portrait;
-            PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, "com.shanhairail.railwaytwo");
+            PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, "com.starrail.cosmosline");
             PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel26;
             var opts = new BuildPlayerOptions
             {

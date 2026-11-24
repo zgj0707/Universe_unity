@@ -1,15 +1,15 @@
 {
     "version": 1,
-    "day": 403,
+    "day": 415,
     "speed": 3,
     "nextId": 26,
     "dailyBaseline": 113,
     "theme": 0,
-    "coins": 327974.63350316125,
+    "coins": 4962842.783349436,
     "diamonds": 425.0,
-    "rp": 3131.0,
-    "clock": 45.07910919189453,
-    "researchClock": 26.095985412597656,
+    "rp": 3330.0,
+    "clock": 203.41131591796875,
+    "researchClock": 27.42680549621582,
     "macau": true,
     "guangdong": true,
     "loan": false,
@@ -180,7 +180,7 @@
             "key": "汐港:跨海虹桥",
             "customName": "",
             "level": 1,
-            "trafficEvent": 1,
+            "trafficEvent": 0,
             "built": true,
             "closed": false,
             "riderBonus": 0.0,
@@ -330,7 +330,7 @@
             "key": "榕川:吉安墟",
             "customName": "",
             "level": 3,
-            "trafficEvent": 4,
+            "trafficEvent": 0,
             "built": true,
             "closed": false,
             "riderBonus": 0.0,
@@ -370,7 +370,7 @@
             "key": "榕川:明珠镇",
             "customName": "",
             "level": 7,
-            "trafficEvent": 1,
+            "trafficEvent": 0,
             "built": true,
             "closed": false,
             "riderBonus": 0.0,
@@ -390,7 +390,7 @@
             "key": "榕川:青藤（北关）",
             "customName": "",
             "level": 9,
-            "trafficEvent": 3,
+            "trafficEvent": 0,
             "built": true,
             "closed": false,
             "riderBonus": 6500.0,
@@ -570,7 +570,7 @@
             "key": "榕川:东坡口",
             "customName": "",
             "level": 1,
-            "trafficEvent": 1,
+            "trafficEvent": 0,
             "built": false,
             "closed": false,
             "riderBonus": 0.0,
@@ -580,7 +580,7 @@
             "key": "榕川:芦湾村",
             "customName": "",
             "level": 1,
-            "trafficEvent": 0,
+            "trafficEvent": 1,
             "built": false,
             "closed": false,
             "riderBonus": 0.0,
@@ -590,7 +590,7 @@
             "key": "榕川:浅沙墟",
             "customName": "",
             "level": 1,
-            "trafficEvent": 1,
+            "trafficEvent": 0,
             "built": true,
             "closed": false,
             "riderBonus": 0.0,
@@ -600,7 +600,7 @@
             "key": "榕川:江边墟",
             "customName": "",
             "level": 1,
-            "trafficEvent": 0,
+            "trafficEvent": 2,
             "built": true,
             "closed": false,
             "riderBonus": 0.0,
@@ -610,7 +610,7 @@
             "key": "榕川:黄沙埠",
             "customName": "",
             "level": 1,
-            "trafficEvent": 0,
+            "trafficEvent": 1,
             "built": true,
             "closed": false,
             "riderBonus": 0.0,
@@ -640,7 +640,7 @@
             "key": "榕川:细沙湾",
             "customName": "",
             "level": 1,
-            "trafficEvent": 0,
+            "trafficEvent": 4,
             "built": false,
             "closed": false,
             "riderBonus": 0.0,
@@ -650,7 +650,7 @@
             "key": "榕川:丰穗墟",
             "customName": "",
             "level": 1,
-            "trafficEvent": 0,
+            "trafficEvent": 1,
             "built": true,
             "closed": false,
             "riderBonus": 0.0,
@@ -690,7 +690,7 @@
             "key": "榕川:兴隆墟",
             "customName": "",
             "level": 1,
-            "trafficEvent": 0,
+            "trafficEvent": 2,
             "built": false,
             "closed": false,
             "riderBonus": 0.0,
@@ -740,7 +740,7 @@
             "key": "榕川:平山围",
             "customName": "",
             "level": 1,
-            "trafficEvent": 0,
+            "trafficEvent": 2,
             "built": false,
             "closed": false,
             "riderBonus": 0.0,
@@ -750,7 +750,7 @@
             "key": "榕川:南渡墟",
             "customName": "",
             "level": 1,
-            "trafficEvent": 4,
+            "trafficEvent": 0,
             "built": false,
             "closed": false,
             "riderBonus": 0.0,
@@ -770,7 +770,7 @@
             "key": "榕川:渔斗门",
             "customName": "",
             "level": 3,
-            "trafficEvent": 0,
+            "trafficEvent": 2,
             "built": true,
             "closed": false,
             "riderBonus": 0.0,
@@ -830,7 +830,7 @@
             "key": "榕川:陶窑坊",
             "customName": "",
             "level": 2,
-            "trafficEvent": 2,
+            "trafficEvent": 0,
             "built": true,
             "closed": false,
             "riderBonus": 0.0,
@@ -890,7 +890,7 @@
             "key": "榕川:望台墟",
             "customName": "",
             "level": 3,
-            "trafficEvent": 1,
+            "trafficEvent": 0,
             "built": true,
             "closed": false,
             "riderBonus": 0.0,
@@ -930,7 +930,7 @@
             "key": "榕川:泉水墟",
             "customName": "",
             "level": 1,
-            "trafficEvent": 3,
+            "trafficEvent": 0,
             "built": true,
             "closed": false,
             "riderBonus": 0.0,
@@ -980,7 +980,7 @@
             "key": "榕川:清泉墟",
             "customName": "",
             "level": 1,
-            "trafficEvent": 0,
+            "trafficEvent": 2,
             "built": true,
             "closed": false,
             "riderBonus": 0.0,
@@ -1010,7 +1010,7 @@
             "key": "榕川:东水湾",
             "customName": "",
             "level": 1,
-            "trafficEvent": 3,
+            "trafficEvent": 1,
             "built": false,
             "closed": false,
             "riderBonus": 0.0,
@@ -1050,7 +1050,7 @@
             "key": "榕川:竹山墟",
             "customName": "",
             "level": 1,
-            "trafficEvent": 0,
+            "trafficEvent": 4,
             "built": true,
             "closed": false,
             "riderBonus": 0.0,
@@ -1100,7 +1100,7 @@
             "key": "榕川:山谷墟",
             "customName": "",
             "level": 1,
-            "trafficEvent": 0,
+            "trafficEvent": 2,
             "built": false,
             "closed": false,
             "riderBonus": 0.0,
@@ -1120,7 +1120,7 @@
             "key": "榕川:桥头埠",
             "customName": "",
             "level": 1,
-            "trafficEvent": 3,
+            "trafficEvent": 0,
             "built": true,
             "closed": false,
             "riderBonus": 0.0,
@@ -1140,7 +1140,7 @@
             "key": "榕川:青萝墟",
             "customName": "",
             "level": 1,
-            "trafficEvent": 0,
+            "trafficEvent": 3,
             "built": true,
             "closed": false,
             "riderBonus": 0.0,
@@ -1170,7 +1170,7 @@
             "key": "榕川:芭蕉坪",
             "customName": "",
             "level": 1,
-            "trafficEvent": 0,
+            "trafficEvent": 3,
             "built": true,
             "closed": false,
             "riderBonus": 0.0,
@@ -1180,7 +1180,7 @@
             "key": "榕川:青瓷墟",
             "customName": "",
             "level": 1,
-            "trafficEvent": 1,
+            "trafficEvent": 0,
             "built": true,
             "closed": false,
             "riderBonus": 0.0,
@@ -1220,7 +1220,7 @@
             "key": "榕川:丰海墟",
             "customName": "",
             "level": 1,
-            "trafficEvent": 4,
+            "trafficEvent": 0,
             "built": false,
             "closed": false,
             "riderBonus": 0.0,
@@ -1230,7 +1230,7 @@
             "key": "榕川:丰陆墟",
             "customName": "",
             "level": 1,
-            "trafficEvent": 0,
+            "trafficEvent": 3,
             "built": true,
             "closed": false,
             "riderBonus": 0.0,
@@ -1270,7 +1270,7 @@
             "key": "榕川:青龙渡",
             "customName": "",
             "level": 1,
-            "trafficEvent": 0,
+            "trafficEvent": 4,
             "built": true,
             "closed": false,
             "riderBonus": 0.0,
@@ -1370,7 +1370,7 @@
             "key": "榕川:白鹭埠",
             "customName": "",
             "level": 1,
-            "trafficEvent": 0,
+            "trafficEvent": 3,
             "built": true,
             "closed": false,
             "riderBonus": 0.0,
@@ -1460,7 +1460,7 @@
             "key": "榕川:泷水埠",
             "customName": "",
             "level": 1,
-            "trafficEvent": 2,
+            "trafficEvent": 0,
             "built": true,
             "closed": false,
             "riderBonus": 0.0,
@@ -1490,7 +1490,7 @@
             "key": "榕川:银江墟",
             "customName": "",
             "level": 3,
-            "trafficEvent": 0,
+            "trafficEvent": 3,
             "built": true,
             "closed": false,
             "riderBonus": 0.0,
@@ -1540,7 +1540,7 @@
             "key": "榕川:白浪港",
             "customName": "",
             "level": 2,
-            "trafficEvent": 0,
+            "trafficEvent": 3,
             "built": true,
             "closed": false,
             "riderBonus": 0.0,
@@ -1560,7 +1560,7 @@
             "key": "榕川:银滩港",
             "customName": "",
             "level": 1,
-            "trafficEvent": 4,
+            "trafficEvent": 0,
             "built": true,
             "closed": false,
             "riderBonus": 0.0,
@@ -1570,7 +1570,7 @@
             "key": "榕川:北山墟",
             "customName": "",
             "level": 5,
-            "trafficEvent": 0,
+            "trafficEvent": 3,
             "built": true,
             "closed": false,
             "riderBonus": 0.0,
@@ -1590,7 +1590,7 @@
             "key": "榕川:榕荫墟",
             "customName": "",
             "level": 1,
-            "trafficEvent": 0,
+            "trafficEvent": 2,
             "built": true,
             "closed": false,
             "riderBonus": 0.0,
@@ -1610,7 +1610,7 @@
             "key": "镜屿:西堤关",
             "customName": "",
             "level": 3,
-            "trafficEvent": 0,
+            "trafficEvent": 4,
             "built": true,
             "closed": false,
             "riderBonus": 0.0,
@@ -1703,7 +1703,7 @@
         {
             "id": 2,
             "trains": 7,
-            "todayRevenue": 1571,
+            "todayRevenue": 7780,
             "skin": 3,
             "baseRemoved": false,
             "name": "2 号线",
@@ -1734,23 +1734,23 @@
                 7
             ],
             "fare": 2.0999999046325684,
-            "todayGross": 1570.8228759765625,
-            "todayMaintenance": 40.87388610839844,
-            "todayTrack": 145.66615295410156,
+            "todayGross": 7780.16015625,
+            "todayMaintenance": 152.6419219970703,
+            "todayTrack": 710.5326538085938,
             "recent": [
-                21033,
-                21033,
-                20016,
-                19044,
-                15282,
-                14126,
-                14727
+                14685,
+                14706,
+                14706,
+                14706,
+                14727,
+                14727,
+                14570
             ]
         },
         {
             "id": 3,
             "trains": 8,
-            "todayRevenue": 7946,
+            "todayRevenue": 37063,
             "skin": 3,
             "baseRemoved": false,
             "name": "3 号线",
@@ -1782,23 +1782,23 @@
                 8
             ],
             "fare": 2.0999999046325684,
-            "todayGross": 7945.890625,
-            "todayMaintenance": 57.315608978271484,
-            "todayTrack": 309.48992919921875,
+            "todayGross": 37063.421875,
+            "todayMaintenance": 258.626708984375,
+            "todayTrack": 1509.6298828125,
             "recent": [
-                57589,
-                56917,
-                56536,
-                58974,
-                52450,
-                49205,
-                59374
+                72149,
+                71649,
+                71245,
+                70515,
+                75574,
+                75959,
+                64100
             ]
         },
         {
             "id": 4,
             "trains": 4,
-            "todayRevenue": 1742,
+            "todayRevenue": 9369,
             "skin": -1,
             "baseRemoved": false,
             "name": "4 号线",
@@ -1831,23 +1831,23 @@
                 4
             ],
             "fare": 2.700000047683716,
-            "todayGross": 1742.3824462890625,
-            "todayMaintenance": 25.682973861694336,
-            "todayTrack": 251.36639404296875,
+            "todayGross": 9368.9619140625,
+            "todayMaintenance": 101.90516662597656,
+            "todayTrack": 1226.1168212890625,
             "recent": [
-                18653,
-                18653,
-                19306,
-                19129,
-                15551,
-                14277,
-                14957
+                14888,
+                14924,
+                14924,
+                14924,
+                14960,
+                14960,
+                14689
             ]
         },
         {
             "id": 6,
             "trains": 4,
-            "todayRevenue": 2246,
+            "todayRevenue": 10328,
             "skin": -1,
             "baseRemoved": false,
             "name": "6 号线",
@@ -1877,23 +1877,23 @@
                 4
             ],
             "fare": 1.899999976158142,
-            "todayGross": 2246.108154296875,
-            "todayMaintenance": 23.346271514892578,
-            "todayTrack": 158.74356079101563,
+            "todayGross": 10327.8681640625,
+            "todayMaintenance": 105.34593200683594,
+            "todayTrack": 774.3194580078125,
             "recent": [
-                16982,
-                15527,
-                15907,
-                15761,
-                14428,
-                12931,
-                15405
+                20231,
+                18651,
+                19344,
+                19243,
+                20663,
+                21881,
+                16537
             ]
         },
         {
             "id": 10,
             "trains": 8,
-            "todayRevenue": 2503,
+            "todayRevenue": 13947,
             "skin": -1,
             "baseRemoved": true,
             "name": "10 号线",
@@ -1919,23 +1919,23 @@
                 8
             ],
             "fare": 1.5,
-            "todayGross": 2503.4306640625,
-            "todayMaintenance": 41.308773040771484,
-            "todayTrack": 64.87214660644531,
+            "todayGross": 13947.330078125,
+            "todayMaintenance": 180.7748260498047,
+            "todayTrack": 316.433349609375,
             "recent": [
-                31734,
-                31734,
-                30850,
-                29673,
-                23785,
-                21813,
-                22790
+                22771,
+                22780,
+                22780,
+                22780,
+                22790,
+                22790,
+                22720
             ]
         },
         {
             "id": 11,
             "trains": 3,
-            "todayRevenue": 368,
+            "todayRevenue": 2452,
             "skin": -1,
             "baseRemoved": false,
             "name": "11 号线",
@@ -1961,23 +1961,23 @@
                 1
             ],
             "fare": 2.5999999046325684,
-            "todayGross": 367.9342346191406,
-            "todayMaintenance": 7.618851184844971,
-            "todayTrack": 105.171142578125,
+            "todayGross": 2451.696533203125,
+            "todayMaintenance": 45.21101379394531,
+            "todayTrack": 513.0053100585938,
             "recent": [
-                5464,
-                5464,
-                5251,
-                5016,
-                4175,
-                3920,
-                4068
+                4038,
+                4053,
+                4053,
+                4053,
+                4068,
+                4068,
+                3955
             ]
         },
         {
             "id": 12,
             "trains": 2,
-            "todayRevenue": 679,
+            "todayRevenue": 4031,
             "skin": -1,
             "baseRemoved": false,
             "name": "12 号线",
@@ -2002,23 +2002,23 @@
                 2
             ],
             "fare": 2.299999952316284,
-            "todayGross": 678.957275390625,
-            "todayMaintenance": 10.435042381286621,
-            "todayTrack": 62.9516716003418,
+            "todayGross": 4031.478515625,
+            "todayMaintenance": 47.086273193359375,
+            "todayTrack": 307.0661926269531,
             "recent": [
-                8321,
-                8321,
-                8072,
-                7707,
-                6144,
-                5649,
-                6139
+                6121,
+                6130,
+                6130,
+                6130,
+                6139,
+                6139,
+                6071
             ]
         },
         {
             "id": 13,
             "trains": 5,
-            "todayRevenue": 419,
+            "todayRevenue": 3330,
             "skin": -1,
             "baseRemoved": false,
             "name": "13 号线",
@@ -2043,23 +2043,23 @@
                 3
             ],
             "fare": 1.5,
-            "todayGross": 418.9604797363281,
-            "todayMaintenance": 17.626646041870117,
-            "todayTrack": 64.9430160522461,
+            "todayGross": 3329.97216796875,
+            "todayMaintenance": 101.1104507446289,
+            "todayTrack": 316.77984619140625,
             "recent": [
-                6897,
-                6897,
-                6527,
-                6219,
-                5115,
-                4817,
-                4950
+                4931,
+                4940,
+                4940,
+                4940,
+                4950,
+                4950,
+                4880
             ]
         },
         {
             "id": 14,
             "trains": 1,
-            "todayRevenue": 139,
+            "todayRevenue": 802,
             "skin": -1,
             "baseRemoved": false,
             "name": "14 号线",
@@ -2084,23 +2084,23 @@
                 1
             ],
             "fare": 1.5,
-            "todayGross": 138.91094970703125,
-            "todayMaintenance": 5.195808410644531,
-            "todayTrack": 61.08837890625,
+            "todayGross": 801.66796875,
+            "todayMaintenance": 23.445114135742188,
+            "todayTrack": 297.9771728515625,
             "recent": [
-                1326,
-                1326,
-                1266,
-                1189,
-                994,
-                898,
-                946
+                928,
+                937,
+                937,
+                937,
+                946,
+                946,
+                880
             ]
         },
         {
             "id": 16,
             "trains": 5,
-            "todayRevenue": 1882,
+            "todayRevenue": 8866,
             "skin": -1,
             "baseRemoved": false,
             "name": "深湛铁路",
@@ -2127,23 +2127,23 @@
                 5
             ],
             "fare": 1.899999976158142,
-            "todayGross": 1881.9652099609375,
-            "todayMaintenance": 30.833526611328125,
-            "todayTrack": 179.2955322265625,
+            "todayGross": 8865.58984375,
+            "todayMaintenance": 139.1303253173828,
+            "todayTrack": 874.5697631835938,
             "recent": [
-                9552,
-                9003,
-                8802,
-                9508,
-                9941,
-                8848,
-                11456
+                12541,
+                13618,
+                13257,
+                13622,
+                13733,
+                14103,
+                12208
             ]
         },
         {
             "id": 17,
             "trains": 2,
-            "todayRevenue": 342,
+            "todayRevenue": 1714,
             "skin": -1,
             "baseRemoved": false,
             "name": "珠湛高铁",
@@ -2166,23 +2166,23 @@
                 2
             ],
             "fare": 1.5,
-            "todayGross": 341.6605529785156,
-            "todayMaintenance": 10.468770980834961,
-            "todayTrack": 51.43888854980469,
+            "todayGross": 1713.943359375,
+            "todayMaintenance": 47.23827362060547,
+            "todayTrack": 250.9088134765625,
             "recent": [
-                2636,
-                2425,
-                2519,
-                2468,
-                2392,
-                2189,
-                2604
+                2567,
+                2514,
+                2731,
+                2955,
+                2691,
+                3163,
+                2716
             ]
         },
         {
             "id": 18,
             "trains": 6,
-            "todayRevenue": 3003,
+            "todayRevenue": 12357,
             "skin": -1,
             "baseRemoved": false,
             "name": "广汕铁路",
@@ -2212,17 +2212,17 @@
                 6
             ],
             "fare": 1.5,
-            "todayGross": 3003.08251953125,
-            "todayMaintenance": 34.31631851196289,
-            "todayTrack": 145.46287536621094,
+            "todayGross": 12357.3017578125,
+            "todayMaintenance": 154.84580993652344,
+            "todayTrack": 709.541748046875,
             "recent": [
-                15537,
-                15723,
-                14875,
-                14842,
-                16097,
-                14834,
-                17827
+                20177,
+                19628,
+                19962,
+                20026,
+                20825,
+                21895,
+                20165
             ]
         },
         {
@@ -2252,22 +2252,22 @@
             ],
             "fare": 1.5,
             "todayGross": 0.0,
-            "todayMaintenance": 5.534088611602783,
-            "todayTrack": 19.625696182250977,
+            "todayMaintenance": 24.971548080444336,
+            "todayTrack": 95.73031616210938,
             "recent": [
-                1649,
-                1649,
-                1649,
-                1650,
-                1650,
-                1524,
-                -206
+                -212,
+                -209,
+                -209,
+                -209,
+                -206,
+                -206,
+                -230
             ]
         },
         {
             "id": 21,
             "trains": 3,
-            "todayRevenue": 1410,
+            "todayRevenue": 5843,
             "skin": -1,
             "baseRemoved": false,
             "name": "21 号线",
@@ -2296,23 +2296,23 @@
                 3
             ],
             "fare": 1.5,
-            "todayGross": 1410.3465576171875,
-            "todayMaintenance": 16.858964920043945,
-            "todayTrack": 128.0957489013672,
+            "todayGross": 5843.1123046875,
+            "todayMaintenance": 76.07310485839844,
+            "todayTrack": 624.8275146484375,
             "recent": [
-                7416,
-                7062,
-                7393,
-                7681,
-                7317,
-                7434,
-                8351
+                8773,
+                9171,
+                8915,
+                8766,
+                9739,
+                9849,
+                9128
             ]
         },
         {
             "id": 22,
             "trains": 8,
-            "todayRevenue": 2597,
+            "todayRevenue": 12629,
             "skin": 1,
             "baseRemoved": false,
             "name": "港湛普通铁路",
@@ -2344,23 +2344,23 @@
                 8
             ],
             "fare": 1.899999976158142,
-            "todayGross": 2596.799072265625,
-            "todayMaintenance": 46.559505462646484,
-            "todayTrack": 169.8074493408203,
+            "todayGross": 12628.9716796875,
+            "todayMaintenance": 210.0906524658203,
+            "todayTrack": 828.288330078125,
             "recent": [
-                15945,
-                14907,
-                14706,
-                15588,
-                14566,
-                14142,
-                16697
+                18423,
+                18379,
+                18155,
+                18076,
+                19000,
+                21906,
+                18518
             ]
         },
         {
             "id": 23,
             "trains": 2,
-            "todayRevenue": 2142,
+            "todayRevenue": 9303,
             "skin": -1,
             "baseRemoved": false,
             "name": "潮州-韶山线",
@@ -2397,23 +2397,23 @@
                 2
             ],
             "fare": 1.5,
-            "todayGross": 2142.3359375,
-            "todayMaintenance": 13.904248237609863,
-            "todayTrack": 352.2802734375,
+            "todayGross": 9302.9130859375,
+            "todayMaintenance": 62.740299224853516,
+            "todayTrack": 1718.35888671875,
             "recent": [
-                9359,
-                9458,
-                9350,
-                9614,
-                9643,
-                9292,
-                11675
+                12370,
+                12702,
+                12364,
+                12080,
+                13413,
+                12857,
+                12610
             ]
         },
         {
             "id": 24,
             "trains": 5,
-            "todayRevenue": 2381,
+            "todayRevenue": 10799,
             "skin": 11,
             "baseRemoved": false,
             "name": "潮中北线",
@@ -2438,23 +2438,23 @@
                 5
             ],
             "fare": 2.0,
-            "todayGross": 2381.33642578125,
-            "todayMaintenance": 27.69426918029785,
-            "todayTrack": 93.62996673583984,
+            "todayGross": 10798.9267578125,
+            "todayMaintenance": 124.96522521972656,
+            "todayTrack": 456.70916748046875,
             "recent": [
-                21677,
-                19795,
-                20028,
-                20244,
-                19561,
-                18495,
-                11737
+                14546,
+                14887,
+                13730,
+                14512,
+                15768,
+                15234,
+                14944
             ]
         },
         {
             "id": 25,
             "trains": 6,
-            "todayRevenue": 450,
+            "todayRevenue": 2001,
             "skin": -1,
             "baseRemoved": true,
             "name": "广州环城线",
@@ -2482,17 +2482,17 @@
                 5
             ],
             "fare": 1.5,
-            "todayGross": 450.0900573730469,
-            "todayMaintenance": 22.787206649780273,
-            "todayTrack": 41.67074966430664,
+            "todayGross": 2001.239990234375,
+            "todayMaintenance": 111.87499237060547,
+            "todayTrack": 203.26235961914063,
             "recent": [
-                1933,
-                1809,
-                1804,
-                1850,
-                1962,
-                1802,
-                2337
+                2616,
+                2475,
+                2430,
+                2423,
+                2535,
+                2899,
+                2649
             ]
         }
     ],
@@ -2641,7 +2641,7 @@
     "bondsRepaid": 0,
     "consultantId": -1,
     "consultantDaysLeft": 0,
-    "economyCycle": 0,
+    "economyCycle": 3,
     "nextEconomyCycle": 2,
     "turboDaysLeft": 0,
     "autoDispatchDaysLeft": 0,
@@ -2650,25 +2650,25 @@
     "boardPartners": [],
     "contracts": [
         {
-            "id": 163,
-            "type": 0,
-            "startValue": 113,
-            "targetValue": 4,
-            "rewardCoins": 12900,
-            "rewardRp": 16,
-            "rewardDiamonds": 3,
-            "deadlineDay": 407,
+            "id": 166,
+            "type": 3,
+            "startValue": 14,
+            "targetValue": 14,
+            "rewardCoins": 11650,
+            "rewardRp": 15,
+            "rewardDiamonds": 6,
+            "deadlineDay": 414,
             "claimed": false
         },
         {
-            "id": 164,
-            "type": 2,
-            "startValue": 0,
-            "targetValue": 431300,
-            "rewardCoins": 15700,
-            "rewardRp": 22,
-            "rewardDiamonds": 4,
-            "deadlineDay": 407,
+            "id": 167,
+            "type": 3,
+            "startValue": 14,
+            "targetValue": 14,
+            "rewardCoins": 11650,
+            "rewardRp": 15,
+            "rewardDiamonds": 6,
+            "deadlineDay": 421,
             "claimed": false
         }
     ],
@@ -2688,36 +2688,8 @@
     "talentPool": [
         {
             "id": 0,
-            "name": "江怀瑾",
-            "role": 1,
-            "rarity": 1,
-            "level": 1,
-            "xp": 0,
-            "assignKind": 0,
-            "assignLineId": 0,
-            "assignStationKey": "",
-            "flawIndex": 0,
-            "flawCleansed": false,
-            "bio": "自小在骑楼老街长大，熟稔街坊商铺门道与早晚市客流规律。"
-        },
-        {
-            "id": 0,
-            "name": "唐致远",
-            "role": 1,
-            "rarity": 2,
-            "level": 1,
-            "xp": 0,
-            "assignKind": 0,
-            "assignLineId": 0,
-            "assignStationKey": "",
-            "flawIndex": 3,
-            "flawCleansed": false,
-            "bio": "自小在骑楼老街长大，熟稔街坊商铺门道与早晚市客流规律。"
-        },
-        {
-            "id": 0,
-            "name": "顾承泽",
-            "role": 0,
+            "name": "钟清嘉",
+            "role": 3,
             "rarity": 1,
             "level": 1,
             "xp": 0,
@@ -2726,11 +2698,39 @@
             "assignStationKey": "",
             "flawIndex": 2,
             "flawCleansed": false,
-            "bio": "毕业于海湾统计夜校，喜欢带着算盘与钢笔巡检每一段路轨。"
+            "bio": "出身三代铁路世家，箱底藏着一本泛黄的蒸汽机车保养札记。"
+        },
+        {
+            "id": 0,
+            "name": "潘星桥",
+            "role": 3,
+            "rarity": 1,
+            "level": 1,
+            "xp": 0,
+            "assignKind": 0,
+            "assignLineId": 0,
+            "assignStationKey": "",
+            "flawIndex": 0,
+            "flawCleansed": false,
+            "bio": "擅长协调跨区口岸站务，再拥挤的换乘通道也能理出秩序。"
+        },
+        {
+            "id": 0,
+            "name": "谢知微",
+            "role": 2,
+            "rarity": 2,
+            "level": 1,
+            "xp": 0,
+            "assignKind": 0,
+            "assignLineId": 0,
+            "assignStationKey": "",
+            "flawIndex": 3,
+            "flawCleansed": false,
+            "bio": "擅长协调跨区口岸站务，再拥挤的换乘通道也能理出秩序。"
         }
     ],
     "nextTalentId": 7,
-    "lastTalentRefreshDay": 403,
+    "lastTalentRefreshDay": 415,
     "lastReadNoticeDay": 394,
     "readPatchNoteVersion": "2026.11.23",
     "memorialPlaques": [
@@ -2745,52 +2745,52 @@
         "tkt_bay"
     ],
     "retiredVehiclesCount": 0,
-    "lastDisplayedSolarTerm": 2,
-    "nextContractId": 165,
+    "lastDisplayedSolarTerm": 6,
+    "nextContractId": 168,
     "hasYesterdayReport": true,
     "yesterdayReport": {
-        "settledDay": 402,
-        "bottleneckStation": 33,
-        "gross": 273607.65625,
+        "settledDay": 414,
+        "bottleneckStation": 37,
+        "gross": 293503.5625,
         "commercialRent": 114299.640625,
-        "maintAndTax": 47773.9609375,
-        "netProfit": 340133.34375,
-        "passengers": 447314.03125,
-        "bestLineNet": 59374.29296875,
-        "worstLineNet": -206.024658203125,
-        "crowdLost": 37837.95703125,
-        "unreachedLost": 550055.5,
-        "elasticLost": 112497.5546875,
+        "maintAndTax": 52392.08203125,
+        "netProfit": 355411.125,
+        "passengers": 430854.0,
+        "bestLineNet": 64100.22265625,
+        "worstLineNet": -229.5336456298828,
+        "crowdLost": 26796.853515625,
+        "unreachedLost": 541499.875,
+        "elasticLost": 108802.0625,
         "bestLineName": "3 号线",
         "worstLineName": "20 号线",
-        "bottleneckNote": "尚有约 22161 人次热门去向未接入路网"
+        "bottleneckNote": "尚有约 26037 人次热门去向未接入路网"
     },
     "frozenLines": [
         {
             "lineId": 3,
             "revenue": [
-                80872.609375,
-                77775.2265625,
-                88193.125,
-                63649.94921875
+                75074.0625,
+                69671.1171875,
+                82197.1875,
+                56403.50390625
             ],
             "demand": [
-                284431.96875,
-                222522.1875,
-                328648.90625,
-                179483.265625
+                259749.65625,
+                211217.546875,
+                311792.9375,
+                167905.53125
             ],
             "served": [
-                214284.5,
-                205041.71875,
-                239448.65625,
-                169190.53125
+                209598.234375,
+                198023.484375,
+                237609.765625,
+                160384.625
             ],
             "peak": [
-                71318.3046875,
-                51499.77734375,
-                78808.6171875,
-                48065.984375
+                65804.9375,
+                47253.40625,
+                70327.8828125,
+                46838.79296875
             ],
             "valid": [
                 true,
@@ -2802,28 +2802,28 @@
         {
             "lineId": 6,
             "revenue": [
-                22117.296875,
-                23756.900390625,
-                23521.853515625,
-                18094.904296875
+                19979.349609375,
+                20196.16015625,
+                20447.884765625,
+                15927.0439453125
             ],
             "demand": [
-                158588.546875,
-                124900.875,
-                185263.25,
-                78785.09375
+                152382.015625,
+                111764.421875,
+                170952.609375,
+                73378.8046875
             ],
             "served": [
-                97755.046875,
-                96785.3515625,
-                107456.484375,
-                73928.5390625
+                94686.8984375,
+                87061.7734375,
+                99101.328125,
+                69865.671875
             ],
             "peak": [
-                71071.7421875,
-                43370.80078125,
-                66749.859375,
-                27301.966796875
+                70160.421875,
+                42624.3359375,
+                63393.16796875,
+                25800.330078125
             ],
             "valid": [
                 true,
@@ -2835,28 +2835,28 @@
         {
             "lineId": 16,
             "revenue": [
-                22416.04296875,
-                14950.1796875,
-                22231.134765625,
-                15332.2978515625
+                20488.0859375,
+                13635.6826171875,
+                20447.888671875,
+                13749.3125
             ],
             "demand": [
-                189664.90625,
-                117386.8671875,
-                202452.8125,
-                109527.140625
+                172625.28125,
+                107338.4765625,
+                183881.28125,
+                95959.6875
             ],
             "served": [
-                103604.890625,
-                84267.6015625,
-                110556.5546875,
-                83810.6328125
+                101577.078125,
+                81397.4609375,
+                109073.5,
+                78580.265625
             ],
             "peak": [
-                85190.0859375,
-                57951.6640625,
-                70444.6953125,
-                53615.7421875
+                74632.390625,
+                54735.27734375,
+                63061.43359375,
+                48599.05859375
             ],
             "valid": [
                 true,
@@ -2868,28 +2868,28 @@
         {
             "lineId": 17,
             "revenue": [
-                3946.481689453125,
-                3193.96044921875,
-                4788.091796875,
-                2685.876953125
+                3667.93505859375,
+                2814.65869140625,
+                4486.14306640625,
+                2718.743896484375
             ],
             "demand": [
-                19237.69921875,
-                14786.9326171875,
-                35808.71484375,
-                10716.7421875
+                20850.0546875,
+                14403.7548828125,
+                37626.98828125,
+                12248.99609375
             ],
             "served": [
-                15924.2802734375,
-                12357.7578125,
-                18513.74609375,
-                10604.3310546875
+                16528.1015625,
+                12235.6650390625,
+                18743.5625,
+                12130.04296875
             ],
             "peak": [
-                12429.40625,
-                11245.0361328125,
-                29335.806640625,
-                7065.07666015625
+                13298.2685546875,
+                9967.001953125,
+                30654.220703125,
+                7791.3212890625
             ],
             "valid": [
                 true,
@@ -2901,28 +2901,28 @@
         {
             "lineId": 18,
             "revenue": [
-                25292.14453125,
-                24455.0546875,
-                27734.2890625,
-                24412.748046875
+                23248.0703125,
+                21357.060546875,
+                25704.90234375,
+                21128.841796875
             ],
             "demand": [
-                157521.609375,
-                112642.90625,
-                166432.390625,
-                102307.8828125
+                142138.96875,
+                100806.9609375,
+                151889.765625,
+                98166.015625
             ],
             "served": [
-                103037.8984375,
-                93433.171875,
-                110025.1796875,
-                92222.3828125
+                100125.0546875,
+                85986.9140625,
+                107157.65625,
+                87255.609375
             ],
             "peak": [
-                58080.46875,
-                50382.23046875,
-                60956.79296875,
-                43358.3515625
+                51669.7578125,
+                46859.5,
+                54587.5546875,
+                46120.1796875
             ],
             "valid": [
                 true,
@@ -2934,28 +2934,28 @@
         {
             "lineId": 21,
             "revenue": [
-                13564.0087890625,
-                11286.2578125,
-                14052.8583984375,
-                11438.865234375
+                11968.8759765625,
+                9595.669921875,
+                12478.49609375,
+                9630.30859375
             ],
             "demand": [
-                118415.9921875,
-                61371.375,
-                128554.0625,
-                59577.5625
+                103326.6796875,
+                53996.50390625,
+                113947.8046875,
+                54148.82421875
             ],
             "served": [
-                62773.1484375,
-                49394.0859375,
-                69787.3984375,
-                49869.375
+                60785.43359375,
+                45867.2109375,
+                67885.8046875,
+                46985.83984375
             ],
             "peak": [
-                49252.76171875,
-                29761.3828125,
-                43556.97265625,
-                28147.451171875
+                41246.4140625,
+                26193.92578125,
+                40300.421875,
+                26098.52734375
             ],
             "valid": [
                 true,
@@ -2967,28 +2967,28 @@
         {
             "lineId": 22,
             "revenue": [
-                27588.53125,
-                22848.123046875,
-                19791.736328125,
-                20858.671875
+                26979.373046875,
+                21896.107421875,
+                18995.166015625,
+                19463.58984375
             ],
             "demand": [
-                149696.453125,
-                101468.28125,
-                145896.328125,
-                86190.6796875
+                143967.0,
+                100036.109375,
+                133636.96875,
+                81273.40625
             ],
             "served": [
-                108484.9140625,
-                94392.2890625,
-                90969.0625,
-                83318.9453125
+                109605.921875,
+                93813.0234375,
+                87345.140625,
+                79577.5546875
             ],
             "peak": [
-                64804.2890625,
-                41449.3125,
-                44903.2109375,
-                36106.06640625
+                61422.5625,
+                38945.109375,
+                43227.94921875,
+                33339.75390625
             ],
             "valid": [
                 true,
@@ -3000,28 +3000,28 @@
         {
             "lineId": 23,
             "revenue": [
-                18278.779296875,
-                17690.6953125,
-                18572.236328125,
-                17261.544921875
+                17408.568359375,
+                16154.453125,
+                17625.48046875,
+                15966.7236328125
             ],
             "demand": [
-                148555.28125,
-                100414.1875,
-                140895.484375,
-                95538.296875
+                138773.640625,
+                93760.2421875,
+                131913.5625,
+                89565.0625
             ],
             "served": [
-                100372.453125,
-                90158.4140625,
-                95949.84375,
-                88249.2890625
+                100326.265625,
+                86179.9375,
+                94924.5546875,
+                84252.609375
             ],
             "peak": [
-                28517.01171875,
-                17186.166015625,
-                24915.400390625,
-                16171.970703125
+                26943.36328125,
+                16363.92578125,
+                23259.998046875,
+                15563.7783203125
             ],
             "valid": [
                 true,
@@ -3033,28 +3033,28 @@
         {
             "lineId": 24,
             "revenue": [
-                23243.173828125,
-                19209.244140625,
-                11843.66796875,
-                19412.181640625
+                22309.9609375,
+                18292.912109375,
+                11457.75390625,
+                17441.87109375
             ],
             "demand": [
-                138724.234375,
-                83743.125,
-                70426.2109375,
-                82206.5234375
+                128826.2421875,
+                84165.390625,
+                71621.4453125,
+                77951.6796875
             ],
             "served": [
-                88572.1875,
-                75942.8125,
-                43859.484375,
-                76725.4453125
+                90448.3125,
+                78440.765625,
+                46477.1953125,
+                74372.7109375
             ],
             "peak": [
-                59212.3671875,
-                36708.59375,
-                23564.8046875,
-                36526.3671875
+                52254.640625,
+                35587.48828125,
+                22802.390625,
+                32948.765625
             ],
             "valid": [
                 true,
@@ -3066,28 +3066,28 @@
         {
             "lineId": 25,
             "revenue": [
-                4876.6650390625,
-                3592.18359375,
-                4487.14892578125,
-                3675.6904296875
+                4281.33203125,
+                3188.114990234375,
+                4144.82470703125,
+                3261.975341796875
             ],
             "demand": [
-                94194.9765625,
-                66677.53125,
-                87726.65625,
-                63411.75
+                86116.3046875,
+                61512.046875,
+                80759.578125,
+                57985.578125
             ],
             "served": [
-                55776.4375,
-                49618.48828125,
-                52601.5703125,
-                49920.30078125
+                53954.4375,
+                48194.9375,
+                52330.69921875,
+                48420.984375
             ],
             "peak": [
-                29202.474609375,
-                21941.3203125,
-                25125.814453125,
-                19694.380859375
+                28618.484375,
+                22072.94921875,
+                21832.5546875,
+                19524.572265625
             ],
             "valid": [
                 true,

@@ -17,7 +17,7 @@ public static class EraPosterGenerator
         public Color glowColor;     // 散射发光光晕色
         public Color coreColor;     // 内芯高亮发白光色
         public Color accentColor;   // 辅色点缀（双杠/光晕次色）
-        public int motifType;       // 0: 穹顶星环  1: 电气弧环  2: 流线磁浮环  3: 授勋星冠  4: 铁道飞翼  5: 全通极光星徽
+        public int motifType;       // 0: 穹顶星环  1: 电气弧环  2: 流线磁浮环  3: 授勋星冠  4: 星轨飞翼  5: 全通极光星徽
         public int bigPrefixCount;  // 前缀放大强调字符数（时代海报为 3，通用海报为 0 或 1）
     }
 
@@ -25,7 +25,7 @@ public static class EraPosterGenerator
     static readonly Dictionary<string, Texture2D> CustomCache = new Dictionary<string, Texture2D>();
 
     /// <summary>
-    /// 通用裸眼 3D 霓虹视差海报生成并缓存接口，供颁奖、排行榜、成就通关等高光卡片调用。
+    /// 通用裸眼 3D 霓虹视差海报生成并缓存接口，供授勋、排行榜、成就通关等高光卡片调用。
     /// </summary>
     public static Texture2D GetCustomPoster(string cacheKey, string text, int paletteIndex, int motifType, int width = 768, int height = 248, int bigPrefixCount = 1)
     {
@@ -389,7 +389,7 @@ public static class EraPosterGenerator
         return strokes;
     }
 
-    // ---------- 顶部时代穹顶/轨道星环 & 周围涂鸦元素 ----------
+    // ---------- 顶部时代穹顶/星轨光环 & 周围涂鸦元素 ----------
     static void BuildMotifAndDecoPaths(int motifType, int w, int h, List<List<Vector2>> neonPaths, List<List<Vector2>> accentPaths)
     {
         float rs = h / 248f;
@@ -398,14 +398,14 @@ public static class EraPosterGenerator
         float rx = 60f * rs, ry = 42f * rs;
         if (motifType == 0)
         {
-            // 19世纪：经典水晶宫/蒸汽穹顶拱顶 + 斜椭圆光环
+            // I代：经典水晶宫/核热推进穹顶拱顶 + 斜椭圆光环
             neonPaths.Add(EllipseArc(domeC, rx, ry, -0.05f, Mathf.PI + 0.05f, 18, 0.08f));
             neonPaths.Add(EllipseArc(domeC, rx * 0.52f, ry * 0.95f, 0.15f, Mathf.PI - 0.15f, 12, 0.08f));
             neonPaths.Add(EllipseArc(new Vector2(domeC.x, domeC.y + ry + 5f * rs), 7.5f * rs, 6f * rs, -0.2f, Mathf.PI + 0.2f, 10, 0.08f));
         }
         else if (motifType == 1)
         {
-            // 20世纪：双菱形电气化受电弓拱弧 + 椭圆星环
+            // II代：双菱形聚变磁轨拱弧 + 椭圆星环
             neonPaths.Add(Poly(
                 new Vector2(domeC.x - 46f * rs, domeC.y + 4f * rs),
                 new Vector2(domeC.x - 20f * rs, domeC.y + 42f * rs),
@@ -419,7 +419,7 @@ public static class EraPosterGenerator
         }
         else if (motifType == 2)
         {
-            // 21世纪：高速动车流线鼻锥弧 + 双轨道信号波
+            // III代：曲速流线型鼻锥弧 + 双星轨信号波
             neonPaths.Add(Cubic(
                 new Vector2(domeC.x - 58f * rs, domeC.y + 2f * rs),
                 new Vector2(domeC.x - 26f * rs, domeC.y + 54f * rs),
@@ -431,7 +431,7 @@ public static class EraPosterGenerator
         }
         else if (motifType == 3)
         {
-            // 授勋大赏：铁道三峰荣冠 + 月桂轨道光弧
+            // 授勋大赏：星轨三峰荣冠 + 月桂星轨光弧
             neonPaths.Add(Poly(
                 new Vector2(domeC.x - 44f * rs, domeC.y + 6f * rs),
                 new Vector2(domeC.x - 36f * rs, domeC.y + 34f * rs),
@@ -444,7 +444,7 @@ public static class EraPosterGenerator
         }
         else if (motifType == 4)
         {
-            // 路网名录：双翼飞轮徽记 + 冲刺速度线
+            // 星航名录：双翼飞轮徽记 + 冲刺速度线
             neonPaths.Add(EllipseArc(new Vector2(domeC.x, domeC.y + 20f * rs), 20f * rs, 20f * rs, 0f, Mathf.PI * 2f + 0.1f, 20, 0f));
             neonPaths.Add(Poly(new Vector2(domeC.x - 24f * rs, domeC.y + 24f * rs), new Vector2(domeC.x - 66f * rs, domeC.y + 34f * rs)));
             neonPaths.Add(Poly(new Vector2(domeC.x - 22f * rs, domeC.y + 14f * rs), new Vector2(domeC.x - 54f * rs, domeC.y + 20f * rs)));
@@ -459,12 +459,12 @@ public static class EraPosterGenerator
         // 共用斜切星环，环绕顶部徽章
         neonPaths.Add(EllipseArc(new Vector2(domeC.x + 3f * rs, domeC.y + 12f * rs), 94f * rs, 14f * rs, -0.18f, Mathf.PI + 0.25f, 22, 0.16f));
 
-        // 2. 贯穿文字下方的倾斜大轨道半环（收窄弧角避免右端弯折突兀）+ `//` 双斜线交叉 + 正下方闪电折线
+        // 2. 贯穿文字下方的倾斜大星轨半环（收窄弧角避免右端弯折突兀）+ `//` 双斜线交叉 + 正下方闪电折线
         Vector2 orbitC = new Vector2(w * 0.50f, h * 0.35f);
         neonPaths.Add(EllipseArc(orbitC, w * 0.37f, h * 0.115f, Mathf.PI * 0.96f, Mathf.PI * 1.98f, 36, 0.08f));
         neonPaths.Add(EllipseArc(new Vector2(orbitC.x + 2f * rs, orbitC.y - 3f * rs), w * 0.355f, h * 0.105f, Mathf.PI * 1.04f, Mathf.PI * 1.93f, 30, 0.08f));
 
-        // 底部轨环左右交叉小斜线 `//`
+        // 底部星轨环左右交叉小斜线 `//`
         float lx1 = w * 0.36f, ly1 = h * 0.17f;
         neonPaths.Add(Poly(new Vector2(lx1 - 7f * rs, ly1 - 10f * rs), new Vector2(lx1 + 2f * rs, ly1 + 11f * rs)));
         neonPaths.Add(Poly(new Vector2(lx1 + 3f * rs, ly1 - 10f * rs), new Vector2(lx1 + 12f * rs, ly1 + 11f * rs)));

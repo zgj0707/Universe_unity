@@ -18,7 +18,7 @@ public partial class DemoBootstrap
         Leaderboard
     }
 
-    int storyStage = 0; // 0: 青湾初笛, 1: 蒸汽与时刻, 2: 汐港烟火气, 3: 立社挂牌, 4: 潮涌山海湾, 5: 全章圆满
+    int storyStage = 0; // 0: 星港初笛, 1: 跃迁与航历, 2: 月之亮面拓荒, 3: 月背深空连接, 4: 火星跨星域贯通, 5: 全章圆满
     bool tutorialSkipped = false;
     GameObject storyObjectiveBannerGo;
     Text storyObjectiveText;
@@ -33,38 +33,38 @@ public partial class DemoBootstrap
     static readonly StoryChapterSpec[] StoryChapters = {
         new StoryChapterSpec {
             stage = 0, key = "ch0_harbor_whistle",
-            chapterTag = "序章 · 青湾初笛", speaker = "规划署嘱托",
-            title = "第一张摊开的手绘图",
-            body = "晨雾还未散尽，你把汐港海岸线的手绘草图摊在木桌上。\n这片城市每天都在奔忙，却还缺一条真正连贯的铁道动脉。\n长按地图上任意两座相邻车站相连，试着点亮我们的第一班列车吧！",
-            objective = "目标：铺设首条线路或接入 2 座车站（解锁「列车」与「科技」）"
+            chapterTag = "序章 · 星港初笛", speaker = "星航署嘱托",
+            title = "第一张摊开的星图",
+            body = "星尘还未落定，你把月之亮面星港群的手绘星图摊在全息桌上。\n这片星域每天都在跃迁，却还缺一条真正连贯的星际航线。\n长按地图上任意两座相邻星港相连，试着点亮我们的首班星舰吧！",
+            objective = "目标：铺设首条航线或接入 2 座星港（解锁「星舰」与「科技」）"
         },
         new StoryChapterSpec {
             stage = 1, key = "ch1_steam_and_time",
-            chapterTag = "第一章 · 蒸汽与时刻", speaker = "机务督办 · 黄工头",
-            title = "锅炉点火与铁道典籍",
-            body = "铁轨刚一合拢，月台上就站满了拎着公文袋与菜篮的早班市民。\n黄工头抹了把汗笑道：『单靠人工时刻表撑不住客流！去看看「科技树」与「列车车库」，研习新机车、调配四时段班次，这线才能真正赚大钱！』",
-            objective = "目标：连通 4 座车站或解锁 1 项科技（解锁「名胜图鉴」与「站前物业」）"
+            chapterTag = "第一章 · 跃迁与航历", speaker = "航务督办 · 黄工头",
+            title = "核热点火与星航典籍",
+            body = "星轨刚一接通，星港里就挤满了拎着公文包与补给袋的早班旅客。\n黄工头抹了把汗笑道：『单靠人工航历撑不住客流！去看看「科技树」与「星舰舰坞」，研习新型飞车、调配四时段航班，这航线才能真正赚大钱！』",
+            objective = "目标：连通 4 座星港或解锁 1 项科技（解锁「名胜图鉴」与「港前物业」）"
         },
         new StoryChapterSpec {
             stage = 2, key = "ch2_harbor_life",
-            chapterTag = "第二章 · 汐港烟火气", speaker = "文史编辑 · 陈素心",
-            title = "车窗外的人间四时",
-            body = "一位女摄影师拿着手帐本走进总站，里面夹着刚刚印出的景点明信片。\n『每当线路路过名胜站，旅人总会在站台多停留十分钟——点开左栏「图鉴」留影打卡，再点车站「详情」添置茶室书局吧。』",
-            objective = "目标：连通 6 座车站（筹备总社挂牌，解锁「公司经营」与「人才招募」）"
+            chapterTag = "第二章 · 月之亮面拓荒", speaker = "文史编辑 · 陈素心",
+            title = "舷窗外的人间四时",
+            body = "一位女摄影师拿着手帐本走进中心星港，里面夹着刚刚印出的景点明信片。\n『每当航线路过名胜港，旅人总会在星港多停留十分钟——点开左栏「星图」留影打卡，再点星港「详情」添置茶室书局吧。』",
+            objective = "目标：连通 6 座星港（筹备总社挂牌，解锁「公司经营」与「人才招募」）"
         },
         new StoryChapterSpec {
             stage = 3, key = "ch3_company_founded",
-            chapterTag = "第三章 · 立社挂牌", speaker = "执行总长 · 林先生",
-            title = "铜牌挂上总社大门",
-            body = "今日红绸落下，你的铁道公司正式挂牌！\n底栏「公司」总台与「企业治理树」现已全面启用：\n任命高管、猎聘才俊并派驻大站或骨干线，让专业团队替你撑起整张山海路网。",
-            objective = "目标：扩展运营并冲击日利润 ¥600（开拓跨海镜屿与全套「金融招投标」）"
+            chapterTag = "第三章 · 月背深空连接", speaker = "执行总长 · 林先生",
+            title = "星轨跨越月背深空",
+            body = "今日红绸落下，你的星际航运公司正式挂牌！\n底栏「公司」总台与「企业治理树」现已全面启用：\n任命高管、猎聘才俊并派驻大港或骨干航线，让专业团队替你撑起整张深空星轨网。\n月背深空连接航线已贯通，星轨向更远处延伸。",
+            objective = "目标：扩展运营并冲击日利润 ¥600（开拓月背深空与全套「金融招投标」）"
         },
         new StoryChapterSpec {
             stage = 4, key = "ch4_greater_bay",
-            chapterTag = "第四章 · 潮涌山海湾", speaker = "海湾联席特使",
-            title = "越过海湾，向北延伸",
-            body = "汐港的灯火已连成诗行，海的另一端与更北方的榕川名城也正发出邀约。\n『债券融资、市政招标、跨区接驳与排行榜』现已全面解禁——用铁轨把整片山海湾连成一个温暖的圆吧！",
-            objective = "自由经营阶段：连结三地门户，建设你的山海百年铁道！"
+            chapterTag = "第四章 · 火星跨星域贯通", speaker = "星域联席特使",
+            title = "跨越星域，抵达火星",
+            body = "月之亮面的灯火已连成诗行，月背的深空航迹也早已贯通，更北方的火星名城正发出邀约。\n『债券融资、市政招标、跨区接驳与排行榜』现已全面解禁——用星轨把整片星域连成一个温暖的圆吧！火星跨星域航线全线贯通！",
+            objective = "自由经营阶段：连结三地门户，建设你的百年星际航运！"
         }
     };
 
@@ -97,16 +97,16 @@ public partial class DemoBootstrap
         {
             case GameFeature.FleetPage:
             case GameFeature.TechPage:
-                return "完成「序章 · 开通首条线路（连通 2 站）」后解锁！";
+                return "完成「序章 · 开通首条航线（连通 2 港）」后解锁！";
             case GameFeature.SceneryAndCommercial:
-                return "推进至「第二章 · 汐港烟火气（连通 4 站或研发 1 项科技）」后解锁！";
+                return "推进至「第二章 · 月之亮面拓荒（连通 4 港或研发 1 项科技）」后解锁！";
             case GameFeature.CompanyCore:
-                return "推进至「第三章 · 立社挂牌（连通 6 座车站）」后解锁！";
+                return "推进至「第三章 · 月背深空连接（连通 6 座星港）」后解锁！";
             case GameFeature.CompanyFinanceAndBoard:
             case GameFeature.Leaderboard:
-                return "推进至「第四章 · 潮涌山海湾（连通 9 站或开放镜屿）」后解锁！";
+                return "推进至「第四章 · 火星跨星域贯通（连通 9 港或开放月背）」后解锁！";
             default:
-                return "继续扩展路网后解锁";
+                return "继续扩展星轨网后解锁";
         }
     }
 
@@ -235,7 +235,7 @@ public partial class DemoBootstrap
         if (dock)
         {
             GameFeature[] tabFeats = { GameFeature.LinesPage, GameFeature.FleetPage, GameFeature.CompanyCore, GameFeature.TechPage };
-            string[] tabBaseNames = { "线路", "列车", "公司", "科技" };
+            string[] tabBaseNames = { "航线", "星舰", "公司", "科技" };
             for (int i = 0; i < 4; i++)
             {
                 var tabTf = dock.transform.Find("Tab" + i);
@@ -250,7 +250,7 @@ public partial class DemoBootstrap
         {
             bool sceneryOpen = IsFeatureUnlocked(GameFeature.SceneryAndCommercial);
             bool rankOpen = IsFeatureUnlocked(GameFeature.Leaderboard);
-            SetLeftRailLock(leftRailGos[1], "图鉴", sceneryOpen);
+            SetLeftRailLock(leftRailGos[1], "星图", sceneryOpen);
             SetLeftRailLock(leftRailGos[2], "排行", rankOpen);
         }
     }
@@ -268,7 +268,7 @@ public partial class DemoBootstrap
 
     void OpenStoryArchiveModal()
     {
-        var pg = OpenPage("山海手帐 · 剧情档案", "重温旅途关键篇章与各阶段引导目标，亦可随时自由切换剧情引导开关。", "PageArt/album_watercolor");
+        var pg = OpenPage("星航手帐 · 剧情档案", "重温星际拓荒关键篇章与各阶段引导目标，亦可随时自由切换剧情引导开关。", "PageArt/album_watercolor");
         float totalH = StoryChapters.Length * 294f + 160f;
         var content = FleetScroll(pg.transform, 36f, PgH - 250f, totalH, scrollKey: "story:archive");
         float topY = content.sizeDelta.y;
@@ -283,7 +283,7 @@ public partial class DemoBootstrap
             Rounded(card, unlocked ? CardBg : Color.Lerp(CardBg, Ink, 0.05f)); SoftShadow(card);
             Img(Rect("Accent", card.transform, 0f, 28f, 7f, 212f), unlocked ? Gold : InkSoft, spriteRound).raycastTarget = false;
             Txt(card.transform, $"{ch.chapterTag}  ·  {ch.speaker}", 24, unlocked ? Matcha : InkSoft, 28f, 212f, 640f, 36f, TextAnchor.MiddleLeft);
-            Txt(card.transform, unlocked ? ch.title : "？？？ （随路网扩展后开启）", 31, unlocked ? Ink : InkSoft, 28f, 160f, 680f, 46f, TextAnchor.MiddleLeft);
+            Txt(card.transform, unlocked ? ch.title : "？？？ （随星轨网扩展后开启）", 31, unlocked ? Ink : InkSoft, 28f, 160f, 680f, 46f, TextAnchor.MiddleLeft);
             Txt(card.transform, unlocked ? ch.body : ch.objective, 24, InkSoft, 28f, 18f, cardW - 252f, 134f, TextAnchor.UpperLeft);
 
             if (unlocked)
