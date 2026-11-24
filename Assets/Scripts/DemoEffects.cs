@@ -133,14 +133,12 @@ public partial class DemoBootstrap
         pageAnimCo = null;
     }
 
-    bool TryGetRegionShowcaseSpec(string titleOrRegion, out RegionShowcaseSpec spec)
+    bool TryGetRegionShowcaseSpec(string titleOrRegion, out RegionSpec spec)
     {
-        string normalized = (titleOrRegion ?? "").Replace(" ", "");
-        for (int i = 0; i < RegionShowcaseSpecs.Length; i++)
-        {
-            if (RegionShowcaseSpecs[i].key == normalized) { spec = RegionShowcaseSpecs[i]; return true; }
-        }
-        spec = RegionShowcaseSpecs[0];
+        string normalized = NormalizeLegacyRegionId((titleOrRegion ?? "").Replace(" ", ""));
+        spec = GetRegionSpec(normalized);
+        if (spec != null) return true;
+        spec = GetRegionSpec("月之亮面");
         return false;
     }
 
@@ -178,7 +176,7 @@ public partial class DemoBootstrap
         artClip.AddComponent<Mask>().showMaskGraphic = true;
 
         RawImage bgRaw = null;
-        var bgTex = hasSpec ? Resources.Load<Texture2D>(spec.bgPath) : null;
+        var bgTex = hasSpec ? Resources.Load<Texture2D>(spec.cardBgResource) : null;
         if (bgTex)
         {
             bgRaw = Rect("Backdrop", artClip.transform, 0f, 0f, artW, artH).AddComponent<RawImage>();
@@ -188,7 +186,7 @@ public partial class DemoBootstrap
 
         // 顶部抵达邮戳标签
         var arrivalPill = Rect("ArrivalBadge", artClip.transform, (artW - 220f) * 0.5f, artH - 58f, 220f, 36f);
-        Rounded(arrivalPill, neon ? Gold : spec.frameAccent);
+        Rounded(arrivalPill, neon ? Gold : spec.accentColor);
         arrivalPill.GetComponent<Image>().raycastTarget = false;
         Txt(arrivalPill.transform, "抵 达 版 图", 19, neon ? new Color(0.08f, 0.08f, 0.14f) : Color.white, 0f, 0f, 220f, 36f, TextAnchor.MiddleCenter);
 
@@ -202,7 +200,7 @@ public partial class DemoBootstrap
         var titleCg = titleHolder.AddComponent<CanvasGroup>();
         titleCg.alpha = 0f;
 
-        var titleTex = (hasSpec && !string.IsNullOrEmpty(spec.titleMaskPath)) ? Resources.Load<Texture2D>(spec.titleMaskPath) : null;
+        var titleTex = (hasSpec && !string.IsNullOrEmpty(spec.titleMaskResource)) ? Resources.Load<Texture2D>(spec.titleMaskResource) : null;
         if (titleTex)
         {
             Color haloCol = neon ? new Color(0.02f, 0.03f, 0.09f, 0.94f) : new Color(0.996f, 0.986f, 0.955f, 0.92f);
@@ -221,12 +219,12 @@ public partial class DemoBootstrap
         }
         else
         {
-            string spaced = (hasSpec ? spec.key : DisplayPlaceAliases(title)).Replace(" ", "");
+            string spaced = (hasSpec ? spec.displayTitle : DisplayPlaceAliases(title)).Replace(" ", "");
             if (spaced.Length == 2) spaced = spaced[0] + "   " + spaced[1];
             Color haloCol = neon ? new Color(0.02f, 0.03f, 0.09f, 0.92f) : new Color(0.996f, 0.984f, 0.948f, 0.94f);
             Color inkCol = hasSpec ? (neon ? spec.neonInk : spec.dayInk) : (neon ? Gold : Ink);
-            Txt(titleHolder.transform, spaced, 120, haloCol, 2f, -3f, titleW, titleH, TextAnchor.MiddleCenter).raycastTarget = false;
-            Txt(titleHolder.transform, spaced, 120, inkCol, 0f, 0f, titleW, titleH, TextAnchor.MiddleCenter).raycastTarget = false;
+            Txt(titleHolder.transform, spaced, 84, haloCol, 2f, -3f, titleW, titleH, TextAnchor.MiddleCenter).raycastTarget = false;
+            Txt(titleHolder.transform, spaced, 84, inkCol, 0f, 0f, titleW, titleH, TextAnchor.MiddleCenter).raycastTarget = false;
         }
 
         // 中线金/青花装饰线（从中心向外舒展）
@@ -234,7 +232,7 @@ public partial class DemoBootstrap
         var ruleRt = rule.GetComponent<RectTransform>();
         ruleRt.pivot = new Vector2(0.5f, 0.5f);
         ruleRt.anchoredPosition = new Vector2(artW * 0.5f, titleY - 10f);
-        var ruleImg = Img(rule, neon ? spec.neonInk : spec.frameAccent, spriteRound);
+        var ruleImg = Img(rule, neon ? spec.neonInk : spec.accentColor, spriteRound);
         ruleImg.raycastTarget = false;
         ruleRt.localScale = new Vector3(0f, 1f, 1f);
 
@@ -243,7 +241,7 @@ public partial class DemoBootstrap
         if (qualityTier >= 2 && (spriteDiamond || spriteCircle))
         {
             sparkles = new List<RectTransform>(10);
-            Color spCol = neon ? spec.neonInk : Color.Lerp(spec.frameAccent, Gold, 0.55f);
+            Color spCol = neon ? spec.neonInk : Color.Lerp(spec.accentColor, Gold, 0.55f);
             for (int i = 0; i < 10; i++)
             {
                 bool leftWing = i % 2 == 0;

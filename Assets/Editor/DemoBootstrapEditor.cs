@@ -45,6 +45,6 @@ public class DemoBootstrapEditor : Editor
     {
         var asset = AssetDatabase.LoadAssetAtPath<MonoScript>(path);
         if (asset != null) AssetDatabase.OpenAsset(asset);
-        else Debug.LogWarning("[Railway2] 找不到脚本 " + path);
+        else Debug.LogWarning("[Universe] 找不到脚本 " + path);
     }
 }

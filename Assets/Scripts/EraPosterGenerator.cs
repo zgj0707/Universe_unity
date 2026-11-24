@@ -17,7 +17,7 @@ public static class EraPosterGenerator
         public Color glowColor;     // 散射发光光晕色
         public Color coreColor;     // 内芯高亮发白光色
         public Color accentColor;   // 辅色点缀（双杠/光晕次色）
-        public int motifType;       // 0: 穹顶星环  1: 电气弧环  2: 流线磁浮环  3: 授勋星冠  4: 星轨飞翼  5: 全通极光星徽
+        public int motifType;       // 0: 穹顶星环  1: 超导能量弧环  2: 流线磁浮环  3: 授勋星冠  4: 星轨飞翼  5: 全通极光星徽
         public int bigPrefixCount;  // 前缀放大强调字符数（时代海报为 3，通用海报为 0 或 1）
     }
 
@@ -33,7 +33,7 @@ public static class EraPosterGenerator
         if (CustomCache.TryGetValue(fullKey, out var cached) && cached != null) return cached;
 
         PosterTheme theme = BuildPalette(paletteIndex);
-        theme.titleText = string.IsNullOrEmpty(text) ? "RAILWAY" : text;
+        theme.titleText = string.IsNullOrEmpty(text) ? "21Century" : text;
         theme.motifType = motifType;
         theme.bigPrefixCount = bigPrefixCount;
 
@@ -99,7 +99,7 @@ public static class EraPosterGenerator
         if (Cached[clamped] != null) return Cached[clamped];
 
         PosterTheme theme = BuildPalette(clamped);
-        theme.digits = clamped == 0 ? "19" : clamped == 1 ? "20" : "21";
+        theme.digits = clamped == 0 ? "21" : clamped == 1 ? "22" : "23";
         theme.titleText = theme.digits + "Century";
         theme.motifType = clamped;
         theme.bigPrefixCount = 3;

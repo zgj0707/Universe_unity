@@ -113,6 +113,7 @@ public partial class DemoBootstrap
         public bool hasYesterdayReport;
         public DailyReportSnapshot yesterdayReport;
         public List<SavedFrozenLine> frozenLines = new List<SavedFrozenLine>();
+        public List<string> unlockedRegions = new List<string>();
     }
     bool saveReady, saveBlocked; float autosaveTimer;
     string StationSaveKey(Station station) { return station.region + ":" + station.name; }
@@ -241,6 +242,13 @@ public partial class DemoBootstrap
         if (!IsThemeAvailable(currentTheme)) currentTheme = 0;
         coins=data.coins; diamonds=data.diamonds; rp=data.rp; day=Mathf.Max(1,data.day); dayClock=data.clock; researchClock=data.researchClock; timeSpeed=data.speed;
         nextLineId=data.nextId; dailyStationBaseline=data.dailyBaseline; macauUnlocked=data.macau; guangdongUnlocked=data.guangdong; loanOutstanding=data.loan; musicEnabled=data.music;
+        unlockedRegions.Clear();
+        unlockedRegions.Add("月之亮面");
+        if (macauUnlocked) unlockedRegions.Add("月背");
+        if (guangdongUnlocked) unlockedRegions.Add("火星·西半球");
+        if (data.unlockedRegions != null)
+            for (int ri = 0; ri < data.unlockedRegions.Count; ri++)
+                SetRegionUnlocked(data.unlockedRegions[ri], true);
         companyName = string.IsNullOrWhiteSpace(data.companyName) ? "深空轨社" : data.companyName.Trim();
         companySeal = Mathf.Clamp(data.companySeal, 0, CompanySealChars.Length - 1);
         companyPolicy = Mathf.Clamp(data.companyPolicy, 0, CompanyPolicyNames.Length - 1);
@@ -287,7 +295,7 @@ public partial class DemoBootstrap
         hasYesterdayReport = data.hasYesterdayReport && data.yesterdayReport != null;
         yesterdayReport = hasYesterdayReport ? CopyDailyReport(data.yesterdayReport) : null;
         lastPolicyDay = data.lastPolicyDay; lastAdSubsidyDay = data.lastAdSubsidyDay; dailyTaskClaimedDay = data.dailyTaskClaimedDay;
-        savedRegion = data.region;
+        savedRegion = NormalizeLegacyRegionId(data.region);
     }
     string savedRegion;
     static DailyReportSnapshot CopyDailyReport(DailyReportSnapshot src)
@@ -330,6 +338,7 @@ public partial class DemoBootstrap
         foreach(var l in lines) { var record=new SavedLine { id=l.id, name=l.name, color=l.color, skin=l.skin, trains=l.trains, baseRemoved=!l.hasBaseTrain, dispatch=(int[])l.dispatch.Clone(), fare=l.fare, todayGross=l.todayGross, todayMaintenance=l.todayMaintenance, todayTrack=l.todayTrack, todayRevenue=l.todayRevenue, recent=new List<int>(l.recent), stations=new List<string>() }; foreach(int i in l.st) record.stations.Add(StationSaveKey(stations[i])); data.lines.Add(record); }
         foreach(var v in researchVehicles) data.vehicles.Add(new SavedVehicle { node=v.node, lineId=v.lineId });
         data.tech.AddRange(techDone); data.story.AddRange(storySeen); data.skins.AddRange(ownedLineSkins);
+        foreach (var ur in unlockedRegions) data.unlockedRegions.Add(ur);
         data.themes.AddRange(ownedThemes);
         foreach (var kv in adWatchCounts) { data.adKeys.Add(kv.Key); data.adCounts.Add(kv.Value); }
         foreach (var kv in themeTrialUntil) { data.trialThemes.Add(kv.Key); data.trialEnds.Add(kv.Value); }
@@ -481,7 +490,7 @@ public partial class DemoBootstrap
         hasYesterdayReport = false; yesterdayReport = null;
         estimatingResearchProfit = false; hasForecastSignature = false;
         frozenTraffic.Clear(); lineForecasts.Clear(); operatingRates.Clear();
-        pendingCheckin.Clear(); storyQueue.Clear();
+        pendingCheckin.Clear(); storyQueue.Clear(); ClearNarrativeBubbles();
         scrollPositions.Clear(); scrollViews.Clear();
         // Keep generations monotonic so an old same-frame callback cannot match a new binding.
         foreach (var key in new List<string>(scrollBindingVersions.Keys)) NextScrollBinding(key);
@@ -532,13 +541,14 @@ public partial class DemoBootstrap
         string dest = (!string.IsNullOrEmpty(savedRegion) && RegionUnlocked(savedRegion)) ? savedRegion : "月之亮面";
         FreezeRegionTraffic();
         currentRegion = dest;
-        if (hkMapArt) hkMapArt.SetActive(currentRegion == "月之亮面");
-        if (macauMapArt) macauMapArt.SetActive(currentRegion == "月背");
-        if (guangdongMapArt) guangdongMapArt.SetActive(currentRegion == "火星");
+        SetActiveRegionMapArt(currentRegion);
+        SyncRegionMapTextureMemory();
+        var curSpec = GetRegionSpec(currentRegion);
+        float initZoom = curSpec != null ? curSpec.initZoom : 1f;
         if (mapRect)
         {
-            mapRect.localScale = Vector3.one;
-            mapRect.anchoredPosition = mapWheelZoom ? mapWheelZoom.CenterPosition(1f) : Vector2.zero;
+            mapRect.localScale = Vector3.one * initZoom;
+            mapRect.anchoredPosition = mapWheelZoom ? mapWheelZoom.CenterPosition(initZoom) : Vector2.zero;
         }
         foreach (var kv in stationImgs)
         {
@@ -553,7 +563,7 @@ public partial class DemoBootstrap
                 if (texts.Length > 1) texts[1].text = DisplayPlaceAliases(PortalSubtitle(stations[i], currentRegion));
             }
         }
-        if (regionTitle) regionTitle.text = DisplayPlaceAliases(currentRegion == "月之亮面" ? "月之亮面" : currentRegion == "月背" ? "月 背" : "火 星");
+        if (regionTitle) regionTitle.text = curSpec != null ? curSpec.spacedTitle : currentRegion;
         RefreshSceneryViews();
         UpdateStationLabelSizes(1f);
         LayoutStationLabels();

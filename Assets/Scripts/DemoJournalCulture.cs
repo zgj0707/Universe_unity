@@ -5,9 +5,9 @@ using UnityEngine.UI;
 
 public partial class DemoBootstrap
 {
-    // ---------- 星图志 · 星域节候、督办御匾、复古纪念星票与全星域拥堵速览 ----------
+    // ---------- 星图志 · 星域节候、荣誉星牌、复古纪念星票与全星域拥堵速览 ----------
 
-    int sceneryCollectionTab = 0; // 0: 名胜风光, 1: 纪念票册, 2: 钦颁匾额, 3: 二十四候
+    int sceneryCollectionTab = 0; // 0: 名胜风光, 1: 纪念票册, 2: 荣誉星牌, 3: 二十四候
     static readonly Dictionary<string, Texture2D> ornamentTexCache = new Dictionary<string, Texture2D>();
 
     Texture2D LoadOrnamentTex(string key)
@@ -53,7 +53,7 @@ public partial class DemoBootstrap
         StampBotanicalSprig(parent, "orn_floral_divider", centerX - w * 0.5f, y, w, h, alpha, false, false, 0f, tint);
     }
 
-    /// <summary>为手帐卡片或牌匾边框绘制一圈精细内框线。</summary>
+    /// <summary>为手帐卡片或荣誉星牌边框绘制一圈精细内框线。</summary>
     void StampFineRuleFrame(Transform parent, float w, float h, float inset = 10f, Color? borderColor = null)
     {
         if (parent == null || w <= inset * 2f + 4f || h <= inset * 2f + 4f) return;
@@ -65,7 +65,7 @@ public partial class DemoBootstrap
         Img(Rect("FrameR", parent, w - inset - t, inset, t, h - inset * 2f), col).raycastTarget = false;
     }
 
-    /// <summary>切入全屏「星图鉴」并直接定位到指定页签（0: 名胜, 1: 票册, 2: 匾额, 3: 节候）。</summary>
+    /// <summary>切入全屏「星图鉴」并直接定位到指定页签（0: 名胜, 1: 票册, 2: 荣誉星牌, 3: 节候）。</summary>
     void OpenSceneryTab(int tab)
     {
         sceneryCollectionTab = Mathf.Clamp(tab, 0, 3);
@@ -114,7 +114,7 @@ public partial class DemoBootstrap
         },
         new SolarTermSpec {
             name = "谷雨", season = "春 · 新茗", poem = "雨前茶香出火星，一笛清风入月之亮面。",
-            effectHint = "全网票款收益 +6%",
+            effectHint = "全网星票款收益 +6%",
             demandMult = 1.00f, sceneryDemandMult = 1.02f, revenueMult = 1.06f, maintMult = 1.00f, commercialMult = 1.00f
         },
         new SolarTermSpec {
@@ -123,13 +123,13 @@ public partial class DemoBootstrap
             demandMult = 1.02f, sceneryDemandMult = 1.12f, revenueMult = 1.00f, maintMult = 1.04f, commercialMult = 1.04f
         },
         new SolarTermSpec {
-            name = "小暑", season = "夏 · 荫街", poem = "骑楼竹影荫茶座，星风穿过港前街。",
+            name = "小暑", season = "夏 · 荫街", poem = "星港廊街竹影荫茶座，星风穿过港前街。",
             effectHint = "港前商用物业日租 +10%",
             demandMult = 1.00f, sceneryDemandMult = 1.00f, revenueMult = 1.00f, maintMult = 1.02f, commercialMult = 1.10f
         },
         new SolarTermSpec {
             name = "立秋", season = "秋 · 商埠", poem = "一叶知秋商旅早，货栈灯火接黎明。",
-            effectHint = "全网票款 +5% · 日常客流 +3%",
+            effectHint = "全网星票款 +5% · 日常客流 +3%",
             demandMult = 1.03f, sceneryDemandMult = 1.03f, revenueMult = 1.05f, maintMult = 1.00f, commercialMult = 1.00f
         },
         new SolarTermSpec {
@@ -138,7 +138,7 @@ public partial class DemoBootstrap
             demandMult = 1.00f, sceneryDemandMult = 1.00f, revenueMult = 1.00f, maintMult = 0.94f, commercialMult = 1.00f
         },
         new SolarTermSpec {
-            name = "中秋", season = "秋 · 团圆", poem = "月悬沧海千尺镜，家书随轨到天涯。",
+            name = "中秋", season = "秋 · 团圆", poem = "月悬星海千尺镜，家书随轨到天涯。",
             effectHint = "全网客流 +8% · 名胜与探亲大热 +14%",
             demandMult = 1.08f, sceneryDemandMult = 1.14f, revenueMult = 1.03f, maintMult = 1.00f, commercialMult = 1.06f
         },
@@ -149,7 +149,7 @@ public partial class DemoBootstrap
         },
         new SolarTermSpec {
             name = "立冬", season = "冬 · 夜墟", poem = "老街砂锅烟火暖，夜市归人乘末班。",
-            effectHint = "全网票款收益 +7%",
+            effectHint = "全网星票款收益 +7%",
             demandMult = 1.02f, sceneryDemandMult = 1.02f, revenueMult = 1.07f, maintMult = 1.00f, commercialMult = 1.04f
         },
         new SolarTermSpec {
@@ -176,7 +176,7 @@ public partial class DemoBootstrap
             new CharterPlaqueSpec {
                 key = "plaque_tongqu", plaqueText = "四通八达", title = "第一阶段 · 星港通衢考成",
                 conditionText = "全网运营满 4 条航线，且已连通至少 12 座星港",
-                rewardHint = "赏银 ¥1,600 · 12 RP · 永久票务收益 +2%",
+                rewardHint = "奖金 ¥1,600 · 12 RP · 永久票务收益 +2%",
                 motto = "星轨初成络脉通，晨曦鸣笛动星关。",
                 rewardCoins = 1600, rewardRp = 12,
                 checkReady = () => lines.Count >= 4 && DailyConnectedCount() >= 12
@@ -184,15 +184,15 @@ public partial class DemoBootstrap
             new CharterPlaqueSpec {
                 key = "plaque_shanhai", plaqueText = "星域通济", title = "第二阶段 · 三星锁钥考成",
                 conditionText = "激活至少 2 条跨星域口岸走廊，并打卡 5 处名胜",
-                rewardHint = "赏银 ¥3,600 · 18 RP · 永久口岸联运补贴 +15%",
+                rewardHint = "奖金 ¥3,600 · 18 RP · 永久口岸联运补贴 +15%",
                 motto = "星港连城水天一色，三地同轨共兴。",
                 rewardCoins = 3600, rewardRp = 18,
                 checkReady = () => CrossBaySynergyLinkCount() >= 2 && FoundCount() >= 5
             },
             new CharterPlaqueSpec {
-                key = "plaque_baiye", plaqueText = "百业兴隆", title = "第三阶段 · 港埠百业考成",
+                key = "plaque_baiye", plaqueText = "百业兴隆", title = "第三阶段 · 星港百业考成",
                 conditionText = "落成 4 处港前商业物业，且星舰拥有量与功勋退役合计 ≥ 6 艘",
-                rewardHint = "赏银 ¥6,000 · 24 RP · 永久港前物业日租 +12%",
+                rewardHint = "奖金 ¥6,000 · 24 RP · 永久港前物业日租 +12%",
                 motto = "港前茶楼书肆立，客来财聚岁年丰。",
                 rewardCoins = 6000, rewardRp = 24,
                 checkReady = () => DevelopedCommercialCount() >= 4 && (researchVehicles.Count + retiredVehiclesCount) >= 6
@@ -200,7 +200,7 @@ public partial class DemoBootstrap
             new CharterPlaqueSpec {
                 key = "plaque_nantian", plaqueText = "南天柱石", title = "终阶段 · 星轨垂范大考",
                 conditionText = "三地口岸 3/3 全贯通，且星际商道公司树已研满 15 项",
-                rewardHint = "赏银 ¥12,000 · 36 RP · 永久全网维保费用 -5%",
+                rewardHint = "奖金 ¥12,000 · 36 RP · 永久全网维保费用 -5%",
                 motto = "百年商道兼工程，深空星脉永流芳。",
                 rewardCoins = 12000, rewardRp = 36,
                 checkReady = () => CrossBaySynergyLinkCount() >= 3 && CoTechEraDoneCount(0) >= 15
@@ -213,39 +213,39 @@ public partial class DemoBootstrap
         return new[]
         {
             new MemorialTicketSpec {
-                key = "tkt_first_line", serial = "NO.1804", title = "初发南疆 · 首班登舰票",
-                routeText = "起始港 ━━▶ 终点港", stampText = "首班\n启航", regionTag = "月之亮面",
-                motto = "第一道墨色轨线落笔成路，旅人怀票登舰。",
+                key = "tkt_first_line", serial = "NO.2045", title = "月面初航 · 首班登舰票",
+                routeText = "静海基地 ━━▶ 阿里亚德港", stampText = "首班\n启航", regionTag = "月之亮面",
+                motto = "第一道星轨落笔成线，拓荒者怀票登舰。",
                 checkEarned = () => lines.Count >= 1
             },
             new MemorialTicketSpec {
-                key = "tkt_hk_6", serial = "NO.1835", title = "青湾鸣笛 · 半岛联线票",
-                routeText = "静海基地 ━━▶ 九曲码头", stampText = "月之亮面\n青湾", regionTag = "月之亮面",
-                motto = "星港环抱六港连珠，清脆提示音与引擎声相和。",
+                key = "tkt_hk_6", serial = "NO.2058", title = "静海鸣笛 · 亮面联线票",
+                routeText = "静海基地 ━━▶ 哥白尼环形山", stampText = "亮面\n巡航", regionTag = "月之亮面",
+                motto = "星港连珠六站成网，真空引擎与信标微光相和。",
                 checkEarned = () => RegionConnectedCount("月之亮面") >= 6
             },
             new MemorialTicketSpec {
-                key = "tkt_macau", serial = "NO.1848", title = "青莲长桥 · 月背深空票",
-                routeText = "冯·卡门港 ━━▶ 翠环村", stampText = "月背\n青瓷", regionTag = "月背",
-                motto = "越过深空星海踏入石板老街，星风里满是咸甜香气。",
+                key = "tkt_macau", serial = "NO.2082", title = "静默远征 · 月背深空票",
+                routeText = "冯·卡门港 ━━▶ 莫斯科海", stampText = "月背\n静默", regionTag = "月背",
+                motto = "越过月面边界踏入无线电静默区，艾特肯深井灯火长明。",
                 checkEarned = () => macauUnlocked && RegionConnectedCount("月背") >= 2
             },
             new MemorialTicketSpec {
-                key = "tkt_gd", serial = "NO.1862", title = "百花晨露 · 火星跨星域票",
-                routeText = "奥林匹斯（月面门） ━━▶ 南羊城 · 骑楼老街", stampText = "火星\n百花", regionTag = "火星",
-                motto = "北上火星万顷良田与骑楼长市，跨星域航线雏形已现。",
-                checkEarned = () => guangdongUnlocked && RegionConnectedCount("火星") >= 3
+                key = "tkt_gd", serial = "NO.2110", title = "赤砂远航 · 火星跨星域票",
+                routeText = "奥林匹斯星门 ━━▶ 米拉斯深谷", stampText = "火星\n赤砂", regionTag = "火星",
+                motto = "跨越地月引力井直抵水手大峡谷，行星际干线雏形已现。",
+                checkEarned = () => RegionUnlocked("火星·西半球") && (RegionConnectedCount("火星·西半球") + RegionConnectedCount("火星·东半球")) >= 3
             },
             new MemorialTicketSpec {
-                key = "tkt_bay", serial = "NO.1885", title = "三地金钥 · 星域联运票",
-                routeText = "月之亮面 ━━▶ 月背 / 奥林匹斯（月面门）", stampText = "三域\n联运", regionTag = "地月环线",
-                motto = "一票可跨三星，星海晨昏皆为通途。",
+                key = "tkt_bay", serial = "NO.2135", title = "三星金钥 · 跨星域联运票",
+                routeText = "月之亮面 ━━▶ 月背 / 火星", stampText = "三星\n联运", regionTag = "星域环线",
+                motto = "一票可跨月面、月背与火星，深空天堑皆为通途。",
                 checkEarned = () => CrossBaySynergyLinkCount() >= 1
             },
             new MemorialTicketSpec {
-                key = "tkt_retire", serial = "NO.1896", title = "功勋星舰 · 荣归票",
-                routeText = "舰坞 ━━▶ 百年陈列馆", stampText = "功勋\n陈列", regionTag = "总社",
-                motto = "曾推动时代的老星舰静静卸甲，引擎余温长存。",
+                key = "tkt_retire", serial = "NO.2160", title = "功勋星舰 · 荣归纪念票",
+                routeText = "星港船坞 ━━▶ 星航陈列馆", stampText = "功勋\n陈列", regionTag = "总部",
+                motto = "曾推动星纪元的初代飞车静静卸甲，核热余温长存。",
                 checkEarned = () => retiredVehiclesCount >= 1 || researchVehicles.Count >= 4
             }
         };
@@ -312,7 +312,7 @@ public partial class DemoBootstrap
         return "";
     }
 
-    /// <summary>同步检查纪念车票解锁与新节气变更提示。</summary>
+    /// <summary>同步检查纪念星票解锁与新节气变更提示。</summary>
     void SyncCulturalCollection(bool notify)
     {
         var specs = BuildMemorialTicketSpecs();
@@ -367,7 +367,7 @@ public partial class DemoBootstrap
         SaveGame();
         RefreshHUD();
         RefreshPendingBadge();
-        Toast("钦颁牌匾【" + spec.plaqueText + "】！获 +¥" + spec.rewardCoins + " · +" + spec.rewardRp + " RP");
+        Toast("授予荣誉星牌【" + spec.plaqueText + "】！获 +¥" + spec.rewardCoins + " · +" + spec.rewardRp + " RP");
         return true;
     }
 
@@ -476,7 +476,7 @@ public partial class DemoBootstrap
         FocusCurrent();
     }
 
-    /// <summary>兼容旧调用入口，统一跳转至全屏「星图鉴」对应收集页签（0->匾额, 1->票册, 2->节候）。</summary>
+    /// <summary>兼容旧调用入口，统一跳转至全屏「星图鉴」对应收集页签（0->荣誉星牌, 1->票册, 2->节候）。</summary>
     void OpenCultureJournalModal(int tab = 0)
     {
         int target = tab == 0 ? 2 : tab == 1 ? 1 : 3;
@@ -527,7 +527,7 @@ public partial class DemoBootstrap
             StampBotanicalSprig(card.transform, "orn_cloud_fret", viewW - 46f, itemH - 46f, 36f, 36f, earned ? 0.42f : 0.18f, true, false);
             StampBotanicalSprig(card.transform, "orn_cloud_fret", viewW - 46f, 10f, 36f, 36f, earned ? 0.42f : 0.18f, true, true);
 
-            // 左侧硬纸板票边彩条 + 检票齿孔 + 垂直虚线撕票线
+            // 左侧合金板票边彩条 + 验票齿孔 + 垂直虚线撕票线
             Color stripCol = earned ? new Color(0.74f, 0.27f, 0.20f, 0.92f) : new Color(0.68f, 0.66f, 0.61f, 0.62f);
             Img(Rect("StubLeft", card.transform, 0f, 14f, 18f, itemH - 28f), stripCol, spriteRound).raycastTarget = false;
             for (int nh = 0; nh < 5; nh++)
@@ -558,7 +558,7 @@ public partial class DemoBootstrap
         }
     }
 
-    /// <summary>星图鉴 · 钦颁御批匾额陈列馆。</summary>
+    /// <summary>星图鉴 · 荣誉星牌陈列馆。</summary>
     void BuildSceneryPlaquesTab(Transform page)
     {
         var plaques = BuildCharterPlaques();
@@ -577,9 +577,9 @@ public partial class DemoBootstrap
         StampFineRuleFrame(intro.transform, viewW, heroH, 8f, new Color(Gold.r, Gold.g, Gold.b, 0.50f));
         StampCloudCornerSet(intro.transform, viewW, heroH, 48f, 8f, 0.62f);
         StampBotanicalSprig(intro.transform, "orn_bauhinia_lotus", viewW - 134f, 4f, 124f, 124f, 0.32f, true, false);
-        Txt(intro.transform, "督办阶段大考 · 累计已颁 [" + earnedPlaques.Count + " / " + plaques.Length + "] 方匾额",
+        Txt(intro.transform, "考核阶段大考 · 累计已授 [" + earnedPlaques.Count + " / " + plaques.Length + "] 枚荣誉星牌",
             28, Ink, 30f, 70f, viewW - 170f, 42f, TextAnchor.MiddleLeft);
-        Txt(intro.transform, "达成阶段统筹指标后即可请领赏银、研学点与永久经营加成；御批头衔将题名于「星际群雄榜」。",
+        Txt(intro.transform, "达成阶段统筹指标后即可领取奖金、研学点与永久经营加成；荣誉头衔将登录于「星际群雄榜」。",
             21, InkSoft, 30f, 18f, viewW - 170f, 44f, TextAnchor.MiddleLeft);
 
         float divBottom = heroBottom - 10f - divH;
@@ -600,7 +600,7 @@ public partial class DemoBootstrap
                 earned ? new Color(Gold.r, Gold.g, Gold.b, 0.52f) : new Color(InkSoft.r, InkSoft.g, InkSoft.b, 0.22f));
             StampCloudCornerSet(card.transform, viewW, itemH, 46f, 8f, earned ? 0.78f : 0.42f);
 
-            // 红木金字两行四字竖方牌匾徽记
+            // 金字两行四字竖方荣誉星牌徽记
             var wood = Rect("PlaqueBoard", card.transform, 28f, 40f, 228f, 196f);
             Rounded(wood, earned ? new Color(0.42f, 0.16f, 0.12f, 0.99f) : new Color(0.78f, 0.75f, 0.69f, 0.75f));
             var goldTrim = Rect("GoldTrim", wood.transform, 10f, 10f, 208f, 176f);
@@ -610,7 +610,7 @@ public partial class DemoBootstrap
             var boardTxt = Txt(goldTrim.transform, gridPlaque, 46, earned ? new Color(0.99f, 0.87f, 0.54f) : InkSoft,
                 8f, 44f, 192f, 118f, TextAnchor.MiddleCenter);
             boardTxt.lineSpacing = 1.06f; boardTxt.raycastTarget = false;
-            Txt(goldTrim.transform, earned ? "御批垂铭" : ready ? "待领颁印" : "尚未题名",
+            Txt(goldTrim.transform, earned ? "荣誉铭刻" : ready ? "待领认证" : "尚未登记",
                 19, earned ? new Color(0.96f, 0.80f, 0.45f) : InkSoft, 8f, 10f, 192f, 28f, TextAnchor.MiddleCenter).raycastTarget = false;
 
             Txt(card.transform, spec.title, 29, Ink, 276f, 208f, viewW - 316f, 40f, TextAnchor.MiddleLeft);
@@ -633,7 +633,7 @@ public partial class DemoBootstrap
             {
                 var badge = Rect("PlaqueStatus", card.transform, viewW - 218f, 26f, 186f, 60f);
                 Rounded(badge, earned ? new Color(0.24f, 0.52f, 0.36f, 0.16f) : new Color(0.86f, 0.84f, 0.78f, 0.68f));
-                Txt(badge.transform, earned ? "已垂名大堂 ✓" : "督办进行中", 21, earned ? Matcha : InkSoft, 0f, 0f, 186f, 60f, TextAnchor.MiddleCenter);
+                Txt(badge.transform, earned ? "已列入荣誉榜 ✓" : "考核进行中", 21, earned ? Matcha : InkSoft, 0f, 0f, 186f, 60f, TextAnchor.MiddleCenter);
             }
             yCursor -= gap;
         }

@@ -68,22 +68,24 @@ public partial class DemoBootstrap
     }
     TrafficResult traffic;
     readonly System.Random trafficRandom = new System.Random();
-    static readonly string[] TrafficEventNames = { "日常运营", "社区活动", "景点活动", "道路施工", "暴雨出行减少" };
+    static readonly string[] TrafficEventNames = { "日常运营", "穹顶庆典", "星旅旺季", "轨道检修", "太阳耀斑预警" };
     static readonly float[] TrafficEventFactors = { 1f, 1.25f, 1.35f, 0.80f, 0.70f };
 
     // 每个模拟客流单位对应 100 人次；收入仍使用原经济尺度。
     const float PassengerScale = 100f;
     float CityDemandWeight(Station station)
     {
-        if (station.portal) return 1.6f;
+        if (station.portal || station.roleHint == 4) return 1.6f;
         if (station.region == "月之亮面") return 1.25f;
         if (station.region == "月背") return 0.75f;
+        if (station.roleHint == 2) return 1.95f;
+        if (station.roleHint == 3) return 1.65f;
+        if (station.roleHint == 1) return 1.45f;
         switch (station.city)
         {
-            case "塔尔西斯星区": case "克律塞星区": return station.county ? 1.45f : 2.35f;
-            case "水手谷中区": case "水手谷西区": return station.county ? 1.25f : 1.95f;
-            case "北方高地": case "索利斯星区": return station.county ? 1.05f : 1.65f;
-            default: return station.county ? 0.95f : 1.45f;
+            case "塔尔西斯星区": case "克律塞星区": case "大瑟提斯区": case "艾律西昂火山区": return 1.90f;
+            case "水手谷中区": case "水手谷西区": case "阿拉伯东区": case "赫拉斯区": return 1.65f;
+            default: return station.county ? 1.05f : 1.35f;
         }
     }
     float StationBaselineDemand(int i)
@@ -92,8 +94,16 @@ public partial class DemoBootstrap
         float baseValue = 80f;
         switch (s.name)
         {
-            case "白沙围": case "翠林澳": case "芦花围": case "丰年墟": case "清泉围": case "松岭围": case "兰溪湾": case "镇海门": case "莲心仔": case "芦苇洲": case "叠石澳": baseValue *= 1.25f; break;
-            case "静海基地": case "阿里亚德港": case "澄海枢纽": case "哥白尼环形山": case "第谷环港": case "冯·卡门港": case "莫斯科海": case "奥林匹斯（月面门）": case "米拉斯深谷": case "克律塞平原": baseValue *= 1.30f; break;
+            // 居住穹顶大站（早高峰出发、晚高峰返程）
+            case "开普勒港": case "云星港": case "知海站": case "中央湾": case "阿基米德站": case "高加索山": case "斯托弗勒": case "沃尔特站": case "阿尔卑斯谷":
+            case "加加林环": case "智星港": case "德弗里斯": case "科罗廖夫环": case "莱曼前哨":
+            case "叙利亚高原": case "阿尔卡迪亚": case "索利斯高原": case "卡塞伊谷": case "提托尼乌姆": case "陶马西亚高地": case "门农尼亚港": case "萨巴高地":
+                baseValue *= 1.25f; break;
+            // 商业与能源核心大站（早高峰涌入、晚高峰疏散）
+            case "静海基地": case "阿里亚德港": case "澄海枢纽": case "哥白尼环形山": case "第谷环港":
+            case "冯·卡门港": case "莫斯科海": case "艾特肯深井":
+            case "奥林匹斯星门": case "米拉斯深谷": case "克律塞平原": case "艾斯克雷尔斯": case "科普剌塔斯": case "亚马逊平原": case "子午线湾": case "阿拉伯台地":
+                baseValue *= 1.30f; break;
         }
         foreach (var sc in sceneries) if (sc.triggerStation == s.name && s.region == sc.region) { baseValue *= 1.15f; break; }
         return baseValue * CityDemandWeight(s);
@@ -115,9 +125,16 @@ public partial class DemoBootstrap
         string name = stations[i].name;
         switch (name)
         {
-            case "白沙围": case "翠林澳": case "芦花围": case "丰年墟": case "清泉围": case "松岭围": case "兰溪湾": case "镇海门": case "莲心仔": case "芦苇洲": case "叠石澳": return 1;
-            case "静海基地": case "阿里亚德港": case "澄海枢纽": case "哥白尼环形山": case "第谷环港": case "冯·卡门港": case "莫斯科海": case "奥林匹斯（月面门）": case "米拉斯深谷": case "克律塞平原": return 2;
+            case "开普勒港": case "云星港": case "知海站": case "中央湾": case "阿基米德站": case "高加索山": case "斯托弗勒": case "沃尔特站": case "阿尔卑斯谷":
+            case "加加林环": case "智星港": case "德弗里斯": case "科罗廖夫环": case "莱曼前哨":
+            case "叙利亚高原": case "阿尔卡迪亚": case "索利斯高原": case "卡塞伊谷": case "提托尼乌姆": case "陶马西亚高地": case "门农尼亚港": case "萨巴高地":
+                return 1;
+            case "静海基地": case "阿里亚德港": case "澄海枢纽": case "哥白尼环形山": case "第谷环港":
+            case "冯·卡门港": case "莫斯科海": case "艾特肯深井":
+            case "奥林匹斯星门": case "米拉斯深谷": case "克律塞平原": case "艾斯克雷尔斯": case "科普剌塔斯": case "亚马逊平原": case "子午线湾": case "阿拉伯台地":
+                return 2;
         }
+        if (stations[i].roleHint > 0) return stations[i].roleHint;
         foreach (var sc in sceneries) if (sc.triggerStation == name && sc.region == stations[i].region) return 3;
         return stations[i].portal ? 4 : 0;
     }
@@ -163,10 +180,10 @@ public partial class DemoBootstrap
     }
     float OdDistanceDenominator(string regA, string regB, float direct, int purpose)
     {
-        bool bothProvincial = regA == "火星" && regB == "火星";
-        if (purpose == 1) return bothProvincial ? (180f + direct * 0.35f) : (95f + direct * 0.55f);
-        if (purpose == 2) return bothProvincial ? (150f + direct * 0.42f) : (48f + direct);
-        return bothProvincial ? (160f + direct * 0.42f) : (55f + direct);
+        bool bothMars = IsMarsRegion(regA) && IsMarsRegion(regB);
+        if (purpose == 1) return bothMars ? (180f + direct * 0.35f) : (95f + direct * 0.55f);
+        if (purpose == 2) return bothMars ? (150f + direct * 0.42f) : (48f + direct);
+        return bothMars ? (160f + direct * 0.42f) : (55f + direct);
     }
     float PurposeDestWeight(int origin, int dest, int purpose, float direct, float[] baseDemand, float[] destDir)
     {
@@ -260,19 +277,30 @@ public partial class DemoBootstrap
     int hkEconomicAnchor = -2, macauEconomicAnchor = -2;
     Vector2 EconomicPosition(int index)
     {
-        var station=stations[index];
-        if (StationInRegion(index,"火星")) return PosInRegion(index,"火星");
+        var station = stations[index];
+        if (StationInRegion(index, currentRegion)) return PosInRegion(index, currentRegion);
+        if (IsMarsRegion(station.region))
+        {
+            if (station.hasGeo)
+            {
+                Vector2 g = MarsGlobalNormalized(station.lon, station.lat);
+                return new Vector2(MAP_X + g.x * MAP_W, MAP_Y + g.y * MAP_H);
+            }
+            return PosInRegion(index, station.region);
+        }
         if (station.region == "月之亮面") {
-            if (hkEconomicAnchor == -2) hkEconomicAnchor = stations.FindIndex(x=>x.name=="奥林匹斯（月面门）");
+            if (hkEconomicAnchor == -2) hkEconomicAnchor = stations.FindIndex(x=>x.name=="奥林匹斯星门");
             int anchor = hkEconomicAnchor;
-            Vector2 origin=anchor>=0 ? PosInRegion(anchor,"火星") : new Vector2(615,900);
+            string marsReg = anchor >= 0 ? stations[anchor].region : "火星·西半球";
+            Vector2 origin=anchor>=0 ? PosInRegion(anchor, marsReg) : new Vector2(615,900);
             Vector2 localAnchor=anchor>=0 ? PosInRegion(anchor,"月之亮面") : new Vector2(590,865);
             return origin+(PosInRegion(index,"月之亮面")-localAnchor)*0.4f;
         }
         if (station.region == "月背") {
-            if (macauEconomicAnchor == -2) macauEconomicAnchor = stations.FindIndex(x=>x.name=="阿西达利亚（月背门）");
+            if (macauEconomicAnchor == -2) macauEconomicAnchor = stations.FindIndex(x=>x.name=="阿波罗星门");
             int anchor = macauEconomicAnchor;
-            Vector2 origin=anchor>=0 ? PosInRegion(anchor,"火星") : new Vector2(540,850);
+            string marsReg = "火星·西半球";
+            Vector2 origin=anchor>=0 ? PosInRegion(anchor, marsReg) : new Vector2(540,850);
             Vector2 localAnchor=anchor>=0 ? PosInRegion(anchor,"月背") : new Vector2(540,900);
             return origin+(PosInRegion(index,"月背")-localAnchor)*0.4f;
         }
@@ -280,7 +308,8 @@ public partial class DemoBootstrap
     }
     float EconomicSegmentDistance(int a,int b,string region)
     {
-        float scale = region == "火星" ? 1f : 0.4f;
+        var spec = GetRegionSpec(region);
+        float scale = spec != null ? spec.economicScale : (IsMarsRegion(region) ? 1f : 0.4f);
         return Vector2.Distance(PosInRegion(a,region),PosInRegion(b,region))*scale;
     }
     float EconomicPathLength(List<int> path)
@@ -475,7 +504,7 @@ public partial class DemoBootstrap
             fareBase += serviceLines[part.line].fare * share;
             speed += FleetTrait(serviceLines[part.line], 2) * share;
         }
-        // 票价基于起终点直达距离，绕远不能凭空增加票款。
+        // 票价基于起终点直达距离，绕远不能凭空增加星票款。
         float fare = fareBase + 0.0036f * directDistance;
         float priceFactor = Mathf.Clamp(0.65f * Mathf.Exp(-0.85f * (fare / (1.5f + 0.0036f * directDistance) - 1f)), 0.1f, 1f);
         float realized = detourFactor * priceFactor / (1f + sol.cost * 0.036f);
@@ -544,7 +573,9 @@ public partial class DemoBootstrap
                 yield return null;
                 int a = path[k], b = path[k + 1]; string region = SegmentRegion(a, b); if (region == null) continue;
                 float distance = Mathf.Max(1f, EconomicSegmentDistance(a, b, region));
-                float travel = distance / (58f * FleetTrait(line, 2)) + distance * 0.002f * 0.3f; int na = node[l, a], nb = node[l, b];
+                // 火星长途星际航道采用更高巡航时速（约 2.6 倍），避免因行星尺度的物理距离放大而被误扣成超高耗时流失
+                float cruiseMult = IsMarsRegion(region) ? 2.6f : 1f;
+                float travel = distance / (58f * cruiseMult * FleetTrait(line, 2)) + distance * 0.002f * (IsMarsRegion(region) ? 0.12f : 0.3f); int na = node[l, a], nb = node[l, b];
                 string edgeKey = line.id + ":" + Mathf.Min(a, b) + ":" + Mathf.Max(a, b);
                 int forward = capacity.Count; capacity.Add(FleetCapacity(line)); sectionOwners.Add(l); sectionKeys.Add(edgeKey);
                 int reverse = capacity.Count; capacity.Add(FleetCapacity(line)); sectionOwners.Add(l); sectionKeys.Add(edgeKey);
@@ -669,13 +700,15 @@ public partial class DemoBootstrap
                 yield return null;
                 if (dest == origin || stations[dest].closed) continue;
                 float direct = Vector2.Distance(originPos, positions[dest]);
-                // 抑制两个交界站之间的直达需求，防止多条航线绕经交界港互相刷客流。
+                // 抑制两个交界港之间的直达需求，防止多条航线绕经交界港互相刷客流。
                 float portalPairMult = (stations[origin].portal && stations[dest].portal) ? 0.12f : 1f;
                 string destReg = stationRegArr[dest];
-                w0[dest] = destCommAttr[dest] * portalPairMult / OdDistanceDenominator(originReg, destReg, direct, 0); tot0 += w0[dest];
+                // 未解锁外区不再空分走大量本地通勤权重；同分区拥有更高归属吸引，确保局部成网也能兑现合理客流
+                float regionReachWeight = RegionUnlocked(destReg) ? ((IsMarsRegion(originReg) && destReg == originReg) ? 1.85f : 1f) : 0.06f;
+                w0[dest] = destCommAttr[dest] * portalPairMult * regionReachWeight / OdDistanceDenominator(originReg, destReg, direct, 0); tot0 += w0[dest];
                 float crossMult = originReg != destReg ? 1.35f : 1f;
-                w1[dest] = destTourAttr[dest] * crossMult * portalPairMult / OdDistanceDenominator(originReg, destReg, direct, 1); tot1 += w1[dest];
-                w2[dest] = destLeisAttr[dest] * portalPairMult / OdDistanceDenominator(originReg, destReg, direct, 2); tot2 += w2[dest];
+                w1[dest] = destTourAttr[dest] * crossMult * portalPairMult * regionReachWeight / OdDistanceDenominator(originReg, destReg, direct, 1); tot1 += w1[dest];
+                w2[dest] = destLeisAttr[dest] * portalPairMult * regionReachWeight / OdDistanceDenominator(originReg, destReg, direct, 2); tot2 += w2[dest];
             }
             if (tot0 + tot1 + tot2 <= 0f) continue;
 
@@ -1051,7 +1084,7 @@ public partial class DemoBootstrap
                 if (c >= u && c >= 25f)
                     bottleneckNote = "星港或星舱超载，日均流失约 " + Mathf.RoundToInt(c) + " 人次（建议加舰/扩容）";
                 else if (wait >= 0.72f)
-                    bottleneckNote = "星港候船负荷达 " + Mathf.RoundToInt(wait * 100f) + "%，已接近排队上限";
+                    bottleneckNote = "星港候航负荷达 " + Mathf.RoundToInt(wait * 100f) + "%，已接近排队上限";
                 else if (u >= 30f)
                     bottleneckNote = "尚有约 " + Mathf.RoundToInt(u) + " 人次热门去向未接入星轨网";
                 else

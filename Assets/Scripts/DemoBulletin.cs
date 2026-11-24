@@ -85,17 +85,17 @@ public partial class DemoBootstrap
     {
         var list = new List<BulletinEntry>();
 
-        // 0. 督办考成（节气与急报已拆至地图左侧快捷入口）
+        // 0. 绩效考核（节气与急报已拆至地图左侧快捷入口）
         int readyPlaques = CountClaimablePlaques();
         if (readyPlaques > 0)
         {
             list.Add(new BulletinEntry
             {
                 tag = "考成",
-                title = "督办考成：" + readyPlaques + " 方牌匾待领",
+                title = "绩效考核：" + readyPlaques + " 枚荣誉星牌待领",
                 date = "可请颁",
                 accentColor = Gold,
-                body = "总办考核目标已达成！请前往「星图志 · 钦颁匾额」请领赏银、科研点与永久经营加成。",
+                body = "塞勒涅播报：绩效考核目标已达成，荣誉星牌已在「星图志 · 荣誉星牌」候着——请领奖金、科研点与永久经营加成。别客气，这些都是您自己挣来的。",
                 actionLabel = "前往请匾",
                 onAction = () => OpenCultureJournalModal(0)
             });
@@ -103,6 +103,23 @@ public partial class DemoBootstrap
 
         // 1. 跨区联运与年度评比动态
         int links = CrossBaySynergyLinkCount();
+        string curRank = CompanyTitle();
+        int clipIdx = 0;
+        if (curRank == "全星系星轨与深空总署") clipIdx = 6;
+        else if (curRank == "深空轨道最高理事会") clipIdx = 5;
+        else if (curRank == "太阳系跨星域控股") clipIdx = 4;
+        else if (curRank == "内太阳系星航局") clipIdx = 3;
+        else if (curRank == "地火航运理事会") clipIdx = 2;
+        else if (curRank == "火星先驱财团" || curRank == "行星际轨道联合体") clipIdx = 1;
+        else clipIdx = 0;
+        list.Add(new BulletinEntry
+        {
+            tag = "复古星轨报",
+            title = NewspaperClippings[clipIdx].headline,
+            date = "头版剪报",
+            accentColor = Indigo,
+            body = NewspaperClippings[clipIdx].lead + "\n（当前社团头衔：" + curRank + "）"
+        });
         int awardCycle = (day / 15) * 15;
         if (day >= 15 && lastAwardDay < awardCycle)
         {
@@ -112,7 +129,7 @@ public partial class DemoBootstrap
                 title = "第 " + awardCycle + " 日年度星轨大赏已揭晓",
                 date = "第 " + day + " 日",
                 accentColor = Gold,
-                body = "评审团已完成本周期星轨网评估，贺礼现已备妥，请前往「公司」页签领赏。",
+                body = "塞勒涅播报：评审团已完成本周期星轨网评估，贺礼现已备妥，请在「公司」页签领赏——我替您数过了，一份不多，一份不少。",
                 actionLabel = "前往领赏",
                 onAction = () => { ClosePanel(true); OpenCompanyScreen(); }
             });
@@ -153,20 +170,22 @@ public partial class DemoBootstrap
                 actionLabel = "定位星港",
                 body = stName + "港周边今日出现「" + TrafficEventNames[ev] + "」，客流需求波动 " + pctStr + "。\n"
                      + (surge
-                         ? (st.built ? "建议留意该港候船拥挤度，必要时加密途经航线航班。" : "尚未接通该港，正是趁热延线扩港的好时机！")
+                         ? (st.built ? "建议留意该港候航拥挤度，必要时加密途经航线航班。" : "尚未接通该港，正是趁热延线扩港的好时机！")
                          : "该港客流短期回落，可适当调减富余航班节省维保成本。")
             });
         }
 
-        // 3. 深空航行周报
+        // 3. 深空星风周报（主控核心「塞勒涅」播报）
         int weekNum = ((day - 1) / 7) + 1;
         list.Add(new BulletinEntry
         {
             tag = "周报",
-            title = "《深空航行周报》第 " + weekNum + " 周 · " + EconomyCycleNames[economyCycle],
+            title = "《深空星风周报》第 " + weekNum + " 周 · " + EconomyCycleNames[economyCycle],
             date = "还剩 " + CycleDaysRemaining() + " 日",
             accentColor = Indigo,
-            body = "本周态势：" + EconomyCycleDescs[economyCycle] + "\n下周风向预告：" + EconomyCycleNames[nextEconomyCycle] + " — " + EconomyCycleDescs[nextEconomyCycle]
+            body = "主控核心塞勒涅为您播报——本周态势：" + EconomyCycleDescs[economyCycle]
+                 + "\n下周风向预告：" + EconomyCycleNames[nextEconomyCycle] + " — " + EconomyCycleDescs[nextEconomyCycle]
+                 + "\n塞勒涅附注：星海从不承诺风平浪静，但账面数字通常比星图诚实。"
         });
 
         // 4. 三地口岸联运简报
@@ -177,19 +196,20 @@ public partial class DemoBootstrap
             date = "实时",
             accentColor = Matcha,
             body = links > 0
-                ? CrossBaySynergySummary() + "\n继续贯通其余跨区门户可进一步叠加口岸补贴与全网客流吸引力。"
-                : "当月之亮面、月背与火星的运营航线在「柏拉图跃迁港 / 奥林匹斯（月面门）」「阿西达利亚（月背门）/ 阿波罗星门」「虹湾星门」等门户两侧同时接通时，即可激活每日跨区联运补贴与客流加成。"
+                ? CrossBaySynergySummary() + "\n继续贯通其余跨区门户可进一步叠加口岸补贴与全网客流吸引力。\n塞勒涅补注：门户多开一扇，账本就多唱一首歌。"
+                : "全宇宙仅设 7 座清晰星门：含「虹湾星门」（月面 / 月背 / 塔尔西斯）与「阿波罗星门」（月背 / 水手谷 / 大瑟提斯）两座金色八角星芒超级枢纽，以及各边界唯一对口小门，两侧通航即享每日联运补贴！\n塞勒涅补注：这次门牌好记多了，认准两颗金星芒枢纽就行。"
         });
 
-        // 5. 常规社务公告
+        // 5. 常规企业公告
         list.Add(new BulletinEntry
         {
-            tag = "社务",
-            title = companyName + " · 港务手帐编年备忘",
+            tag = "企业",
+            title = companyName + " · 星港事务手帐编年备忘",
             date = "常态",
             accentColor = InkSoft,
             body = "· 长按地图任意星港拖拽可实时预览走廊客需（翠绿→琥珀→赤红）与预计新增日客流。\n"
-                 + "· 越堵的航线色相越偏红，点选繁忙航段即可快捷调班或加飞车。"
+                 + "· 越堵的航线色相越偏红，点选繁忙航段即可快捷调班或加飞车。\n"
+                 + "· 塞勒涅备忘：航线偶尔会堵，情绪不必跟着堵。"
         });
 
         // 6. 近期版本更新汇总（未点读前带红点置顶，点完取消红点并置底）
@@ -411,7 +431,7 @@ public partial class DemoBootstrap
             },
             new LeaderboardOperator {
                 name = "火星快航集团",
-                tag = "南溟城际航运",
+                tag = "火星城际航运",
                 motto = "主打塔尔西斯—水手谷—克律塞跨城大港快线",
                 stations = 3 + Mathf.Min(26, d / 2),
                 linesCount = 1 + Mathf.Min(8, d / 6),
@@ -419,16 +439,16 @@ public partial class DemoBootstrap
                 score = 920 + d * 245
             },
             new LeaderboardOperator {
-                name = "月背轻航社",
-                tag = "海湾文旅专线",
-                motto = "深耕半岛与连汀海湾接驳",
+                name = "月背轻航公司",
+                tag = "星湾文旅专线",
+                motto = "深耕星岛与连汀星湾接驳",
                 stations = 2 + Mathf.Min(12, d / 4),
                 linesCount = 1 + Mathf.Min(4, d / 9),
                 dailyProfit = 190 + d * 26,
                 score = 720 + d * 120
             },
             new LeaderboardOperator {
-                name = "沧海客运总社",
+                name = "星海旅客星运联合体",
                 tag = "百年商埠航队",
                 motto = "老街商业与港前物业稳健派",
                 stations = 5 + Mathf.Min(20, d / 3),
@@ -452,7 +472,7 @@ public partial class DemoBootstrap
 
     void OpenLeaderboard()
     {
-        var page = OpenPage("排行榜", "查看星际航运同盟名录与本社建设编年史。", "PageArt/album_watercolor");
+        var page = OpenPage("排行榜", "查看星际航运同盟名录与本公司建设编年史。", "PageArt/album_watercolor");
         Txt(page.transform, "星际群雄榜", 38, Ink, 36, PgH - 255, 800, 54, TextAnchor.MiddleLeft);
 
         var list = BuildBayLeaderboard();
@@ -465,12 +485,12 @@ public partial class DemoBootstrap
         float cardW = content.sizeDelta.x;
         float innerW = cardW - 8f;
 
-        // 1. 顶部霓虹海报与本社排名总览卡
+        // 1. 顶部霓虹海报与本公司排名总览卡
         float heroH = 380f;
         float y = topY - 12f - heroH;
         var hero = Rect("RankingHeroCard", content, 4f, y, innerW, heroH);
         Rounded(hero, CardBg); SoftShadow(hero); JournalTape(hero.transform, innerW * 0.5f - 72f, heroH - 17f, 144f);
-        int palette = currentRegion == "月背" ? 2 : currentRegion == "火星" ? 1 : 0;
+        int palette = currentRegion == "月背" ? 2 : IsMarsRegion(currentRegion) ? 1 : 0;
         var posterTex = EraPosterGenerator.GetCustomPoster("rank_" + currentRegion, "RAILWAY", palette, 4, 768, 220, 1);
         var posterFrame = CreateNeonPosterFrame(hero.transform, "RankingNeonPoster", 24f, 134f, innerW - 48f, 214f, posterTex, 9f);
         var badge = Rect("RegionTag", posterFrame.transform, 18f, 16f, 240f, 38f);
@@ -479,7 +499,7 @@ public partial class DemoBootstrap
 
         Txt(hero.transform, companyName + " · 当前第 " + playerRank + " 名", 34, Ink, 28f, 72f, innerW - 290f, 48f, TextAnchor.MiddleLeft);
         Txt(hero.transform, "综合评分 " + CalculatePlayerRailScore().ToString("N0"), 28, Matcha, innerW - 270f, 74f, 242f, 44f, TextAnchor.MiddleRight);
-        Txt(hero.transform, "已连 " + DailyConnectedCount() + " 站  ·  运营 " + lines.Count + " 线  ·  预期日利 " + FormatSignedCoins(income) + "  ·  口岸走廊 " + CrossBaySynergyLinkCount() + "/3",
+        Txt(hero.transform, "已连 " + DailyConnectedCount() + " 站  ·  运营 " + lines.Count + " 线  ·  预期日利 " + FormatSignedCoins(income) + "  ·  口岸走廊 " + CrossBaySynergyLinkCount() + "/" + CrossBayCorridorNames.Length,
             22, InkSoft, 28f, 22f, innerW - 56f, 38f, TextAnchor.MiddleLeft);
 
         // 2. 星际同行阶梯榜
@@ -511,9 +531,9 @@ public partial class DemoBootstrap
         string[] milestones = {
             (lines.Count >= 1 ? "✓ " : "○ ") + "青湾初笛：开通首条商业航线",
             (FoundCount() >= 3 ? "✓ " : "○ ") + "星轨留影：累计收录 3 处以上名胜风光（当前 " + FoundCount() + " 处）",
-            (macauUnlocked ? "✓ " : "○ ") + "越空月背：解锁并通航月背版图",
-            (guangdongUnlocked ? "✓ " : "○ ") + "北上火星：解锁并贯通火星航线网",
-            (CrossBaySynergyLinkCount() >= 1 ? "✓ " : "○ ") + "星轨直通：打通跨区口岸联运走廊（" + CrossBaySynergyLinkCount() + "/3）",
+            (RegionUnlocked("月背") ? "✓ " : "○ ") + "越空月背：解锁并通航月背版图",
+            (RegionUnlocked("火星·西半球") ? "✓ " : "○ ") + "踏足火星：解锁并贯通红色星区航线网",
+            (CrossBaySynergyLinkCount() >= 1 ? "✓ " : "○ ") + "星轨直通：打通跨区口岸联运走廊（" + CrossBaySynergyLinkCount() + "/" + CrossBayCorridorNames.Length + "）",
             (income >= 2000f ? "✓ " : "○ ") + "金字招牌：全网预期日利润突破 ¥2,000（当前 " + FormatSignedCoins(income) + "）"
         };
         for (int m = 0; m < milestones.Length; m++)

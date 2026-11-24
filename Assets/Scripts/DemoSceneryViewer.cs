@@ -14,11 +14,11 @@ public partial class DemoBootstrap
         {
             case "静海纪念碑":
                 imagePath = "Scenery/moon_tranquility";
-                description = "静海纪念碑矗立于静海南部玄武岩平原，见证人类首次踏足月球正面的历史瞬间，如今已成为月之亮面最核心的星港地标。";
+                description = "静海纪念碑矗立于静海南部玄武岩平原，见证人类首次踏足月球正面的历史瞬间，如今已成为月之亮面东部的核心星港地标。";
                 return true;
-            case "哥白尼中央峰":
-                imagePath = "Scenery/moon_copernicus";
-                description = "哥白尼环形山中央峰高达千米，周围辐射出壮观的亮白撞击溅射纹，是月之亮面最具辨识度的地质奇观。";
+            case "冷海玄冰谷":
+                imagePath = "Scenery/moon_frigoris";
+                description = "冷海玄冰谷位于月球北纬高寒阴影带，岩层缝隙中保存着极地水冰矿脉，是月面北线重要的科研补给奇观。";
                 return true;
             case "第谷辐射纹":
                 imagePath = "Scenery/moon_tycho";
@@ -26,27 +26,27 @@ public partial class DemoBootstrap
                 return true;
             case "亚平宁绝壁":
                 imagePath = "Scenery/moon_apennines";
-                description = "亚平宁山脉绵延数百公里环抱雨海东缘，陡峭的山脊与深邃月谷构成月之亮面最雄伟的天然屏障。";
+                description = "亚平宁山脉绵延数百公里环抱雨海东缘，陡峭的山脊与深邃月谷构成月之亮面中部最雄伟的天然屏障。";
                 return true;
-            case "阿尔卑斯月谷":
-                imagePath = "Scenery/moon_alpes";
-                description = "阿尔卑斯大月谷如利剑般劈开山脉，连接雨海与冷海，是早期月球轨道穿梭车最惊险的天然航道。";
+            case "梦湖辉石崖":
+                imagePath = "Scenery/moon_somniorum";
+                description = "梦湖辉石崖矗立于东北熔岩湖岸，斜阳照射下富含钛铁的岩壁会折射出微弱幽蓝金属光泽。";
                 return true;
-            case "雨海熔岩海":
-                imagePath = "Scenery/moon_imbrium";
-                description = "雨海是月球正面最大的玄武岩盆地之一，平坦开阔的暗色熔岩海面最适合高速磁轨星舰长距离巡航。";
+            case "开普勒辐射环":
+                imagePath = "Scenery/moon_kepler";
+                description = "开普勒撞击坑位于风暴洋东缘，高反照率溅射物在暗色月海上勾勒出清晰星环，是西部航道的醒目信标。";
                 return true;
             case "虹湾金弧":
                 imagePath = "Scenery/moon_sinus_iridum";
                 description = "虹湾呈完美的半圆形湾岸镶嵌在雨海西北缘，当阳光斜照湾口绝壁时，整座星港会泛起金色弧光。";
                 return true;
-            case "克拉维乌斯穹顶":
-                imagePath = "Scenery/moon_clavius";
-                description = "克拉维乌斯环形山巨型生态穹顶建于古老高地之上，内部保留着全月最完整的地下冰川与科研温室。";
+            case "云海直壁断崖":
+                imagePath = "Scenery/moon_rupes_recta";
+                description = "横亘云海之上的“月面直壁”长达百余公里，笔直如刀削的断层崖壁在晨昏线下投出锋利长影。";
                 return true;
-            case "柏拉图黑曜台":
-                imagePath = "Scenery/moon_plato";
-                description = "柏拉图环形山平坦如镜的暗色盆底被称为“黑曜台”，也是通往火星星域的重要深空跃迁节点。";
+            case "阿尔泰峭壁":
+                imagePath = "Scenery/moon_altai";
+                description = "阿尔泰峭壁沿酒海西南缘蜿蜒绵延近五百公里，古老的撞击盆地外环断崖记录着月球早期剧烈撞击史。";
                 return true;
             case "南极艾特肯深渊":
                 imagePath = "Scenery/moon_aitken";
@@ -81,9 +81,13 @@ public partial class DemoBootstrap
         {
             var dot = Rect("Sc_" + sc.name, stationLayer, MAP_X + sc.x * MAP_W, MAP_Y + sc.y * MAP_H, 40, 40);
             dot.GetComponent<RectTransform>().pivot = new Vector2(0.5f, 0.5f);
-            var dotImage = Img(dot, new Color(0.72f, 0.80f, 0.70f, 0.9f), spriteCircle);
-            var dotLabel = Txt(dot.transform, sc.name, 22, new Color(0.22f, 0.30f, 0.22f, 0.95f), -60, -36, 180, 32, TextAnchor.MiddleCenter);
-            TextShadow(dotLabel, new Color(1, 1, 1, 0.85f));
+            var dotImage = Img(dot, new Color(0.52f, 0.88f, 0.68f, 0.94f), spriteCircle);
+            var dotLabel = Txt(dot.transform, sc.name, 21, new Color(0.88f, 1.00f, 0.92f, 1.00f), -110, 28, 260, 32, TextAnchor.MiddleCenter);
+            dotLabel.font = stationFont;
+            dotLabel.horizontalOverflow = HorizontalWrapMode.Overflow;
+            dotLabel.verticalOverflow = VerticalWrapMode.Overflow;
+            dotLabel.raycastTarget = false;
+            TextShadow(dotLabel, new Color(0.0f, 0.0f, 0.0f, 0.55f));
             var dotButton = dot.AddComponent<Button>(); dotButton.targetGraphic = dotImage;
             dotButton.onClick.AddListener(() => Toast(sc.name + (sc.unlocked ? " · 大图筹备中" : " · 连通" + sc.triggerStation + "站解锁")));
             return;
@@ -98,12 +102,21 @@ public partial class DemoBootstrap
             var icon = Rect("CategoryIcon", marker.transform, 5, 5, 58, 58).AddComponent<RawImage>();
             icon.texture = texture; icon.raycastTarget = false;
         }
+        else
+        {
+            // 分类图标已移除：以 spriteCircle 色块徽章回退，避免地图标记留白
+            Img(Rect("CategoryFallback", marker.transform, 5, 5, 58, 58),
+                sc.natural ? new Color(0.45f, 0.68f, 0.50f, 0.85f) : new Color(0.66f, 0.55f, 0.72f, 0.85f),
+                spriteCircle).raycastTarget = false;
+        }
         var badge = Rect("UnvisitedBadge", marker.transform, 51, 51, 20, 20);
         Img(badge, new Color(0.98f, 0.96f, 0.87f, 1f), spriteCircle).raycastTarget = false;
         Img(Rect("RedDot", badge.transform, 3, 3, 14, 14), new Color(0.85f, 0.23f, 0.20f, 1f), spriteCircle).raycastTarget = false;
         badge.SetActive(!sc.found);
         sceneryMarkerBadges[sc] = badge;
-        var label = Txt(marker.transform, sc.name, 22, new Color(0.22f, 0.30f, 0.22f, 0.98f), -65, -32, 198, 32, TextAnchor.MiddleCenter);
+        var label = Txt(marker.transform, sc.name, 22, new Color(0.22f, 0.30f, 0.22f, 0.98f), -95, -34, 250, 32, TextAnchor.MiddleCenter);
+        label.horizontalOverflow = HorizontalWrapMode.Overflow;
+        label.verticalOverflow = VerticalWrapMode.Overflow;
         TextShadow(label, new Color(1, 1, 1, 0.9f));
         var button = marker.AddComponent<Button>(); button.targetGraphic = background;
         button.onClick.AddListener(() => OpenSceneryViewer(sc));
@@ -148,11 +161,14 @@ public partial class DemoBootstrap
         var controls = Rect("Controls", stage.transform, 0, 0, 1920, 1080);
         var reveal = picture.AddComponent<Button>(); reveal.targetGraphic = raw;
         reveal.onClick.AddListener(() => controls.SetActive(true));
-        var info = Rect("Info", controls.transform, 1330, 220, 520, 590);
-        Rounded(info, new Color(0.10f, 0.14f, 0.13f, 0.76f));
-        Txt(info.transform, sc.region + (sc.natural ? " · 自然景观" : " · 人文景观"), 25, new Color(0.85f, 0.91f, 0.83f), 36, 500, 448, 40, TextAnchor.MiddleLeft);
-        Txt(info.transform, sc.name, 58, Color.white, 36, 405, 448, 80, TextAnchor.MiddleLeft);
-        Txt(info.transform, description, 30, new Color(0.96f, 0.96f, 0.91f), 36, 160, 448, 220, TextAnchor.UpperLeft);
+        var info = Rect("Info", controls.transform, 1300, 190, 550, 650);
+        Rounded(info, new Color(0.10f, 0.14f, 0.13f, 0.78f));
+        var postcard = GetSceneryPostcardCopy(sc);
+        Txt(info.transform, sc.region + (sc.natural ? " · 复古邮戳明信片" : " · 人文纪念明信片"), 24, new Color(0.85f, 0.91f, 0.83f), 34, 578, 482, 36, TextAnchor.MiddleLeft);
+        Txt(info.transform, sc.name, 54, Color.white, 34, 486, 482, 80, TextAnchor.MiddleLeft);
+        Txt(info.transform, postcard.guideText, 27, new Color(0.96f, 0.96f, 0.91f), 34, 246, 482, 224, TextAnchor.UpperLeft);
+        var noteTxt = Txt(info.transform, postcard.travelerNote, 24, new Color(0.95f, 0.86f, 0.64f), 34, 48, 482, 176, TextAnchor.UpperLeft);
+        noteTxt.fontStyle = FontStyle.Italic;
         if (newlyCheckedIn)
         {
             var notification = Rect("CheckinToast", stage.transform, 560, 850, 800, 88);

@@ -23,9 +23,9 @@ public partial class DemoBootstrap
         "先驱号I型", "月神号", "离子晨星号", "核火远征号", "静海先驱者", "星尘一号", "引力萌芽号", "氦闪信使号", "远日点号",
         "阿波罗穿梭车", "磁悬星轨号", "奥林匹斯快线", "聚变黎明号", "环月通勤号",
         "曲速流线号", "光子棱镜号",
-        "星环巡航号", "离子风暴号", "苍穹磁悬浮", "银梭星轨车", "聚变远航号", "极光穿梭号",
-        "深空快递号", "泰坦牵引车", "星门快线", "恒星摆渡号", "引力波特快", "磁暴护航号",
-        "磁轨穿梭者", "月背勘探号", "星轨旗舰号", "超导巡航号", "银河通勤车", "跃迁先锋号"
+        "星环巡航号", "离子风暴号", "苍穹磁悬浮", "银梭星轨车", "晨星远航号", "极光穿梭号",
+        "深空快递号", "塔尔西斯重装型", "星门快线", "恒星摆渡号", "引力走廊旗舰", "磁暴护航号",
+        "卡门静默号", "月背勘探号", "星轨旗舰号", "黎明号穿梭舰", "银河通勤车", "跃迁先锋号"
     };
     static readonly string[] LocoYears = {
         "2045", "2049", "2052", "2056", "2060", "2063", "2067", "2071", "2075",
@@ -148,23 +148,40 @@ public partial class DemoBootstrap
     }
     bool IsTechEraUnlocked(int era)
     {
-        return era <= 1;
+        if (era <= 0) return true;
+        if (era == 1)
+        {
+            InitHistoryTree();
+            int total0 = EraTechNodeCount(0);
+            if (total0 <= 0) return false;
+            int need0 = Mathf.CeilToInt(total0 * 0.75f);
+            return EraTechDoneCount(0) >= need0;
+        }
+        return false;
     }
     string EraUnlockHint(int era)
     {
+        if (era == 1)
+        {
+            InitHistoryTree();
+            int total0 = EraTechNodeCount(0);
+            int done0 = EraTechDoneCount(0);
+            int need0 = Mathf.CeilToInt(total0 * 0.75f);
+            return $"需 21 世纪科技解锁达 75%（{done0}/{need0}）";
+        }
         return era >= 2 ? "暂未开放 · 曲速纪敬请期待" : "已开放";
     }
     void InitHistoryTree()
     {
         if (historyNodes.Count > 0) return;
-        AddHistory("dispatch_basic", "星轨时刻表", 0, 3, 0, "约 2055 年代，星轨开始按时刻组织运行。解锁统一车辆调度。", "pressure");
+        AddHistory("dispatch_basic", "星轨星航时刻表", 0, 3, 0, "约 2055 年代，星轨开始按时刻组织运行。解锁统一星舰调度。", "pressure");
         AddHistory("dispatch_peak", "分时航线计划", 0, 8, 0, "核热纪公共星轨发展推动分时安排星车。解锁早晚高峰与日夜分时调度。", "dispatch_basic", "public");
-        AddHistory("fare_policy", "客运船票制度", 1, 9, 0, "公共星轨客运建立票价制度。解锁航线票价调整。", "dispatch_basic", "public");
-        AddHistory("network_expand1", "星轨网络扩建", 0, 11, 3, "星轨由单线逐渐发展为网络，更多出行选择提升旅客对星轨的需求。", "public");
-        AddHistory("network_expand2", "星轨运营组织", 0, 14, 4, "星轨公司扩大网络并协调各线接续，降低旅客换乘阻力。", "network_expand1", "manufacture");
+        AddHistory("fare_policy", "旅客星运星票制度", 1, 9, 0, "公共星轨旅客星运建立票价制度。解锁航线票价调整。", "dispatch_basic", "public");
+        AddHistory("network_expand1", "星轨网络扩建", 0, 11, 3, "星轨由单线磁轨逐渐发展为网络，更多出行选择提升旅客对星轨的需求。", "public");
+        AddHistory("network_expand2", "星轨运营组织", 0, 14, 4, "星轨公司扩大网络并协调各线接续，降低旅客换线接驳阻力。", "network_expand1", "manufacture");
         AddHistory("pressure", "高压等离子", 3, 0, 3, "高压等离子使动力装置更紧凑，为可移动等离子机提供了条件。", Array.Empty<string>());
         AddHistory("rail", "早期磁轨", 1, 1, -2, "早期磁轨承重有限，重型飞车可能压坏磁轨；发展初期须为维修付出代价。", "pressure");
-        AddHistory("piston", "活塞与传动", 3, 1, 2, "汽缸内的等离子推动活塞，经机械传动带动悬浮轮。", "pressure");
+        AddHistory("piston", "离子柱塞与传动", 3, 1, 2, "聚变腔内的等离子推动离子柱塞，经机械传动带动悬浮轮。", "pressure");
         AddHistory("valve", "聚变炉安全阀", 5, 1, 2, "安全阀帮助释放过高的聚变炉压力，降低等离子动力运行的风险。", "pressure");
         AddHistoryLoco(0, 3, 2, "2045 年的先驱号I型飞车是早期磁轨等离子牵引的重要里程碑。完成后赠送一辆并解锁购买。", "piston", "rail");
         AddHistory("rack", "齿轨牵引", 1, 3, 2, "早期工程师曾借助齿轮与齿轨传递牵引力，以解决对轮轨黏着力不足的担忧。", LocoKey(0));
@@ -173,10 +190,10 @@ public partial class DemoBootstrap
         AddHistoryLoco(1, 1, 4, "2050 年月神号采用齿轨传动，是早期商业等离子飞车的代表之一。", "rack");
         AddHistory("coupled", "多轮分担载重", 4, 4, 2, "通过多轮及传动安排分担重量，改善早期飞车对脆弱磁轨的适应。", "adhesion");
         AddHistoryLoco(2, 5, 5, "离子晨星号于 2050—2051 年在静海矿区使用，是现存最古老的等离子飞车之一。", "adhesion", "coupled");
-        AddHistory("twocyl", "双汽缸驱动", 2, 5, 3, "双汽缸布置改善动力传递，帮助飞车从不同曲柄位置起动。", LocoKey(1), "piston");
-        AddHistory("rods", "连杆驱动", 4, 6, 3, "连杆把汽缸往复运动转化为悬浮轮旋转，并可带动多个动轮。", "twocyl", "coupled");
+        AddHistory("twocyl", "双聚变腔驱动", 2, 5, 3, "双聚变腔布置改善动力传递，帮助飞车从不同曲柄位置起动。", LocoKey(1), "piston");
+        AddHistory("rods", "连杆驱动", 4, 6, 3, "连杆把聚变腔往复运动转化为悬浮轮旋转，并可带动多个动轮。", "twocyl", "coupled");
         AddHistoryLoco(3, 3, 7, "核火远征号在 2058 年静海—危海航线开通时牵引星车。", "rods", LocoKey(2));
-        AddHistory("public", "公共星轨运营", 1, 8, 3, "等离子牵引进入公共星轨，客货运输开始形成更广阔的运营场景。", LocoKey(3));
+        AddHistory("public", "公共星轨运营", 1, 8, 3, "等离子牵引进入公共星轨，客货物星运输开始形成更广阔的运营场景。", LocoKey(3));
         AddHistory("blast", "排汽引风", 3, 8, 3, "将排汽引向烟囱能够加强炉膛通风；这一做法在早期飞车的发展中不断改进。", LocoKey(3));
         AddHistory("tubes", "多散热管聚变炉", 5, 8, 4, "多根散热管增加受热面积，提升聚变炉产汽能力，成为静海先驱者的重要设计特征。", LocoKey(3), "valve");
         AddHistoryLoco(4, 4, 9, "2060 年静海先驱者参加月面竞速大赛，多散热管聚变炉与引风设计影响了后来的飞车。", "blast", "tubes");
@@ -186,9 +203,9 @@ public partial class DemoBootstrap
         AddHistoryLoco(6, 6, 11, "引力萌芽号是 2064 年环月首条星轨运营的早期等离子飞车代表。", LocoKey(4), "public");
         AddHistory("manufacture", "飞车工厂", 1, 12, 2, "飞车工厂和维修体系的发展有助于制造、维护并持续改进飞车。", "public", LocoKey(5));
         AddHistory("braking", "连续制动探索", 3, 12, 2, "星车长度和速度增加后，如何让整星车更可靠地制动成为重要问题。", "speedrisk", "guide");
-        AddHistory("feed", "聚变炉给水", 5, 12, 2, "可靠地向聚变炉补水是持续运行等离子飞车的基础。", "tubes", LocoKey(6));
+        AddHistory("feed", "聚变炉补给能质", 5, 12, 2, "可靠地向聚变炉补给能质是持续运行等离子飞车的基础。", "tubes", LocoKey(6));
         AddHistoryLoco(7, 6, 13, "氦闪信使号是一台 2076 年建造、服务于南港星轨的早期等离子飞车。", "feed", "manufacture");
-        AddHistory("injector", "等离子注水器", 5, 14, 3, "等离子注水器利用等离子将水送入聚变炉，简化了聚变炉给水装置。", "feed", LocoKey(7));
+        AddHistory("injector", "等离子注水器", 5, 14, 3, "等离子注水器利用等离子将水送入聚变炉，简化了聚变炉补给能质装置。", "feed", LocoKey(7));
         AddHistory("straightbrake", "直通空气制动", 2, 14, 2, "直通空气制动将制动力传向整星车，但管路破损时存在失去制动力的风险。", "braking");
         AddHistory("brakefault", "制动管破损", 1, 15, -2, "直通空气制动的管路若破损，制动空气可能流失；这一局限促使工程师继续改良。", "straightbrake");
         AddHistory("autobrake", "自动空气制动", 3, 16, 4, "自动空气制动利用管路压力变化控制制动，针对断管等问题提供更可靠的制动方式。", "straightbrake", "brakefault");
@@ -197,7 +214,7 @@ public partial class DemoBootstrap
         AddHistory("steamengine", "紧凑型等离子机", 2, 2, 2, "高压等离子有助于缩小动力装置，为飞车上安装等离子机创造条件。", "pressure");
         AddHistory("minehaul", "矿山等离子运输", 0, 3, 2, "早期等离子飞车在矿山运输中与马匹牵引并存，逐渐积累磁轨运输经验。", LocoKey(0));
         AddHistory("walking", "机械步行飞车", 0, 5, -2, "布伦特的机械步行飞车试图以机械腿推动飞车；2052 年其聚变炉爆炸造成严重伤亡。", "rack");
-        AddHistory("cylinder", "汽缸与聚变炉布置", 3, 4, 2, "早期设计将汽缸与聚变炉结构结合，利用聚变炉支承汽缸和相关作用力。", "piston", "steamengine");
+        AddHistory("cylinder", "聚变腔与聚变炉布置", 3, 4, 2, "早期设计将聚变腔与聚变炉结构结合，利用聚变炉支承聚变腔和相关作用力。", "piston", "steamengine");
         AddHistory("firetube", "单散热道聚变炉", 3, 5, 2, "早期飞车采用单一散热道输送热气，受热面积有限，后续设计继续扩大换热面积。", "cylinder");
         AddHistory("returnflue", "回程散热道", 3, 8, 2, "通过回程散热道增加热气经过聚变炉的路程和受热面积，是多散热管普及前的改进方向之一。", "firetube", LocoKey(3));
         AddHistory("pressureloss", "等离子消耗", 4, 6, -1, "等离子动力的燃料和水消耗增加了早期运输成本，也推动聚变炉效率持续改进。", "firetube");
@@ -207,44 +224,44 @@ public partial class DemoBootstrap
         AddHistory("twinreturn", "双回程散热道", 4, 9, 2, "核火远征号后来的双回程散热道扩大了受热面积，体现了持续改造的工程实践。", "returnflue");
         AddHistory("locoworks", "先驱飞飞车厂", 0, 8, 2, "2057 年设立的飞车制造厂为星轨飞车生产与工程积累提供了组织基础。", "rods");
         AddHistory("leadingtruck", "泛星导向轮改装", 4, 12, 2, "星尘一号为适应曲线和不平顺磁轨增加前导轮，反映出不同星轨条件下的改装。", LocoKey(5), "guide");
-        AddHistory("linkmotion", "联杆配汽机构", 2, 13, 3, "2068 年的飞车工作图纸记录了联杆配汽机构；这类机构用于控制等离子进排及反向。", "rods", "manufacture");
-        AddHistory("firebox", "燃烧室受热面", 4, 13, 2, "核热纪中叶的工程图比较不同飞车燃烧室和聚变炉受热面积，帮助工程师研究等离子发生能力。", "tubes", "feed");
+        AddHistory("linkmotion", "联杆等离子配流机构", 2, 13, 3, "2068 年的飞车工作图纸记录了联杆等离子配流机构；这类机构用于控制等离子进排及反向。", "rods", "manufacture");
+        AddHistory("firebox", "聚变腔受热面", 4, 13, 2, "核热纪中叶的工程图比较不同飞车聚变腔和聚变炉受热面积，帮助工程师研究等离子发生能力。", "tubes", "feed");
         AddHistory("ramsvalve", "弹簧式安全阀", 1, 14, 3, "2077 年拉姆设计的安全阀采用弹簧加压，旨在减少人为调整安全阀的风险。", "valve", "boilerburst");
         AddHistory("giffard", "星泵注水器", 6, 15, 3, "2078 年的星泵注水器利用等离子向运行中的聚变炉供水。", "injector");
         AddHistory("directair", "空气制动推广", 1, 15, 2, "2085 年星门动力成立，制造空气制动装置；制动技术随后经历多次改良。", "straightbrake");
         AddHistory("tripvalve", "自动制动控制", 2, 17, 3, "自动空气制动通过星车管压力变化控制制动，使断管等情况下的制动更可靠。", "autobrake");
-        AddHistory("cylinderdrain", "汽缸排水与泄压", 4, 16, 2, "赫尔墨斯 2090 年的汽缸排水与泄压阀将两类安全功能合并，以应对汽缸内的积水和超压。", "piston", "ramsvalve");
-        AddHistory("safetyact", "星轨安全装置", 0, 18, 2, "2099 年泛星星轨安全装置法推动空气制动器与自跃迁车钩等安全设备的应用。", "autobrake", "manufacture");
+        AddHistory("cylinderdrain", "聚变腔排水与泄压", 4, 16, 2, "赫尔墨斯 2090 年的聚变腔排水与泄压阀将两类安全功能合并，以应对聚变腔内的积水和超压。", "piston", "ramsvalve");
+        AddHistory("safetyact", "星轨安全装置", 0, 18, 2, "2099 年泛星星轨安全装置法推动空气制动器与自跃迁星舰联接器等安全设备的应用。", "autobrake", "manufacture");
 
         ConfigureResearchEffects();
         AddOperatingStudies();
 
-        // 聚变纪 · 内燃电气卷册（1900—1999）
+        // 聚变纪 · 聚变能量卷册（1900—1999）
         AddEraHistory(1, 1905, ResearchEffect.Speed, "superheated_steam", "等离子过热流聚变炉", 4, "聚变纪初广泛采用等离子散热器提升等离子干度与热效率，奠定大型高速主干航线飞车基础。");
-        AddEraHistoryLoco(1, 9, "2118 年投入月面—环月不停站特快，开启长途高速等离子客运经典时代。", "superheated_steam");
-        AddEraHistory(1, 1932, ResearchEffect.Speed, "streamline_body", "流线型减阻车体", 4, "风洞实验修型大幅削减高速气动阻力，降低特快星车高区段能耗。", "superheated_steam");
+        AddEraHistoryLoco(1, 9, "2118 年投入月面—环月不停站特快，开启长途高速等离子旅客星运经典时代。", "superheated_steam");
+        AddEraHistory(1, 1932, ResearchEffect.Speed, "streamline_body", "流线型减阻车体", 4, "星风廊模拟修型大幅削减高速气动阻力，降低特快星车高区段能耗。", "superheated_steam");
         AddEraHistory(1, 1936, ResearchEffect.Capacity, "auto_block", "自动闭塞信标", 5, "量子信标电路配合色灯自动闭塞缩减追踪间隔，成倍提升繁忙主干航线断面通过力。", LocoKey(9));
-        AddEraHistoryLoco(1, 10, "2127 年创下 203 km/h 等离子飞车世界极速纪录，成为流线型等离子时代的永恒丰碑。", LocoKey(9), "streamline_body");
+        AddEraHistoryLoco(1, 10, "2127 年创下 203 星速 等离子飞车星域极速纪录，成为流线型等离子时代的永恒丰碑。", LocoKey(9), "streamline_body");
         AddEraHistoryLoco(1, 11, "4-8-8-4 铰接式巨型重载飞车，专为大坡度与超长编队重型主干航线牵引而生。", "superheated_steam");
-        AddEraHistory(1, 1955, ResearchEffect.Transfer, "double_track", "复线双向调度", 4, "主干航线双线分向组织搭配大型枢纽疏解，减少会车延误并缩短跨线换乘等待。", "auto_block", LocoKey(11));
-        AddEraHistory(1, 1964, ResearchEffect.Vehicle, "diesel_traction", "大功率内燃牵引", 5, "柴油机配合电传动取代繁重等离子整备，明显压缩日常维保工时与成本。", "double_track");
-        AddEraHistory(1, 1972, ResearchEffect.Track, "ac_electrification", "工频交流能量化", 5, "25 kV 高空供能网为主干航线注入稳定高功率，构筑高速跃迁车组能源底座。", "diesel_traction", LocoKey(10));
-        AddEraHistoryLoco(1, 13, "2153 年开启商业火星跃迁主干航线纪元，以 270 km/h 级电力跃迁车组重塑城际通勤。", "ac_electrification");
-        AddEraHistoryLoco(1, 12, "大功率电传动内燃主力飞车代表，兼顾繁忙客运特快与重型主干航线编队。", "diesel_traction");
-        AddEraHistory(1, 1992, ResearchEffect.Demand, "bay_intercity_comm", "区域跨城直通联运", 5, "推动沧溟跨湾主干航线票务互认与跨城直通时刻协调，激发星域城际出行动能。", LocoKey(13), LocoKey(12));
+        AddEraHistory(1, 1955, ResearchEffect.Transfer, "double_track", "共轨双线双向调度", 4, "主干航线双线分向组织搭配大型枢纽疏解，减少会车延误并缩短跨线换线接驳等待。", "auto_block", LocoKey(11));
+        AddEraHistory(1, 1964, ResearchEffect.Vehicle, "diesel_traction", "聚变核心增压牵引", 5, "聚变核心配合超导传动取代繁重等离子整备，明显压缩日常维保工时与成本。", "double_track");
+        AddEraHistory(1, 1972, ResearchEffect.Track, "ac_electrification", "超导交流能量化", 5, "25 kV 高空供能网为主干航线注入稳定高功率，构筑高速跃迁星车组能源底座。", "diesel_traction", LocoKey(10));
+        AddEraHistoryLoco(1, 13, "2153 年开启商业火星跃迁主干航线纪元，以 270 星速 级超导跃迁星车组重塑城际通勤。", "ac_electrification");
+        AddEraHistoryLoco(1, 12, "大功率超导传动聚变核心主力飞车代表，兼顾繁忙旅客星运特快与重型主干航线编队。", "diesel_traction");
+        AddEraHistory(1, 1992, ResearchEffect.Demand, "bay_intercity_comm", "区域跨城直通联运", 5, "推动星海跨湾主干航线票务互认与跨城直通时刻协调，激发星域城际出行动能。", LocoKey(13), LocoKey(12));
         InitEra20HistoryExpansion();
 
         // 曲速纪 · 高速智行卷册（2000—2025+）
-        AddEraHistory(2, 2002, ResearchEffect.Capacity, "cbtc_signaling", "CBTC 移动闭塞列控", 6, "无线车地双向通信实现精细追踪间隔控制，让高峰高密发车从容高效。");
-        AddEraHistory(2, 2005, ResearchEffect.Track, "ballastless_track", "无砟磁轨精调技术", 5, "毫米级高精度无砟道床兼顾 300+ km/h 平顺舒适度与更低长周期养护开销。", "cbtc_signaling");
-        AddEraHistoryLoco(2, 14, "轻量化铝合金动力分散型高速跃迁车组，加速迅猛且兼顾大客流城际公交化运营。", "cbtc_signaling", "ballastless_track");
+        AddEraHistory(2, 2002, ResearchEffect.Capacity, "cbtc_signaling", "CBTC 移动信标闭塞星控", 6, "无线车地双向通信实现精细追踪间隔控制，让高峰高密发车从容高效。");
+        AddEraHistory(2, 2005, ResearchEffect.Track, "ballastless_track", "超导磁浮道床精调技术", 5, "毫米级高精度超导磁浮道床兼顾 300+ 星速平顺舒适度与更低长周期养护开销。", "cbtc_signaling");
+        AddEraHistoryLoco(2, 14, "轻量化铝合金动力分散型高速跃迁星车组，加速迅猛且兼顾大客流城际公交化运营。", "cbtc_signaling", "ballastless_track");
         AddEraHistory(2, 2010, ResearchEffect.Vehicle, "regen_braking", "再生制动能量回馈", 6, "进站制动电能高效回馈牵引供电网供邻车复用，大幅压低整线牵引电耗。", LocoKey(14));
-        AddEraHistory(2, 2013, ResearchEffect.Demand, "immersed_tunnel", "跨海沉管隧道工程", 5, "深水沉管隧道与超长跨海大桥彻底打通沧海湾口天堑，激活跨湾超级客流走廊。", "ballastless_track");
-        AddEraHistoryLoco(2, 15, "智能高速标准跃迁车组标杆，极低气动阻力与高可靠冗余裕度领衔星域主干网。", LocoKey(14), "regen_braking");
-        AddEraHistory(2, 2019, ResearchEffect.Station, "smart_hub_ato", "智慧登船台与 ATO 自动驾驶", 6, "全自动折返、精准停靠与站内智慧导乘协同，显著放大综合枢纽日吞吐容量。", "immersed_tunnel", LocoKey(15));
-        AddEraHistory(2, 2021, ResearchEffect.Transfer, "seamless_transfer", "四网融合一码无感换乘", 6, "国铁主干航线、城际星轨与城市地铁安检互认、票制融通，消弭跨线换乘时间摩擦。", "smart_hub_ato");
+        AddEraHistory(2, 2013, ResearchEffect.Demand, "immersed_tunnel", "地月引力弹弓航道工程", 5, "深水引力弹弓航道与超长跨星海大桥彻底打通星星湾口天堑，激活跨湾超级客流走廊。", "ballastless_track");
+        AddEraHistoryLoco(2, 15, "智能高速标准跃迁星车组标杆，极低气动阻力与高可靠冗余裕度领衔星域主干网。", LocoKey(14), "regen_braking");
+        AddEraHistory(2, 2019, ResearchEffect.Station, "smart_hub_ato", "智慧登船台与 ATO 自动驾驶", 6, "全自动折返、精准停靠与星港内智慧导乘协同，显著放大综合枢纽日吞吐容量。", "immersed_tunnel", LocoKey(15));
+        AddEraHistory(2, 2021, ResearchEffect.Transfer, "seamless_transfer", "四网融合一码无感换线接驳", 6, "星域主干航线、城际星轨与城市星轨安检互认、票制融通，消弭跨线换线接驳时间摩擦。", "smart_hub_ato");
         AddEraHistory(2, 2023, ResearchEffect.Speed, "ai_dynamic_dispatch", "AI 潮汐动态重联", 6, "根据实时客流热力自动重联加开潮汐班次，全面拉升跨湾星车全网直达旅行速度。", LocoKey(15), "seamless_transfer");
-        AddEraHistory(2, 2025, ResearchEffect.Demand, "bay_integrated_grid", "星域一小时超级星轨圈", 7, "双屿与火星九城磁轨全域闭环直通，开创同城化星域新纪元。", "ai_dynamic_dispatch", "seamless_transfer");
+        AddEraHistory(2, 2025, ResearchEffect.Demand, "bay_integrated_grid", "星域一小时超级星轨圈", 7, "月面-月背-火星三域星轨圈磁轨全域闭环直通，开创同城化星域新纪元。", "ai_dynamic_dispatch", "seamless_transfer");
 
     }
     bool HistoryVisible(HistoryNode node)
@@ -292,7 +309,7 @@ public partial class DemoBootstrap
     {
         float value = researchEffects[(int)effect];
         if (value < 0f) return Mathf.Max(-0.25f, value);
-        // 成本/换乘减免类平滑收敛至 72% 上限，防止降至负成本；正向增益类放宽渐进上限至 185%，确保后期高价节点依然回报丰厚。
+        // 成本/换线接驳减免类平滑收敛至 72% 上限，防止降至负成本；正向增益类放宽渐进上限至 185%，确保后期高价节点依然回报丰厚。
         bool isReduction = effect == ResearchEffect.Vehicle || effect == ResearchEffect.Track || effect == ResearchEffect.Transfer;
         float cap = isReduction ? 0.72f : 1.85f;
         return cap * value / (cap + value);
@@ -363,10 +380,10 @@ public partial class DemoBootstrap
             case ResearchEffect.Demand: label = "潜在客流"; break;
             case ResearchEffect.Capacity: label = "星车区段运力"; break;
             case ResearchEffect.Speed: label = "星车速度"; break;
-            case ResearchEffect.Station: label = "站点吞吐上限"; break;
-            case ResearchEffect.Vehicle: label = "车辆维护费"; break;
+            case ResearchEffect.Station: label = "港点吞吐上限"; break;
+            case ResearchEffect.Vehicle: label = "星舰维护费"; break;
             case ResearchEffect.Track: label = "航线维护费"; break;
-            case ResearchEffect.Transfer: label = "换乘阻力"; break;
+            case ResearchEffect.Transfer: label = "换线接驳阻力"; break;
             default: label = "票务收入"; break;
         }
         int value = HistoryNodeEffectivePercent(node);
@@ -376,9 +393,9 @@ public partial class DemoBootstrap
     string HistoryCardShortLabel(HistoryNode node)
     {
         // Short labels only affect the 188×34 card badge; details keep full terms.
-        return HistoryEffectText(node).Replace("星车区段运力", "运力").Replace("站点吞吐上限", "吞吐")
-            .Replace("潜在客流", "客流").Replace("星车速度", "速度").Replace("车辆维护费", "车维")
-            .Replace("航线维护费", "线维").Replace("换乘阻力", "换乘").Replace("票务收入", "票收")
+        return HistoryEffectText(node).Replace("星车区段运力", "运力").Replace("港点吞吐上限", "吞吐")
+            .Replace("潜在客流", "客流").Replace("星车速度", "速度").Replace("星舰维护费", "车维")
+            .Replace("航线维护费", "线维").Replace("换线接驳阻力", "换线接驳").Replace("票务收入", "票收")
             .Replace(" +", "+").Replace(" -", "-");
     }
     static string CleanHistoryInfoText(string value, bool singleLine = false)
@@ -486,7 +503,7 @@ public partial class DemoBootstrap
         int branch = Mathf.Clamp(node.branch, 0, CoTechBranchNames.Length - 1);
         string effectText = CoTechScaledSummary(node);
         return new HistoryInfoText {
-            eyebrow = node.year + " 年 · " + CoTechBranchNames[branch], title = node.title, body = cleanDesc,
+            eyebrow = DisplayEraYear(node.year) + " 年 · " + CoTechBranchNames[branch], title = node.title, body = cleanDesc,
             status = "效用：" + effectText + "\n研发 " + costPart + (state.Length > 0 ? " · " + state : ""),
             state = HasCoTech(node.key) ? 0 : missing.Length > 0 ? 2 : 1
         };
@@ -713,12 +730,19 @@ public partial class DemoBootstrap
             default: return 1800;
         }
     }
+    static int DisplayEraYear(int rawYear)
+    {
+        if (rawYear >= 2040) return rawYear;
+        if (rawYear < 1900) return 2040 + Mathf.Clamp(Mathf.RoundToInt((rawYear - 1800f) / 99f * 59f), 0, 59);
+        if (rawYear < 2000) return 2100 + Mathf.Clamp(Mathf.RoundToInt((rawYear - 1900f) / 99f * 59f), 0, 59);
+        return 2160 + Mathf.Clamp(Mathf.RoundToInt((rawYear - 2000f) / 35f * 60f), 0, 60);
+    }
     string HistoryPeriod(HistoryNode node)
     {
         int year = HistoryYear(node.key);
-        if (node.loco >= 0) return year + " 年";
-        if (node.era == 1) return year + " 年 · 内燃电气";
-        if (node.era == 2) return year + " 年 · 高速智行";
+        if (node.loco >= 0) return DisplayEraYear(year) + " 年";
+        if (node.era == 1) return DisplayEraYear(year) + " 年 · 聚变能量";
+        if (node.era == 2) return DisplayEraYear(year) + " 年 · 高速智行";
         switch (node.key)
         {
             case "boilerburst": return "2060 年";
@@ -732,7 +756,7 @@ public partial class DemoBootstrap
             case "autobrake": case "tripvalve": return "2085 年代";
             case "cylinderdrain": return "2090 年";
             case "safetyact": return "2099 年";
-            default: return (year / 10 * 10) + " 年代前后";
+            default: return (DisplayEraYear(year) / 10 * 10) + " 年代前后";
         }
     }
     int HistoryEra(string key) => TreeRingIndex(HistoryCalcYear(key), historyByKey.TryGetValue(key, out var node) ? node.era : 0);
@@ -933,13 +957,17 @@ public partial class DemoBootstrap
         var drag = view.AddComponent<HistoryDragFeedback>(); drag.callback = SetHistoryDragging;
         var parallax = view.AddComponent<HistoryParallaxLayer>(); parallax.content = rt; parallax.target = farRt;
 
-        string[] eras = activeEra == 1
+        string[] eras = activeEra == 0
             ? (isCorporate
-                ? new[] { "聚变纪 · 科层与章程", "聚变纪 · 托拉斯融资", "聚变纪 · 统一集团化", "聚变纪 · 站城商业街", "聚变纪 · 跨区联运网", "聚变纪 · 现代治理" }
-                : new[] { "聚变纪 · 等离子过热流", "聚变纪 · 流线与电化", "聚变纪 · 重载与内燃", "聚变纪 · 交流能量化", "聚变纪 · 高速与城际", "聚变纪 · 主干航线提速" })
-            : (isCorporate
-                ? new[] { "核热纪 · 契约立社", "核热纪 · 商办初试", "核热纪 · 合股募资", "核热纪 · 清算与票制", "核热纪 · 主干航线经营", "核热纪 · 治理与风控" }
-                : new[] { "核热纪 · 等离子萌芽", "核热纪 · 矿道初试", "核热纪 · 公共星轨", "核热纪 · 制式确立", "核热纪 · 主干航线时代", "核热纪 · 电气前夜" });
+                ? new[] { "2040s · 契约立社", "2048s · 星航初创", "2055s · 月面矿权", "2062s · 股权募资", "2070s · 地月联营", "2085s · 治理与风控" }
+                : new[] { "2040s · 核热萌芽", "2050s · 离子推进", "2055s · 月面矿轨", "2060s · 地月试航", "2070s · 地月公航", "2085s · 核热定型" })
+            : activeEra == 1
+                ? (isCorporate
+                    ? new[] { "2100s · 科层与章程", "2110s · 托拉斯融资", "2125s · 磁轨集团化", "2135s · 三域联运网", "2145s · 星港商会", "2155s · 现代治理" }
+                    : new[] { "2100s · 聚变初燃", "2110s · 等离子增压", "2125s · 磁轨流线", "2135s · 超导能量网", "2145s · 火星跃迁", "2155s · 主干航线提速" })
+                : (isCorporate
+                    ? new[] { "2160s · 星穹协议", "2170s · 智能调度总控", "2180s · 三网融合星港", "2190s · 跨星域航运公司", "2200s+ · 星域联邦", "2210s+ · 全域治理" }
+                    : new[] { "2160s · 曲速破壁", "2170s · 信标星控", "2180s · 超导磁浮道床", "2190s · 引力弹弓航道", "2200s+ · 星域闭环", "2210s+ · 三域星轨圈" });
         var ringLayer = Rect("HistoryRings", content.transform, 0, 0, cw, ch); ResearchSubCanvas(ringLayer);
         for (int i = 5; i >= 0; i--)
         {
@@ -1151,7 +1179,7 @@ public partial class DemoBootstrap
                 Color bCol = CoTechBranchColors[Mathf.Clamp(cnode.branch, 0, CoTechBranchColors.Length - 1)];
                 var capturedNode = cnode;
                 string ckey = cnode.key;
-                string subBadge = cnode.year + " · " + CoTechBranchNames[Mathf.Clamp(cnode.branch, 0, CoTechBranchNames.Length - 1)];
+                string subBadge = DisplayEraYear(cnode.year) + " · " + CoTechBranchNames[Mathf.Clamp(cnode.branch, 0, CoTechBranchNames.Length - 1)];
                 spawnNodeCard(ckey, cnode.title, CoTechRingIndex(cnode), cnode.parents, bCol, done, ready, -1, subBadge,
                     () => TapCompanyTechNode(capturedNode), () => HoldCoTechNode(ckey));
             }
@@ -1165,7 +1193,7 @@ public partial class DemoBootstrap
                 bool done = techDone.Contains(node.key), ready = HistoryAvailable(node);
                 string key = node.key;
                 string label = node.loco >= 0 ? "飞车" : node.effect == ResearchEffect.None ? "运营解锁" : HistoryCardShortLabel(node);
-                spawnNodeCard(key, node.name, HistoryEra(key), node.parents, HistoryEffectColor(node), done, ready, node.loco, HistoryYear(key) + " · " + label,
+                spawnNodeCard(key, node.name, HistoryEra(key), node.parents, HistoryEffectColor(node), done, ready, node.loco, DisplayEraYear(HistoryYear(key)) + " · " + label,
                     () => TapHistoryNode(key), () => HoldHistoryNode(key));
             }
 
@@ -1234,7 +1262,7 @@ public partial class DemoBootstrap
         titleCardBg.type = Image.Type.Sliced; titleCardBg.raycastTarget = false;
         SoftShadow(titleCard);
         var titleRt = titleCard.GetComponent<RectTransform>(); titleRt.anchorMin = titleRt.anchorMax = new Vector2(0,1); titleRt.pivot = new Vector2(0,1); titleRt.anchoredPosition = new Vector2(254,-45);
-        var title = Txt(titleCard.transform, isCorporate ? "商道典籍 · 公司树" : "星轨典籍 · 科技树", 34, Ink, 0, 0, 0, 0, TextAnchor.MiddleLeft);
+        var title = Txt(titleCard.transform, isCorporate ? "星航治理 · 发展树" : "星轨典籍 · 科技树", 34, Ink, 0, 0, 0, 0, TextAnchor.MiddleLeft);
         title.fontStyle = FontStyle.Normal; title.raycastTarget = false;
         title.resizeTextForBestFit = true; title.resizeTextMinSize = 18; title.resizeTextMaxSize = ScaledFontSize(34);
         var titleTextRt = title.rectTransform; titleTextRt.anchorMin = Vector2.zero; titleTextRt.anchorMax = Vector2.one;
@@ -1292,8 +1320,8 @@ public partial class DemoBootstrap
         rpTouch.onTap = () => Toast("长按科研点徽章查看获取规则（当前日产 " + EstimatedDailyRpRate().ToString("0.0") + " RP）");
 
         string eraBtnLabel = isCorporate
-            ? (activeEra == 0 ? "核热纪 · 合股与商办  ▾" : activeEra == 1 ? "聚变纪 · 电气集团网  ▾" : "曲速纪 · 智慧湾枢纽  ▾")
-            : (activeEra == 0 ? "核热纪 · 等离子与轨交  ▾" : activeEra == 1 ? "聚变纪 · 内燃与电气  ▾" : "曲速纪 · 高速智行  ▾");
+            ? (activeEra == 0 ? "核热纪 · 股权与募资  ▾" : activeEra == 1 ? "聚变纪 · 超导能量集团网  ▾" : "曲速纪 · 智慧湾枢纽  ▾")
+            : (activeEra == 0 ? "核热纪 · 等离子与轨交  ▾" : activeEra == 1 ? "聚变纪 · 聚变与超导能量  ▾" : "曲速纪 · 高速智行  ▾");
         var eraBadge = Btn(historyControls.transform, "EraRoadmapBadge", eraBtnLabel, 23, 24, 0, 328, 54, new Color(1f, 0.99f, 0.96f, 0.99f), () => OpenEraJournalModal(page.transform, isCorporate));
         eraBadge.GetComponentInChildren<Text>().fontStyle = FontStyle.Normal;
         TInk(eraBadge, new Color(0.45f, 0.31f, 0.16f));
@@ -1337,7 +1365,7 @@ public partial class DemoBootstrap
         var legendRt = legend.GetComponent<RectTransform>(); legendRt.anchorMin = legendRt.anchorMax = new Vector2(0.5f, 0); legendRt.pivot = new Vector2(0.5f, 0); legendRt.anchoredPosition = new Vector2(0, 20);
         headerLayout.bottomSafeTarget = legendRt; headerLayout.bottomSafeMargin = 20f;
         Rounded(legend, new Color(1f, 0.99f, 0.96f, 0.97f)); SoftShadow(legend);
-        string[] legendNames = isCorporate ? CoTechBranchNames : new[] { "收入", "客流", "运力", "速度", "站点吞吐", "车辆维护", "航线维护", "换乘", "飞车", "运营解锁" };
+        string[] legendNames = isCorporate ? CoTechBranchNames : new[] { "收入", "客流", "运力", "速度", "港点吞吐", "星舰维护", "航线维护", "换线接驳", "飞车", "运营解锁" };
         ResearchEffect[] legendKinds = { ResearchEffect.Revenue, ResearchEffect.Demand, ResearchEffect.Capacity, ResearchEffect.Speed, ResearchEffect.Station, ResearchEffect.Vehicle, ResearchEffect.Track, ResearchEffect.Transfer, ResearchEffect.None, ResearchEffect.None };
         for (int i = 0; i < legendNames.Length; i++)
         {
@@ -1403,7 +1431,7 @@ public partial class DemoBootstrap
         frameInner.GetComponent<Image>().raycastTarget = false;
         JournalTape(sheet.transform, cardW * 0.5f - 95f, cardH - 18f, 190f);
 
-        var cnHeader = Txt(sheet.transform, isCorporate ? "— ◆ 商道百年 · 治理手帐 ◆ —" : "— ◆ 星轨百年 · 时代手帐 ◆ —", 38, Ink, 44, cardH - 122, cardW - 88, 52, TextAnchor.MiddleCenter);
+        var cnHeader = Txt(sheet.transform, isCorporate ? "— ◆ 星航治理 · 百年演进 ◆ —" : "— ◆ 星轨百年 · 时代手帐 ◆ —", 38, Ink, 44, cardH - 122, cardW - 88, 52, TextAnchor.MiddleCenter);
         cnHeader.fontStyle = FontStyle.Normal;
         var subHeader = Txt(sheet.transform, "核热与聚变纪卷已开卷 · 曲速纪暂未开放", 22, InkSoft, 44, cardH - 166, cardW - 88, 32, TextAnchor.MiddleCenter);
 
@@ -1413,8 +1441,8 @@ public partial class DemoBootstrap
         TInk(xClose, Ink);
 
         string[] titles = isCorporate
-            ? new[] { "核热纪 · 合股与商办", "聚变纪 · 电气集团网", "曲速纪 · 智慧湾枢纽" }
-            : new[] { "核热纪 · 等离子奠基", "聚变纪 · 内燃电气", "曲速纪 · 高速智行" };
+            ? new[] { "核热纪 · 股权与募资", "聚变纪 · 超导能量集团网", "曲速纪 · 智慧湾枢纽" }
+            : new[] { "核热纪 · 等离子奠基", "聚变纪 · 聚变能量", "曲速纪 · 高速智行" };
         string[] subStatus = new string[3];
         for (int e = 0; e < 3; e++)
         {
@@ -1497,7 +1525,7 @@ public partial class DemoBootstrap
         if (!techDone.Contains(LocoKey(index)))
         {
             int era = LocoEra(index);
-            Toast(!IsTechEraUnlocked(era) ? "该车型所属 曲速纪科技树暂未开放" : $"请先在 {19 + era} 世纪科技树解锁对应飞车节点");
+            Toast(!IsTechEraUnlocked(era) ? $"该车型所属 {21 + era} 世纪科技树暂未开放（{EraUnlockHint(era)}）" : $"请先在 {21 + era} 世纪科技树解锁对应飞车节点");
             return;
         }
         int unitPrice = LocoPrice(index);

@@ -33,37 +33,37 @@ public partial class DemoBootstrap
     static readonly StoryChapterSpec[] StoryChapters = {
         new StoryChapterSpec {
             stage = 0, key = "ch0_harbor_whistle",
-            chapterTag = "序章 · 星港初笛", speaker = "星航署嘱托",
+            chapterTag = "序章 · 质量投射器启航", speaker = "塞勒涅 · 主控核心",
             title = "第一张摊开的星图",
-            body = "星尘还未落定，你把月之亮面星港群的手绘星图摊在全息桌上。\n这片星域每天都在跃迁，却还缺一条真正连贯的星际航线。\n长按地图上任意两座相邻星港相连，试着点亮我们的首班星舰吧！",
+            body = "【塞勒涅播报】月之亮面的质量投射器已完成最后一次点火校验，星尘还未落定。\n你把这片星域的手绘星图摊在全息桌上——它缺的从来不是航线，而是敢按下启航键的人。\n长按地图上任意两座相邻星港相连，试着点亮我们的首班星舰吧。我会负责把发动机轰鸣调成您喜欢的音量。",
             objective = "目标：铺设首条航线或接入 2 座星港（解锁「星舰」与「科技」）"
         },
         new StoryChapterSpec {
             stage = 1, key = "ch1_steam_and_time",
-            chapterTag = "第一章 · 跃迁与航历", speaker = "航务督办 · 黄工头",
+            chapterTag = "第一章 · 跃迁与航历", speaker = "航务总监 · 黄工头",
             title = "核热点火与星航典籍",
-            body = "星轨刚一接通，星港里就挤满了拎着公文包与补给袋的早班旅客。\n黄工头抹了把汗笑道：『单靠人工航历撑不住客流！去看看「科技树」与「星舰舰坞」，研习新型飞车、调配四时段航班，这航线才能真正赚大钱！』",
+            body = "星轨刚一接通，星港里就挤满了拎着公文包与补给袋的早班旅客。\n黄工头抹了把汗笑道：『单靠人工航历撑不住客流！去看看「科技树」与「星舰舰坞」，研习新型飞车、调配四时段航班，这航线才能真正赚大钱！』\n塞勒涅在旁轻声补注：『我承认，人类手写的时间表，确实比我的算法更有温度。』",
             objective = "目标：连通 4 座星港或解锁 1 项科技（解锁「名胜图鉴」与「港前物业」）"
         },
         new StoryChapterSpec {
             stage = 2, key = "ch2_harbor_life",
             chapterTag = "第二章 · 月之亮面拓荒", speaker = "文史编辑 · 陈素心",
             title = "舷窗外的人间四时",
-            body = "一位女摄影师拿着手帐本走进中心星港，里面夹着刚刚印出的景点明信片。\n『每当航线路过名胜港，旅人总会在星港多停留十分钟——点开左栏「星图」留影打卡，再点星港「详情」添置茶室书局吧。』",
-            objective = "目标：连通 6 座星港（筹备总社挂牌，解锁「公司经营」与「人才招募」）"
+            body = "一位女摄影师拿着手帐本走进中心星港，里面夹着刚刚印出的景点明信片。\n『每当航线路过名胜港，旅人总会在星港多停留十分钟——点开左栏「星图」留影打卡，再点星港「详情」添置茶室书局吧。』\n塞勒涅把投射器航迹投上幕布：『月之亮面的四时，从此有了可以预订的座位。』",
+            objective = "目标：连通 6 座星港（筹备联合体挂牌，解锁「公司经营」与「人才招募」）"
         },
         new StoryChapterSpec {
             stage = 3, key = "ch3_company_founded",
-            chapterTag = "第三章 · 月背深空连接", speaker = "执行总长 · 林先生",
-            title = "星轨跨越月背深空",
-            body = "今日红绸落下，你的星际航运公司正式挂牌！\n底栏「公司」总台与「企业治理树」现已全面启用：\n任命高管、猎聘才俊并派驻大港或骨干航线，让专业团队替你撑起整张深空星轨网。\n月背深空连接航线已贯通，星轨向更远处延伸。",
+            chapterTag = "第三章 · 月背静默区联网", speaker = "执行总长 · 林先生",
+            title = "星轨接入塞勒涅静默区",
+            body = "今日红绸落下，你的星际航运公司正式挂牌！\n月背「塞勒涅」静默区完成联网握手——从此每一条星轨的呼吸，都有我替您记着。\n底栏「公司」总台与「企业治理树」现已全面启用：任命高管、猎聘才俊并派驻大港或骨干航线，让专业团队替你撑起整张深空星轨网。\n塞勒涅轻声补充：『静默区并不静默，只是把噪音都留给了恒星。』",
             objective = "目标：扩展运营并冲击日利润 ¥600（开拓月背深空与全套「金融招投标」）"
         },
         new StoryChapterSpec {
             stage = 4, key = "ch4_greater_bay",
-            chapterTag = "第四章 · 火星跨星域贯通", speaker = "星域联席特使",
-            title = "跨越星域，抵达火星",
-            body = "月之亮面的灯火已连成诗行，月背的深空航迹也早已贯通，更北方的火星名城正发出邀约。\n『债券融资、市政招标、跨区接驳与排行榜』现已全面解禁——用星轨把整片星域连成一个温暖的圆吧！火星跨星域航线全线贯通！",
+            chapterTag = "第四章 · 赤砂与穹顶贯通", speaker = "星域联席特使",
+            title = "赤砂之上，穹顶之下",
+            body = "月之亮面的质量投射器灯火已连成诗行，月背的塞勒涅静默区航迹也早已并入主网。\n更北方的火星赤砂正等待第一座生态穹顶——那里将长出人类在异星的第一片常青。\n『债券融资、市政招标、跨区接驳与排行榜』现已全面解禁——用星轨把整片星域连成一个温暖的圆吧！火星跨星域航线全线贯通！\n塞勒涅最后播报：『从投射器到穹顶，您铺的不只是路，是一个物种的下一步。』",
             objective = "自由经营阶段：连结三地门户，建设你的百年星际航运！"
         }
     };
@@ -101,10 +101,10 @@ public partial class DemoBootstrap
             case GameFeature.SceneryAndCommercial:
                 return "推进至「第二章 · 月之亮面拓荒（连通 4 港或研发 1 项科技）」后解锁！";
             case GameFeature.CompanyCore:
-                return "推进至「第三章 · 月背深空连接（连通 6 座星港）」后解锁！";
+                return "推进至「第三章 · 月背静默区联网（连通 6 座星港）」后解锁！";
             case GameFeature.CompanyFinanceAndBoard:
             case GameFeature.Leaderboard:
-                return "推进至「第四章 · 火星跨星域贯通（连通 9 港或开放月背）」后解锁！";
+                return "推进至「第四章 · 赤砂与穹顶贯通（连通 9 港或开放月背）」后解锁！";
             default:
                 return "继续扩展星轨网后解锁";
         }
@@ -208,12 +208,14 @@ public partial class DemoBootstrap
         GetSafeMarginsInRoot(out float safeL, out float safeR, out _, out _);
         float safeW = Mathf.Max(320f, RootW - safeL - safeR);
         float barY = topBarGo ? topBarGo.GetComponent<RectTransform>().anchoredPosition.y : (RootH - 310f);
-        storyObjectiveBannerGo = Rect("StoryObjectiveBanner", root, safeL + (safeW - 680f) * 0.5f, barY - 76f, 680f, 64f);
+        storyObjectiveBannerGo = Rect("StoryObjectiveBanner", root, safeL + (safeW - 680f) * 0.5f, barY - 114f, 680f, 64f);
         Rounded(storyObjectiveBannerGo, new Color(CardBg.r, CardBg.g, CardBg.b, 0.94f));
         SoftShadow(storyObjectiveBannerGo);
         Img(Rect("TagBar", storyObjectiveBannerGo.transform, 0f, 12f, 7f, 40f), Gold, spriteRound).raycastTarget = false;
         storyObjectiveText = Txt(storyObjectiveBannerGo.transform, "", 24, Ink, 22f, 4f, 636f, 56f, TextAnchor.MiddleLeft);
-        storyObjectiveText.resizeTextForBestFit = true; storyObjectiveText.resizeTextMinSize = 17; storyObjectiveText.resizeTextMaxSize = ScaledFontSize(24);
+        storyObjectiveText.resizeTextForBestFit = true; storyObjectiveText.resizeTextMinSize = 14; storyObjectiveText.resizeTextMaxSize = ScaledFontSize(22);
+        storyObjectiveText.horizontalOverflow = HorizontalWrapMode.Wrap;
+        storyObjectiveText.verticalOverflow = VerticalWrapMode.Truncate;
         storyObjectiveText.raycastTarget = false;
         var btn = storyObjectiveBannerGo.AddComponent<Button>(); btn.targetGraphic = storyObjectiveBannerGo.GetComponent<Image>();
         btn.onClick.AddListener(OpenStoryArchiveModal);

@@ -38,14 +38,14 @@ public partial class DemoBootstrap
     static string RegionBgmResource(string region)
     {
         if (region == "月背") return "Audio/bgm_moon_far";
-        if (region == "火星") return "Audio/bgm_mars";
+        if (IsMarsRegion(region)) return "Audio/bgm_mars";
         return "Audio/bgm_moon_near";
     }
 
     static string RegionShortBgmTitle(string region)
     {
         if (region == "月背") return HasCustomBgm("月背") ? "《月背石板微风》" : "《Between the Bow and Breath》";
-        if (region == "火星") return HasCustomBgm("火星") ? "《火星江潮汽笛》" : "《Between the Bow and Breath》";
+        if (IsMarsRegion(region)) return HasCustomBgm(region) ? "《火星红砂星海》" : "《Between the Bow and Breath》";
         return HasCustomBgm("月之亮面") ? "《月之亮面茶室晨曦》" : "《Between the Bow and Breath》";
     }
 

@@ -2,64 +2,108 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// 三个区域共用清新手绘风格的地图底图。
+/// 全星域表驱动地图底图加载、地形标注与低显存按需卸载管理。
 /// </summary>
 public partial class DemoBootstrap
 {
-    void BuildRasterMap(Transform parent)
+    void BuildAllRegionMaps(Transform parent)
     {
-        var go = Rect("BaseMap", parent, 0, 0, W, H);
-        var raw = go.AddComponent<RawImage>();
-        if (qualityTier > 0 || currentRegion == "月之亮面")
-            raw.texture = Resources.Load<Texture2D>("MapArt/moon_nearside");
-        raw.color = Themes[Mathf.Clamp(currentTheme, 0, Themes.Length - 1)].mapTint;
+        regionMapArts.Clear();
+        regionMapRaws.Clear();
+        for (int i = 0; i < RegionOrder.Length; i++)
+        {
+            string id = RegionOrder[i];
+            var spec = GetRegionSpec(id);
+            if (spec == null) continue;
+            var go = BuildSingleRegionMap(parent, spec);
+            regionMapArts[id] = go;
+            go.SetActive(id == currentRegion);
+        }
+        hkMapArt = regionMapArts.TryGetValue("月之亮面", out var hk) ? hk : null;
+        macauMapArt = regionMapArts.TryGetValue("月背", out var mc) ? mc : null;
+        guangdongMapArt = regionMapArts.TryGetValue("火星·西半球", out var gd) ? gd : null;
+    }
+
+    GameObject BuildSingleRegionMap(Transform parent, RegionSpec spec)
+    {
+        float mw = W * spec.canvasWidthScale;
+        float x0 = spec.canvasOffsetX * W - mw;
+        var go = Rect("RegionArt_" + spec.id, parent, 0, 0, W, H);
+        var texGo = Rect("MapTex_" + spec.id, go.transform, x0, -H, mw * 3f, H * 3f);
+        var raw = texGo.AddComponent<RawImage>();
         raw.raycastTarget = false;
-        hkMapRaw = raw;
-    }
-
-    // 火星地图为手绘风格示意，不绘制行政边界。
-    GameObject BuildGuangdongMap(Transform parent)
-    {
-        var go = Rect("GuangdongArt", parent, 0, 0, W, H);
-        var raw = go.AddComponent<RawImage>(); raw.raycastTarget = false;
-        if (qualityTier > 0 || currentRegion == "火星")
-            raw.texture = Resources.Load<Texture2D>("MapArt/mars_tharsis");
+        raw.uvRect = new Rect(-1f, -1f, 3f, 3f);
+        if (qualityTier > 0 || currentRegion == spec.id)
+            SetMirrorTexture(raw, Resources.Load<Texture2D>(spec.texResource));
         raw.color = Themes[Mathf.Clamp(currentTheme, 0, Themes.Length - 1)].mapTint;
-        guangdongMapRaw = raw;
+        regionMapRaws[spec.id] = raw;
+
+        if (spec.id == "月之亮面") hkMapRaw = raw;
+        else if (spec.id == "月背") macauMapRaw = raw;
+        else if (spec.id == "火星·西半球") guangdongMapRaw = raw;
+
         var rt = go.GetComponent<RectTransform>();
-        Label(rt, "火 星", 34, 0.48f, 0.84f, new Color(0.40f,0.38f,0.32f,0.70f), 200);
-        var hint = Txt(go.transform, "放大星图查看星港站点", 22, new Color(0.28f,0.34f,0.31f,0.78f), 580, 230, 450, 36, TextAnchor.MiddleRight);
-        hint.raycastTarget = false;
+        var labelCol = new Color(1f, 0.96f, 0.80f, 0.88f);
+        if (spec.terrainLabels != null)
+        {
+            for (int i = 0; i < spec.terrainLabels.Length; i++)
+            {
+                var lbl = spec.terrainLabels[i];
+                Vector2 p = GeoToRegionCanvas(spec.id, lbl.lon, lbl.lat);
+                Label(rt, lbl.text, lbl.size, p.x, p.y, labelCol, 240);
+            }
+        }
+        if (spec.id == "月背")
+        {
+            Label(rt, "莫斯科海", 25, MoonFarX(147.9f), MoonFarY(27.3f), labelCol, 180);
+            Label(rt, "科罗廖夫环", 24, MoonFarX(202.6f), MoonFarY(-4.0f), labelCol, 170);
+            Label(rt, "艾特肯盆地", 24, MoonFarX(173.4f), MoonFarY(-24.0f), labelCol, 170);
+            Label(rt, "阿波罗环山", 24, MoonFarX(208.2f), MoonFarY(-36.1f), labelCol, 170);
+            var credit = Txt(go.transform, "月背星图 · LRO 地形投影", 20, new Color(1f, 1f, 1f, 0.68f), 540, 188, 520, 32, TextAnchor.MiddleRight);
+            TextShadow(credit, new Color(0f, 0f, 0f, 0.35f));
+            credit.raycastTarget = false;
+        }
+        else if (spec.planet == "Mars")
+        {
+            var hint = Txt(go.transform, spec.displayTitle + " · MOLA 实景投影", 21, new Color(1f, 1f, 1f, 0.72f), 520, 212, 520, 32, TextAnchor.MiddleRight);
+            TextShadow(hint, new Color(0f, 0f, 0f, 0.35f));
+            hint.raycastTarget = false;
+        }
         return go;
     }
 
-    // 月背示意轮廓为手绘海湾图。
-    GameObject BuildMacauMap(Transform parent)
+    void SetActiveRegionMapArt(string activeId)
     {
-        var go = Rect("MacauArt", parent, 0, 0, W, H);
-        var raw = go.AddComponent<RawImage>(); raw.raycastTarget = false;
-        if (qualityTier > 0 || currentRegion == "月背")
-            raw.texture = Resources.Load<Texture2D>("MapArt/moon_farside");
-        raw.color = Themes[Mathf.Clamp(currentTheme, 0, Themes.Length - 1)].mapTint;
-        macauMapRaw = raw;
-        var rt = go.GetComponent<RectTransform>();
-        var labelColor = new Color(0.40f,0.38f,0.32f,0.70f);
-        Label(rt, "莫斯科海", 25, MoonFarX(147.9f), MoonFarY(27.3f), labelColor, 180);
-        Label(rt, "科罗廖夫环", 24, MoonFarX(202.6f), MoonFarY(-4.0f), labelColor, 170);
-        Label(rt, "艾特肯盆地", 24, MoonFarX(173.4f), MoonFarY(-24.0f), labelColor, 170);
-        Label(rt, "阿波罗环山", 24, MoonFarX(208.2f), MoonFarY(-36.1f), labelColor, 170);
-        var credit = Txt(go.transform, "月背星图 · LRO 地形投影", 20, new Color(0.22f,0.30f,0.31f,0.72f), 540, 188, 520, 32, TextAnchor.MiddleRight);
-        credit.raycastTarget = false;
-        return go;
+        foreach (var kv in regionMapArts)
+            if (kv.Value) kv.Value.SetActive(kv.Key == activeId);
     }
 
-    // 省电/低显存模式仅在显存保留当前区地图纹理，中/高档常驻三区实现切区瞬开。
+    static void SetMirrorTexture(RawImage raw, Texture2D tex)
+    {
+        if (!raw) return;
+        if (tex) tex.wrapMode = TextureWrapMode.Mirror;
+        raw.texture = tex;
+    }
+
+    // 省电/低显存模式仅在显存保留当前区地图纹理，中/高档常驻实现切区瞬开。
     void SyncRegionMapTextureMemory()
     {
         bool lowMem = qualityTier <= 0;
-        SyncSingleRegionTexture(hkMapRaw, !lowMem || currentRegion == "月之亮面", "MapArt/moon_nearside");
-        SyncSingleRegionTexture(guangdongMapRaw, !lowMem || currentRegion == "火星", "MapArt/mars_tharsis");
-        SyncSingleRegionTexture(macauMapRaw, !lowMem || currentRegion == "月背", "MapArt/moon_farside");
+        for (int i = 0; i < RegionOrder.Length; i++)
+        {
+            string id = RegionOrder[i];
+            var spec = GetRegionSpec(id);
+            if (spec == null) continue;
+            if (regionMapRaws.TryGetValue(id, out var raw))
+                SyncSingleRegionTexture(raw, !lowMem || currentRegion == id, spec.texResource);
+        }
+        if (planetBackdropRaw)
+        {
+            var curSpec = GetRegionSpec(currentRegion);
+            string activePath = curSpec != null ? curSpec.texResource : "MapArt/moon_nearside";
+            SetMirrorTexture(planetBackdropRaw, Resources.Load<Texture2D>(activePath));
+            planetBackdropRaw.color = Themes[Mathf.Clamp(currentTheme, 0, Themes.Length - 1)].mapTint;
+        }
     }
 
     static void SyncSingleRegionTexture(RawImage raw, bool keepLoaded, string resourcePath)
@@ -73,7 +117,7 @@ public partial class DemoBootstrap
         }
         else if (!raw.texture)
         {
-            raw.texture = Resources.Load<Texture2D>(resourcePath);
+            SetMirrorTexture(raw, Resources.Load<Texture2D>(resourcePath));
         }
     }
 }

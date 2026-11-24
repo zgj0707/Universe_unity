@@ -34,7 +34,7 @@ public static class RailwaySaveRoundTripAudit
         }
         return result;
     }
-    [MenuItem("Railway2/Audit/Save round trip (isolated)")]
+    [MenuItem("星轨纪行/Audit/Save round trip (isolated)")]
     public static void Run()
     {
         try

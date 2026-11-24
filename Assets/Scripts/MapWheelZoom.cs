@@ -8,7 +8,9 @@ public class MapWheelZoom : MonoBehaviour, IScrollHandler, IBeginDragHandler, ID
     public Func<bool> canZoom;
     public Action onPanStart;
     public Func<float> maxZoom;
-    const float MinZoom = 1f;
+    public Func<float> minZoom;
+    public Func<Vector2> panMarginRatio;
+    const float DefaultMinZoom = 1f;
     float pinchDistance;
     bool panning;
     Vector2 previous;
@@ -26,7 +28,8 @@ public class MapWheelZoom : MonoBehaviour, IScrollHandler, IBeginDragHandler, ID
         float vw = viewport ? viewport.rect.width : mw;
         float vh = viewport ? viewport.rect.height : mh;
         float scaledW = mw * scale, scaledH = mh * scale;
-        float marginX = mw * 0.08f, marginY = mh * 0.05f;
+        Vector2 ratio = panMarginRatio != null ? panMarginRatio() : new Vector2(0.25f, 0.25f);
+        float marginX = mw * ratio.x, marginY = mh * ratio.y;
         float minX = scaledW >= vw ? (vw - scaledW - marginX) : ((vw - scaledW) * 0.5f - marginX);
         float maxX = scaledW >= vw ? marginX : ((vw - scaledW) * 0.5f + marginX);
         float minY = scaledH >= vh ? (vh - scaledH - marginY) : ((vh - scaledH) * 0.5f - marginY);
@@ -43,7 +46,8 @@ public class MapWheelZoom : MonoBehaviour, IScrollHandler, IBeginDragHandler, ID
     void ZoomAt(Vector2 screenPoint, float next)
     {
         float current = map.localScale.x;
-        next = Mathf.Clamp(next, MinZoom, maxZoom != null ? maxZoom() : 2.5f);
+        float minZ = minZoom != null ? minZoom() : DefaultMinZoom;
+        next = Mathf.Clamp(next, minZ, maxZoom != null ? maxZoom() : 2.5f);
         if (Mathf.Approximately(next, current)) return;
         if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(map, screenPoint, null, out var local)) return;
         if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(viewport, screenPoint, null, out var desired)) return;

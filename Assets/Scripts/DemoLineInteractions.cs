@@ -185,7 +185,8 @@ public partial class DemoBootstrap
         int n = line.st.Count;
         if (!IsLoop(line.st) && n > 3 && seg > 0 && seg < n - 2) {
             var head = line.st.GetRange(0, seg + 1); var tailPath = line.st.GetRange(seg + 1, n - seg - 1);
-            foreach (string region in new[] { "月之亮面", "月背", "火星" }) {
+            for (int r = 0; r < RegionOrder.Length; r++) {
+                string region = RegionOrder[r];
                 int after = RegionLineCount(region) - (PathTouchesRegion(line.st, region) ? 1 : 0)
                     + (PathTouchesRegion(head, region) ? 1 : 0) + (PathTouchesRegion(tailPath, region) ? 1 : 0);
                 if (after > RegionLineLimit(region)) { Toast(region + "航线已达上限，无法拆分该段"); return; }
@@ -257,7 +258,10 @@ public partial class DemoBootstrap
     {
         if (line == null || !lines.Contains(line)) return;
         CloseLineBubble();
-        string pathText = "沿线 " + UniquePathText(line.st);
+        bool isLoop = IsLoop(line.st);
+        string pathText = isLoop
+            ? "环线 · 具体途经站请查看「航线详情」"
+            : "沿线 " + UniquePathText(line.st);
         float pathHeight = Mathf.Clamp(MeasureTextHeight(pathText, 19, 860) + 6, 48, 280);
         float extra = pathHeight - 48;
         float h = 1180f + extra;
@@ -275,7 +279,7 @@ public partial class DemoBootstrap
         StatBox(p.transform, "预计日收入" + pendingTag, Mathf.RoundToInt(forecast.gross) + "", 34, h - 300, 430, 150, Gold);
         StatBox(p.transform, "预计日利润" + pendingTag, Mathf.RoundToInt(forecast.Profit) + "", 496, h - 300, 430, 150, Matcha);
         StatBox(p.transform, "客 流", Mathf.RoundToInt(LinePassengerFlow(line)) + "", 34, h - 470, 430, 150, Indigo);
-        StatBox(p.transform, "单向区段运力", Mathf.RoundToInt(LineCapacity(line)) + " 人次/日", 496, h - 470, 430, 150, Sakura);
+        StatBox(p.transform, "单向区段运力", Mathf.RoundToInt(LineCapacity(line)) + "", 496, h - 470, 430, 150, Sakura);
 
         Txt(p.transform, "近 7 日净利润", 24, Ink, 36, 675 + extra, 420, 34, TextAnchor.MiddleLeft);
         if (line.recent.Count == 0)
@@ -461,7 +465,7 @@ public partial class DemoBootstrap
         CancelLineInsert();
         if (!CanInsertStation(line, segment, target)) { Toast("请拖到本区域内未经过的普通星港"); return; }
         int cost = InsertStationCost(line, segment, target);
-        string details = line.name + " · " + StationDisplayName(target, currentRegion) + "\n造价 ¥" + cost + "（含必要开站费用）";
+        string details = line.name + " · " + StationDisplayName(target, currentRegion) + "\n造价 ¥" + cost + "（含必要开港费用）";
         float detailsHeight = Mathf.Clamp(MeasureTextHeight(details, 25, 620) + 8, 54, H - 410);
         var p = OpenPopup("插入途经港", detailsHeight + 200, 680);
         ScrollableText(p.transform, details, 25, InkSoft, 28, 102, 620, detailsHeight);

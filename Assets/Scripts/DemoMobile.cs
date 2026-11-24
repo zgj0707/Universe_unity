@@ -414,7 +414,7 @@ public partial class DemoBootstrap
                 if (cycleSub > 0f)
                 {
                     coins += cycleSub;
-                    Toast("防汛防台运营补贴 +¥" + Mathf.RoundToInt(cycleSub));
+                    Toast("尘暴应急运营补贴 +¥" + Mathf.RoundToInt(cycleSub));
                 }
                 float bayBonus = CrossBaySynergyDailyBonus();
                 if (bayBonus > 0f)
@@ -518,11 +518,11 @@ public partial class DemoBootstrap
         string lineNames = "";
         foreach (var line in lines) if (line.st.Contains(index)) lineNames += (lineNames.Length == 0 ? "" : "、") + line.name;
         float demand = StationRequestedFlow(index), served = StationPassengerFlow(index), cap = StationCapacity(index);
-        string pressure = demand > cap ? "星港候船爆满（" + Mathf.RoundToInt(demand / Mathf.Max(1f, cap) * 100f) + "%），建议扩建升级" : "星港负荷 " + Mathf.RoundToInt(demand / Mathf.Max(1f, cap) * 100f) + "%（运力宽裕）";
+        string pressure = demand > cap ? "星港候航爆满（" + Mathf.RoundToInt(demand / Mathf.Max(1f, cap) * 100f) + "%），建议扩建升级" : "星港负荷 " + Mathf.RoundToInt(demand / Mathf.Max(1f, cap) * 100f) + "%（运力宽裕）";
         string diag = StationFlowDiagnostics(index);
         return state + (lineNames.Length > 0 ? "\n途经：" + lineNames : "") + "\n日均需求 " + StationEstimatedDemand(index) + " 人 · 当前输送 " + Mathf.RoundToInt(served) + " / 需求 " + Mathf.RoundToInt(demand) + "\n" +
             "港内容量 " + Mathf.RoundToInt(cap) + " · " + pressure + "\n" +
-            "站场动态：" + TrafficEventNames[station.trafficEvent] + "（需求 " +
+            "星港场动态：" + TrafficEventNames[station.trafficEvent] + "（需求 " +
             (TrafficEventFactors[station.trafficEvent] >= 1 ? "+" : "") + Mathf.RoundToInt((TrafficEventFactors[station.trafficEvent]-1)*100) + "%）\n" +
             StationAreaHint(index) + (string.IsNullOrEmpty(diag) ? "" : "\n" + diag);
     }
@@ -532,7 +532,7 @@ public partial class DemoBootstrap
         int cost = StationOpeningCost(index);
         if (coins < cost) { Toast("金币不足：还差 ¥" + FormatShortfall(cost - coins)); return false; }
         if (station.built && !station.closed) return true;
-        BeginUndo(station.built ? "重新开站" : "开站");
+        BeginUndo(station.built ? "重新开港" : "开港");
         coins -= cost; station.built = true; station.closed = false;
         RefreshStationDots(); RecalcIncome(); CheckSceneryOnLine(null);
         PlayBuildSfx(); TriggerHaptic(16);
@@ -545,44 +545,54 @@ public partial class DemoBootstrap
     string StationIntroduction(int index)
     {
         var station = stations[index];
+        int kind = StationKind(index);
+        string prefix = "";
         switch (station.name)
         {
-            case "南羊城": return "沧海之畔的商贸名城，街巷烟火与繁华市集交融。";
-            case "奥林匹斯（月面门）": return "连接月之亮面与火星的跨区域交通节点。";
-            case "阿西达利亚（月背门）": return "海岛与海湾相映的滨海城镇，邻接月背。";
-            case "百川镇": return "水乡与手工作坊交织，城镇生活充满活力。";
-            case "鹅山墟": return "星域相依，湖光与海岸风景相伴。";
-            case "明珠镇": return "南溟水乡与传统手艺相映的城市。";
-            case "锦溪墟": return "水网密布的滨海侨乡，延续着古朴文脉。";
-            case "五岭口": return "山水环绕的北岭门户，奇峰丹崖风光闻名。";
-            case "潮风港": return "滨海商埠，海派食肆与古港记忆交织。";
-            case "银江墟": return "五津水乡，骑楼与老街故事相伴。";
-            case "雷海埠": return "沧海半岛上的滨海港城，面海而兴。";
-            case "荔枝城": return "西海之滨城市，海岸与百果林乡相伴。";
-            case "砚山墟": return "西川之畔，山水与古砚文脉相映。";
-            case "寒香镇": return "山间古驿之乡，围屋与乡村风物相连。";
-            case "白浪港": return "依山面海的城市，渔港与海岸风光相伴。";
-            case "东溪埠": return "山水相依的东溪上游城市。";
-            case "银滩港": return "滨海山城，以海景与传统铁艺工坊闻名。";
-            case "北山墟": return "北溪穿城而过，山水与温泉相伴。";
-            case "金凤城": return "青溪之畔的古城，保留着传统古街风韵。";
-            case "榕荫墟": return "海滨平原上的城镇，绿榕水穿城而过。";
-            case "石鼓墟": return "群山之间的采石之乡，依西川而展。";
-            case "柏拉图跃迁港": return "连接两地的口岸站，旅客往来频繁。";
-            case "虹湾星门": return "跨越海湾的交通节点，连接三地。";
-            case "静海基地": return "海港边的商业街区，都市与山景相邻。";
-            case "翠竹咀": return "临海的繁华街区，可远眺帆影港。";
-            case "东山涌": return "苍岚岛北岸的社区，邻近星域风景。";
-            case "旺市角": return "街市与商铺密集，生活气息浓厚。";
-            case "哥白尼环形山": return "老城街巷环绕，留存着历史建筑风貌。";
-            case "莲心仔": return "海岛社区与街巷美食交融的区域。";
-            case "木船厂": return "海岸与山林相伴，保留宁静的岛屿风貌。";
+            case "静海基地": prefix = "月球正面最早建立的氦-3 交易与联合体调度中心。"; break;
+            case "阿里亚德港": prefix = "静海西缘的金融与精密器件贸易枢纽。"; break;
+            case "澄海枢纽": prefix = "月面东北环线的能源精炼与商贸中心。"; break;
+            case "哥白尼环形山": prefix = "中央峰矿业总部与轨道科研办公集群所在地。"; break;
+            case "第谷环港": prefix = "南半球高地最大的资源集散与科研商务港。"; break;
+            case "冯·卡门港": prefix = "月背南极-艾特肯盆地核心科研与氦-3 商业中心。"; break;
+            case "莫斯科海": prefix = "月背北部的玄武岩工业与深空探测指挥枢纽。"; break;
+            case "艾特肯深井": prefix = "深入月幔矿层的重工业与深空补给办公区。"; break;
+            case "奥林匹斯星门": prefix = "高耸于塔尔西斯高原的火星商贸核心，唯一连通月之亮面的超级星门。"; break;
+            case "柏拉图环": prefix = "北雨海边缘的黑曜台高地科研与矿业星港。"; break;
+            case "虹湾星门": prefix = "【三域超级枢纽】贯穿月之亮面、月背与火星·西半球的星海大枢。"; break;
+            case "达朗贝尔环": prefix = "月背北极高地的深空探测前哨站。"; break;
+            case "阿波罗星门": prefix = "【三域超级枢纽】连接月背、火星·西半球与东半球的南疆星枢。"; break;
+            case "艾斯克雷尔斯": prefix = "塔尔西斯三大巨型火山北峰的氦-3 精炼与商贸枢纽。"; break;
+            case "科普剌塔斯": prefix = "水手谷东口最重要的工业加工与联合体商业分部。"; break;
+            case "米拉斯深谷": prefix = "水手大峡谷中段最繁华的商业采矿与轨道办公枢纽。"; break;
+            case "克律塞平原": prefix = "火星北部平原的太空电梯基座与跨星区贸易中心。"; break;
+            case "开普勒港": case "云星港": case "叙利亚高原": case "阿尔卡迪亚": case "加加林环":
+                prefix = "大型生态穹顶生活圈，每日清晨向核心枢纽输送稳定通勤客流。"; break;
         }
-        if (!string.IsNullOrEmpty(station.city))
-            return "位于" + station.city + "，连接周边城镇与社区。";
-        if (station.region == "月背") return "月背的沿线区域，星域古韵交融。";
-        if (station.region == "月之亮面") return "月之亮面的沿线区域，星域与城市相伴。";
-        return "沿线城镇与社区相连的地区。";
+        string roleDesc;
+        switch (kind)
+        {
+            case 1:
+                roleDesc = "【居住穹顶大站】密集的开拓者生态居住区，早高峰向外输送大量通勤客流、晚间集中归巢，适合直连商业核心站。";
+                break;
+            case 2:
+                roleDesc = "【商业核心大站】汇集联合体总部、能源交易与办公区，早高峰海量通勤客流涌入、晚高峰集中返程，高运力干线必连。";
+                break;
+            case 3:
+                roleDesc = "【星际奇观景点】毗邻罕见的星球地貌奇观，白天观光与科研访客源源不断，接入观光航线可大幅提升收益。";
+                break;
+            case 4:
+                roleDesc = "【跨星域门户】横跨地月与火星航道的超空间接驳枢纽，多条星轨在此交会可触发高额跨区联运加成。";
+                break;
+            default:
+                roleDesc = !string.IsNullOrEmpty(station.city)
+                    ? "【" + station.city + "中继港】承担星区日常通勤与物资接驳，客流稳定，适合编入支线或环线串联。"
+                    : "【星港中继站】周边为常规补给与科研聚落，客流均衡，适合连接邻近大站实现客流互补。";
+                break;
+        }
+        string flavor = GetStationFlavorSnippet(station);
+        string baseIntro = string.IsNullOrEmpty(prefix) ? roleDesc : prefix + "\n" + roleDesc;
+        return string.IsNullOrEmpty(flavor) ? baseIntro : baseIntro + "\n" + flavor;
     }
 
     void ShowStationActions(int index)
@@ -611,7 +621,7 @@ public partial class DemoBootstrap
             float halfW = 548f * sc * 0.5f;
             float halfH = bubbleH * sc * 0.5f;
             float leftX = safeL + 20f + halfW;
-            float topY = Mathf.Max(safeB + 180f + halfH, RootH - safeT - 245f - halfH);
+            float topY = Mathf.Max(safeB + 180f + halfH, RootH - safeT - 315f - halfH);
             prt.anchoredPosition = new Vector2(leftX, topY);
             var bgImg = p.GetComponent<Image>();
             if (bgImg) bgImg.raycastTarget = true;
@@ -733,7 +743,7 @@ public partial class DemoBootstrap
         int netVal = Mathf.RoundToInt(rep.netProfit);
         Txt(cashCard.transform, "当前账户可用资金：¥" + Math.Floor(coins).ToString("N0"), 26, Ink, 24f, 46f, 520f, 38f, TextAnchor.MiddleLeft);
         Txt(cashCard.transform, (netVal >= 0 ? "净盈利 +¥" + netVal : "净亏损 -¥" + Mathf.Abs(netVal)), 30, netVal >= 0 ? Matcha : Vermilion, 550f, 44f, 290f, 42f, TextAnchor.MiddleRight);
-        Txt(cashCard.transform, "票款 ¥" + Mathf.RoundToInt(rep.gross) + "  ·  物业/联运 ¥" + Mathf.RoundToInt(rep.commercialRent) + "  ·  运维税费 -¥" + Mathf.RoundToInt(rep.maintAndTax), 22, InkSoft, 24f, 8f, 816f, 34f, TextAnchor.MiddleLeft);
+        Txt(cashCard.transform, "星票款 ¥" + Mathf.RoundToInt(rep.gross) + "  ·  物业/联运 ¥" + Mathf.RoundToInt(rep.commercialRent) + "  ·  运维税费 -¥" + Mathf.RoundToInt(rep.maintAndTax), 22, InkSoft, 24f, 8f, 816f, 34f, TextAnchor.MiddleLeft);
         y -= 114f;
 
         var lineCard = Rect("LinePerfCard", p.transform, 38f, y - 140f, 864f, 140f);
@@ -898,7 +908,11 @@ public partial class DemoBootstrap
         if (storyCard || storyQueue.Count == 0 || pageRoot || activePanel || sceneryViewer || lineBubbleRoot || dragging) return;
         var story = storyQueue.Dequeue();
         bool hasObj = !string.IsNullOrEmpty(story.objectiveHint);
-        float cardH = hasObj ? 450f : 390f;
+        float textH = Mathf.Max(80f, MeasureTextHeight(story.text, 25, 932f) + 14f);
+        float objH = hasObj ? Mathf.Max(58f, MeasureTextHeight(story.objectiveHint, 24, 896f) + 22f) : 0f;
+        float objY = 108f;
+        float textY = hasObj ? (objY + objH + 16f) : 108f;
+        float cardH = textY + textH + 124f;
         storyCard = Rect("StoryCard", root, 40f, 204f, 1000f, cardH);
         Rounded(storyCard, new Color(CardBg.r, CardBg.g, CardBg.b, 0.985f)); SoftShadow(storyCard);
         JournalTape(storyCard.transform, 428f, cardH - 16f, 144f);
@@ -908,13 +922,13 @@ public partial class DemoBootstrap
         if (!string.IsNullOrEmpty(story.speaker)) headerLine += "  ·  " + story.speaker;
         Txt(storyCard.transform, headerLine, 22, Matcha, 34f, cardH - 52f, 700f, 34f, TextAnchor.MiddleLeft);
         Txt(storyCard.transform, story.title, 36, Ink, 34f, cardH - 106f, 920f, 50f, TextAnchor.MiddleLeft);
-        Txt(storyCard.transform, story.text, 25, Ink, 34f, hasObj ? 168f : 108f, 932f, cardH - (hasObj ? 284f : 224f), TextAnchor.UpperLeft);
+        Txt(storyCard.transform, story.text, 25, Ink, 34f, textY, 932f, textH, TextAnchor.UpperLeft);
 
         if (hasObj)
         {
-            var objBox = Rect("StoryObjective", storyCard.transform, 34f, 106f, 932f, 58f);
+            var objBox = Rect("StoryObjective", storyCard.transform, 34f, objY, 932f, objH);
             Rounded(objBox, Color.Lerp(CardBg, Indigo, 0.08f));
-            Txt(objBox.transform, story.objectiveHint, 24, Indigo, 18f, 0f, 896f, 58f, TextAnchor.MiddleLeft);
+            Txt(objBox.transform, story.objectiveHint, 24, Indigo, 18f, 0f, 896f, objH, TextAnchor.MiddleLeft);
         }
 
         if (story.allowSkip)
@@ -925,7 +939,7 @@ public partial class DemoBootstrap
             TInk(skipBtn, InkSoft);
         }
 
-        var close = Btn(storyCard.transform, "Continue", "继续运营", 25, 740f, 22f, 226f, 68f, Matcha, () => {
+        var close = Btn(storyCard.transform, "Continue", "继续运营", 25, 708f, 22f, 226f, 68f, Matcha, () => {
             if (storyCard) Destroy(storyCard);
             storyCard = null;
         });
@@ -1130,6 +1144,7 @@ public partial class DemoBootstrap
         }
         if (Vector2.Distance((Vector2)Input.mousePosition, pressStart) > 26f && pressTimer < 0.42f)
         {
+            if (pressTimer >= 0.14f) ShowConnectHint("长按星港蓄满进度环后再拖拽即可开线");
             pressing = false; pressIdx = -1;
             HidePressRing();
             return;
@@ -1159,14 +1174,34 @@ public partial class DemoBootstrap
     void StartDraw(int idx)
     {
         if (dragging || idx < 0 || idx >= stations.Count) return;
-        // 航线已满时，从「不属于任何航线」的星港起手只能新开线 —— 在长按开始就拦住，别等拖完才说
+        // 航线已满时，若起手港既不在任何非环线端点又无法新开线，直接给出清晰指引
         bool onLine = false;
-        foreach (var line in lines) if (line.st.Contains(idx)) { onLine = true; break; }
-        if (!onLine && RegionLineCount(currentRegion) >= LineLimit())
+        bool hasExtendableEnd = false;
+        foreach (var line in lines)
         {
-            HidePressRing();
-            Toast(currentRegion + "航线已达上限（" + LineLimit() + " 条）");
-            return;
+            if (!line.st.Contains(idx)) continue;
+            onLine = true;
+            if (!IsLoop(line.st) && (line.st[0] == idx || line.st[line.st.Count - 1] == idx))
+            {
+                hasExtendableEnd = true;
+                break;
+            }
+        }
+        if (RegionLineCount(currentRegion) >= LineLimit())
+        {
+            QueueGuideBubble("G-06");
+            if (!onLine)
+            {
+                HidePressRing();
+                Toast(currentRegion + "航线已达上限（" + LineLimit() + " 条），请从既有航线两端连接试试");
+                return;
+            }
+            if (!hasExtendableEnd)
+            {
+                HidePressRing();
+                Toast("该星港所在航线已闭环或为途经站，请从航线另一端连接试试");
+                return;
+            }
         }
         CloseLineBubble();
         draft.Clear(); draftSegNeeds.Clear(); draft.Add(idx); draftCost = DraftCostOf(draft);

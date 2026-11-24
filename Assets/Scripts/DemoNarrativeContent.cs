@@ -1,0 +1,223 @@
+using System;
+using System.Collections.Generic;
+using UnityEngine;
+
+public partial class DemoBootstrap
+{
+    // ---------- 苏晚叙事总包：纯气泡引导、乘客微气泡与复古手帐世界观文案 ----------
+    public enum NarrativeBubblePriority
+    {
+        P0_Milestone = 0,
+        P1_WeeklyCycle = 1,
+        P2_Guide = 2
+    }
+
+    public sealed class NarrativeBubbleSpec
+    {
+        public string key;
+        public NarrativeBubblePriority priority;
+        public string speakerTag;
+        public string text;
+        public string badgeLabel;
+        public Action badgeAction;
+    }
+
+    public sealed class SceneryPostcardCopy
+    {
+        public string guideText;
+        public string travelerNote;
+    }
+
+    public sealed class NewspaperClippingSpec
+    {
+        public string rankTitle;
+        public string headline;
+        public string lead;
+    }
+
+    // G-01 ~ G-07：开局前 10 分钟隐形引导（P2，全局仅触发 1 次，间隔 >= 25s）
+    static readonly Dictionary<string, string> GuideBubbleTexts = new Dictionary<string, string>(StringComparer.Ordinal)
+    {
+        { "G-01", "社长，静海的月尘已经扫干净啦！长按星港拉出咱们的第一条手绘星轨，去接第一批仰望地球的旅客吧。" },
+        { "G-02", "滴——首班星舰离港！每一张星票和乘客的笑容，都会在日终结算时准时落袋哦。" },
+        { "G-03", "早高峰的矿工快把站台挤变形啦！试试加派星舰、调密早班发车，或者画条环线分流吧～" },
+        { "G-04", "旅客等车时总想喝杯低重力热咖啡！升个站前商业，光收铺位租金都能旱涝保收呢。" },
+        { "G-05", "工程师们在茶水间画出了新图纸！点开科研演进，让星舰跑得更省钱、运得更多吧。" },
+        { "G-06", "这片星区的航道已经排满啦！社长可以用‘延长既有线路’或‘中途插站’把新星港串进主干网哦。" },
+        { "G-07", "漂亮的闭合环线！星舰不用再在终点掉头喘气，全线周转效率瞬间拉满啦。" }
+    };
+
+    // M-01 ~ M-09：四大星域开拓与 5 座星门里程碑（P0，必播允许排队）
+    static readonly Dictionary<string, (string text, string badge)> MilestoneBubbleSpecs = new Dictionary<string, (string, string)>(StringComparer.Ordinal)
+    {
+        { "M-01", ("批准令下来了！咱们终于要越过明暗界线，去看看地球永远望不见的那片「月背静默」啦。", "🗺 月背航图已展开") },
+        { "M-02", ("地月已经装不下咱们的野心了！前方是红色荒原与奥林匹斯山脉，第一代火星开拓者正等着咱们的星舰！", "🗺 火星西半球已开启") },
+        { "M-03", ("东半球赫拉斯大盆地发来接驳信号！等东西两脉贯通，整颗火星的脉搏就都握在咱们手里啦。", "🗺 火星全境版图就绪") },
+        { "M-04", ("星门跃迁环亮了！记住哦，星门之间不能直连，得靠咱们勤劳的普通星港当‘中转桥梁’才能激活联运！", "✦ 星门规则已记录") },
+        { "M-05", ("地火直通走廊激活！地球的清晨与火星的黄昏，今天起只需一张联运星票就能跨过啦。", "✉ 走廊补贴已生效") },
+        { "M-06", ("跨越零度经线！火星东西半球的客流正式合流，咱们的大动脉彻底跳动起来了！", "✉ 走廊补贴已生效") },
+        { "M-07", ("跨过日界线，整颗火星被咱们画成了一个圆！全网需求飙升，社长准备数星币吧～", "✉ 走廊补贴已生效") },
+        { "M-08", ("金色八角星徽亮起！月之亮面、月背与火星西半球在此交汇，快备好大运力星舰和分流环线，别让口岸爆仓！", "★ 超级枢纽已点亮") },
+        { "M-09", ("阿波罗三域超级枢纽全功率运转！从月背直通火星全境的黄金通道，正式写进太阳系交通史！", "★ 超级枢纽已点亮") }
+    };
+
+    // 《深空星风周报》五大经济周期预告文案（与 EconomyCycleNames 0~4 严格对齐）
+    static readonly string[] WeeklyCycleForecastTexts =
+    {
+        "下周星风温柔得像复古爵士乐，客流与造价一切如常，最适合稳扎稳打理顺线路网。",
+        "下周迎来氦-3 交割季！矿工们揣着分红挤爆星港，全网客流暴涨 16%，快把主力星舰全派上干线！",
+        "百年难遇的地月冲日！游客们举着胶片相机涌向奇观站，快给名胜专线加密班次迎接打卡人潮吧！",
+        "红色尘暴预警！下周轨道维护涨 15%、客流略减，好在总署每天发 ¥600 抗灾补贴，先别盲目扩建哦。",
+        "星环建材大降价！下周开港、铺轨和站前商业一律八五折，社长憋了一周的基建计划可以启动啦！"
+    };
+
+    // P3 地图“烟火气”乘客微气泡库（单条 <= 15 字，3 秒自动淡出）
+    static readonly string[] MicroCongestedTexts =
+    {
+        "头盔都要挤裂了，下一班呢！",
+        "早高峰比地球地铁还猛啊…",
+        "求社长多派两艘星舰吧！",
+        "这票价，能不能给个座呀？"
+    };
+    static readonly string[] MicroSmoothTexts =
+    {
+        "窗外的星尘好安静。",
+        "一个人包车看环形山真爽！",
+        "准点率满分，好评！"
+    };
+    static readonly string[] MicroNightTexts =
+    {
+        "月背的夜班车，适合听歌发呆。",
+        "下夜班啦，回家喝热汤！",
+        "凌晨的火星星空像碎钻一样。"
+    };
+    static readonly string[] MicroSceneryTexts =
+    {
+        "终于坐星轨看到大峡谷啦！",
+        "快帮我在站牌下拍张照！",
+        "这趟旅行值回票价！"
+    };
+    static readonly string[] MicroCommercialTexts =
+    {
+        "新开的低重力咖啡馆太香了！",
+        "站前便利店的冻干草莓居然没卖完！",
+        "等车顺手买了张复古邮票～"
+    };
+    static readonly string[] MicroPortalTexts =
+    {
+        "跨星域换乘比想象中丝滑！",
+        "刚离开月球，晚饭就能在火星吃！",
+        "金色星门打卡成功！"
+    };
+
+    // 板块 1：14 处星际奇观《复古邮戳明信片》导游词 + 旅客寄语（按名称关键字智能匹配）
+    static readonly (string keyword, string guide, string note)[] SceneryPostcardLibrary =
+    {
+        ("静海", "人类第一次踩出脚印的地方，如今成了清晨最热闹的通勤起点。没有海水，却有永不停歇的星舰潮声。", "“给地球上的妈妈：我在静海站买了早班票，抬头就能看见蓝色的家。”"),
+        ("第谷", "放射状的月尘辐射纹在阳光下亮得像一枚巨大银勋章，是轨道车绕行时最绝佳的观景窗。", "“车厢里齐刷刷举起手机，差点以为星舰倾斜了。”"),
+        ("虹湾", "弧形山脉温柔地环抱这片平静月海，落日余晖滑过山脊时，站台玻璃会被染成琥珀色。", "“听说在虹湾看一次地球升起，许的愿都会灵验。”"),
+        ("静默", "永远背对地球的温柔角落。穿过中继星的信号会慢半拍，但这里的星空比任何地方都清澈。", "“失恋了，特意坐夜班星舰来月背听一场无线电静默。”"),
+        ("莫斯科海", "永远背对地球的温柔角落。穿过中继星的信号会慢半拍，但这里的星空比任何地方都清澈。", "“失恋了，特意坐夜班星舰来月背听一场无线电静默。”"),
+        ("科罗廖夫", "月球高耸的环形山峰顶几乎永不落日，金色的光柱常年照亮登船台的铁艺栏杆。", "“这里没有黑夜，连等车时的影子都被拉得很长很浪漫。”"),
+        ("极区", "月球南极高耸的环形山峰顶几乎永不落日，金色的光柱常年照亮登船台的铁艺栏杆。", "“这里没有黑夜，连等车时的影子都被拉得很长很浪漫。”"),
+        ("艾特肯", "太阳系最古老的撞击盆地，深邃的暗影里藏着无数矿工与地质学家的浪漫传说。", "“邻座的老矿工送了我一块月岩边角料，说能保佑旅途平安。”"),
+        ("阿波罗", "深邃古老的环山观测站，曾见证最早一批月背先驱把信号塔竖立在寂静岭上。", "“站在观测塔窗前，整条月背星轨像银线一样亮。”"),
+        ("奥林匹斯", "太阳系最高的盾状火山。轨道车绕着山麓缓缓攀升时，窗外稀薄的云海淡得像一层橘色糖霜。", "“谁能想到，有一天人类能坐着轻轨逛太阳系第一高峰！”"),
+        ("水手", "撕裂火星表面的宏伟伤疤。高架星轨横跨深渊之上，乘客们总爱扒着扶手往下看云雾翻涌。", "“列车过桥那十秒，全车厢安静得只能听见心跳声。”"),
+        ("塔尔西斯", "三座巨型火山在高原上排成一条斜线，像三位披着红纱的沉默巨人，目送星舰日夜穿梭。", "“今天运气太好，尘暴刚散，三座山峰全露出来啦！”"),
+        ("亚马逊", "一望无际的铁锈色平原，微风卷起细碎红砂拍打在车窗上，发出像旧黑胶唱片一样的沙沙声。", "“买了杯火星红茶，看着窗外发了一下午呆。”"),
+        ("克律塞", "远古洪水冲刷出的蜿蜒河床。虽然水已干涸亿万年，如今奔流不息的是载满旅人的银色星舰。", "“导游说这里以前有大河，我好像真的听见水声了。”"),
+        ("阿耳古瑞", "冬季霜雪覆盖盆地时，整片阿耳古瑞平原会泛起淡淡银光，被旅客们称作“火星的冬季明镜”。", "“没想到在红色星球上，也能遇见这么温柔的白色冬天。”"),
+        ("大瑟提斯", "火星表面最显眼的深色玄武岩高原，从轨道俯瞰宛如一张摊开的复古航海羊皮图。", "“老航员说，看见大瑟提斯就知道快到东半球的老家了。”"),
+        ("赫拉斯", "东半球最深的巨型盆地，气压最高、雾气最浓，清晨常有粉红色的云海漫过星港站台。", "“走进粉红雾气里买票的感觉，像误入了某个太空童话。”")
+    };
+
+    public static SceneryPostcardCopy GetSceneryPostcardCopy(Scenery sc)
+    {
+        if (sc != null && !string.IsNullOrEmpty(sc.name))
+        {
+            for (int i = 0; i < SceneryPostcardLibrary.Length; i++)
+            {
+                if (sc.name.Contains(SceneryPostcardLibrary[i].keyword))
+                    return new SceneryPostcardCopy { guideText = SceneryPostcardLibrary[i].guide, travelerNote = SceneryPostcardLibrary[i].note };
+            }
+        }
+        string regionName = sc != null ? sc.region : "深空";
+        return new SceneryPostcardCopy
+        {
+            guideText = regionName + "极具代表性的轨交地标，每当星舰缓缓驶过观景高架，整节车厢的旅客都会望向窗外。",
+            travelerNote = "“把这一站的风景夹进复古手帐，是我这趟星际通勤最浪漫的收获。”"
+        };
+    }
+
+    // 板块 2：100+ 星港风物志组合模板（星域地貌标签 + 20 条市井风物签）
+    static readonly string[] StationFlavorPool =
+    {
+        "站台自动贩卖机的低重力可乐总在早高峰前被抢光。",
+        "站长养了一盆水培薄荷，据说全星域的乘务员都来讨过叶子。",
+        "候车厅的复古机械翻牌钟偶尔会慢三秒，但星舰从不晚点。",
+        "每逢周五傍晚，站前广场就会摆起矿工们的二手星图小摊。",
+        "这里原本只是一座无人信标，如今每天迎来送往数千名旅人。",
+        "站内广播的报站铃声，改编自一首百年前的地球民谣。",
+        "售票窗贴着一张泛黄的合照，记录着首班星舰进站的那一天。",
+        "虽然地处偏远，但这里的冻干草莓泡芙远近闻名。",
+        "夜间停靠时，常能看见穿着工装的维修师坐在月台上喝热茶。",
+        "站台长椅刻着历代旅客的留言，最老的一行写于星轨社初创那年。",
+        "尘暴来袭前，这里的玻璃穹顶会自动降下温暖的琥珀色防风帘。",
+        "不少年轻情侣特意买站台票进来，只为了看一眼星舰交汇的火花。",
+        "候车室的旧书架实行‘带走一本、留下一本’，已经传了三代旅人。",
+        "本站的纪念邮戳是一枚戴着宇航头盔的笑脸月亮，人气超高。",
+        "早班车出发前十分钟，总能闻到站前烘培坊飘来的黄油香气。",
+        "因为视角极佳，这里是天文爱好者最爱蹲守的免费观景台。",
+        "站内有一台修不好的老式点唱机，只肯循环播放爵士乐。",
+        "每当氦-3 交割季来临，这座平时安静的小站就会热闹得像过节。",
+        "检票口挂着一块铜牌：‘无论你去往哪颗星，祝你一路顺风。’",
+        "听说在这里转车超过十次的人，都会爱上窗外不变的星光。"
+    };
+
+    public static string GetStationFlavorSnippet(Station s)
+    {
+        if (s == null) return "";
+        string tag;
+        if (s.portal) tag = "【" + s.region + " · 星门联运口岸】";
+        else if (s.region == "月之亮面") tag = "【月之亮面 · 通勤港】";
+        else if (s.region == "月背") tag = "【月背 · 矿业补给站】";
+        else if (s.region == "火星·西半球") tag = "【火星西半球 · 高原换乘港】";
+        else tag = "【火星东半球 · 盆地枢纽】";
+
+        int hash = Math.Abs((s.id * 397) ^ (s.name != null ? s.name.GetHashCode() : 0));
+        string note = StationFlavorPool[hash % StationFlavorPool.Length];
+        return tag + " " + note;
+    }
+
+    // 板块 3：《8 枚公司印记 · 时代纪念铭文》（与 CompanySealNames 0~7 严格对齐）
+    static readonly string[] CompanySealInscriptions =
+    {
+        "献给在月尘里画下第一条虚线的人——那时我们只有一艘老星舰，和一整个星空。",
+        "当第一批旅客走下登船梯，荒凉的月海便有了早高峰的烟火气。",
+        "连太阳系最高的山峰都向轨道俯首，人类从此丈量行星不再靠脚步，而靠时刻表。",
+        "信号穿过中继星要多等一秒，但我们的星舰从未让任何一位旅人久等。",
+        "一张网织起星辰大海，每一道蓝橙红的微光，都是文明跳动的脉搏。",
+        "当两颗行星的早高峰在同一座站台交汇，太阳系从此只剩下一个时区。",
+        "跨过尘暴与星风，我们的班次表已成为内太阳系最值得信赖的时钟。",
+        "百站通途，群星入画。致敬每一位用轨道连接宇宙的领航者。"
+    };
+
+    public static string GetCompanySealInscription(int index)
+    {
+        if (index < 0 || index >= CompanySealInscriptions.Length) return "";
+        return CompanySealInscriptions[index];
+    }
+
+    // 板块 4：《复古星轨报》头版剪报墙（7 级公司头衔晋升触发）
+    static readonly NewspaperClippingSpec[] NewspaperClippings =
+    {
+        new NewspaperClippingSpec { rankTitle = "初创星轨社", headline = "《号外！月海迎来首条民用星轨，通勤时代悄然启幕》", lead = "一家名不见经传的小社团在静海铺下第一段铁轨，没人知道它将改写太阳系版图。" },
+        new NewspaperClippingSpec { rankTitle = "火星先驱财团", headline = "《跨越地月！红色星球首张常规星轨时刻表今日刊行》", lead = "伴随首班火星列车鸣笛进站，开拓者们终于告别孤岛，迎来准点通勤的浪漫时代。" },
+        new NewspaperClippingSpec { rankTitle = "地火航运理事会", headline = "《星门轰鸣！地月与火星联运走廊正式步入日班化》", lead = "从月背静默到奥林匹斯山麓，一张票根即可串联两颗行星的清晨与黄昏。" },
+        new NewspaperClippingSpec { rankTitle = "内太阳系星航局", headline = "《百花齐放！多域星港商业繁荣，站城经济成深空新引擎》", lead = "昔日荒芜的陨石坑如今灯火通明，低重力咖啡与复古书店点亮了无数旅人的归途。" },
+        new NewspaperClippingSpec { rankTitle = "太阳系跨星域控股", headline = "《超级枢纽全线亮灯！三域客流创下百年航运新纪录》", lead = "金色八角星徽闪耀深空，面对滔天客流，星轨社以惊人的调度艺术交出满分答卷。" },
+        new NewspaperClippingSpec { rankTitle = "深空轨道最高理事会", headline = "《火星东西全境贯通！太阳系迎来无国界轨交大动脉》", lead = "跨越本初子午线与日界线，红色星球的每一座盆地与高原，皆已被银色轨道温柔拥抱。" },
+        new NewspaperClippingSpec { rankTitle = "全星系星轨与深空总署", headline = "《百年加冕！128 站铸就星穹奇迹，全星系深空总署今日挂牌》", lead = "从静海一隅到群星之巅，社长用画笔与星舰证明：宇宙虽大，轨交可抵一切远方。" }
+    };
+}

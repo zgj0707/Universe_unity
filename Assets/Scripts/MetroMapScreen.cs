@@ -39,7 +39,10 @@ public partial class DemoBootstrap
         CloseLineBubble();
         ClearStationOdArcs();
 
-        metroRegionFilter = string.IsNullOrEmpty(currentRegion) ? "月之亮面" : currentRegion;
+        string initial = string.IsNullOrEmpty(currentRegion) ? "月之亮面" : currentRegion;
+        // 旧存档仍以 "火星" 作为单一区域，直接落到全境拼接视图，避免下拉无对应项
+        if (string.Equals(initial, "火星", StringComparison.Ordinal)) initial = "火星·全境";
+        metroRegionFilter = initial;
         metroLandscapeMode = false;
         metroCleanMode = false;
 
@@ -68,7 +71,7 @@ public partial class DemoBootstrap
         metroBackdropGraphic = bgGo.GetComponent<MetroBackdropGridGraphic>();
         metroBackdropGraphic.raycastTarget = true;
 
-        // 2. 可缩放/平移的地铁图视口
+        // 2. 可缩放/平移的城市星轨图视口
         var vpGo = new GameObject("MetroViewport", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Mask));
         vpGo.transform.SetParent(metroMapPageRoot.transform, false);
         metroViewportRt = vpGo.GetComponent<RectTransform>();
@@ -184,7 +187,7 @@ public partial class DemoBootstrap
         var backBtn = Btn(topBar.transform, "MetroBack", "返回", 28, 14, 14, 120, 64, Paper2, CloseMetroMapScreen);
         backBtn.GetComponentInChildren<Text>().color = Ink;
 
-        metroScopeTxt = Txt(topBar.transform, "月之亮面地铁图", 32, Ink, 148, 12, 410, 68, TextAnchor.MiddleLeft);
+        metroScopeTxt = Txt(topBar.transform, "月之亮面城市星轨图", 32, Ink, 148, 12, 410, 68, TextAnchor.MiddleLeft);
         metroScopeTxt.resizeTextForBestFit = true;
         metroScopeTxt.resizeTextMinSize = 20;
         metroScopeTxt.resizeTextMaxSize = 32;
@@ -200,16 +203,21 @@ public partial class DemoBootstrap
         metroRegionBtnTxt = regBtn.GetComponentInChildren<Text>();
         metroRegionBtnTxt.color = Ink;
 
-        // 区域下拉选项浮层
-        metroRegionDropdownList = Rect("MetroRegionList", topBar.transform, 580, -206, 210, 200);
+        // 区域下拉选项浮层：按选项数量自适应高度与逐行 Y 坐标，7 项全量点选不裁切
+        string[] regions = { "火星·全境", "月之亮面", "月背", "火星·西半球", "火星·东半球" };
+        const float optH = 56f;
+        const float optGap = 8f;
+        const float listPad = 10f;
+        const float listW = 220f;
+        float listH = listPad * 2f + regions.Length * optH + (regions.Length - 1) * optGap;
+        metroRegionDropdownList = Rect("MetroRegionList", topBar.transform, 580f, -(listH + 6f), listW, listH);
         Rounded(metroRegionDropdownList, CardBg);
         SoftShadow(metroRegionDropdownList);
-        string[] regions = { "月之亮面", "月背", "火星" };
         for (int i = 0; i < regions.Length; i++)
         {
             string rName = regions[i];
-            float iy = 136f - i * 64f;
-            var optBtn = Btn(metroRegionDropdownList.transform, "Opt_" + rName, rName, 26, 8, iy, 194, 56, Paper2, () =>
+            float iy = listPad + (regions.Length - 1 - i) * (optH + optGap);
+            var optBtn = Btn(metroRegionDropdownList.transform, "Opt_" + rName, rName, 24, 8, iy, listW - 16f, optH, Paper2, () =>
             {
                 metroRegionFilter = rName;
                 if (metroRegionBtnTxt != null) metroRegionBtnTxt.text = rName + " ▼";
@@ -251,18 +259,27 @@ public partial class DemoBootstrap
     {
         if (metroMapPageRoot == null) return;
 
-        // 按当前区域建成站点数动态放大布局画布，留出充裕的站间空隙，再通过缩放一屏全览
+        // 按当前视图建成港点数动态放大布局画布，留出充裕站距后再缩放一屏全览
+        bool isMarsAll = string.Equals(metroRegionFilter, "火星·全境", StringComparison.Ordinal)
+                      || string.Equals(metroRegionFilter, "火星", StringComparison.Ordinal);
         int builtInRegion = 0;
         for (int i = 0; i < stations.Count; i++)
         {
             var st = stations[i];
-            if (st != null && st.built && !st.closed && string.Equals(st.region, metroRegionFilter, StringComparison.Ordinal))
-            {
-                builtInRegion++;
-            }
+            if (st == null || !st.built || st.closed) continue;
+            bool serves = isMarsAll
+                ? MetroLayoutBuilder.StationIsMars(st)
+                : MetroLayoutBuilder.StationServesRegion(st, metroRegionFilter);
+            if (serves) builtInRegion++;
         }
-        float canvasBoost = Mathf.Clamp(Mathf.Sqrt(Mathf.Max(12, builtInRegion) / 14f), 1.15f, 2.35f);
-        Vector2 baseSize = metroLandscapeMode ? new Vector2(H, W) : new Vector2(W, H);
+        float densityBase = isMarsAll ? 24f : 14f;
+        float canvasBoost = Mathf.Clamp(
+            Mathf.Sqrt(Mathf.Max(12, builtInRegion) / densityBase),
+            isMarsAll ? 1.25f : 1.15f,
+            isMarsAll ? 2.10f : 2.35f);
+        Vector2 baseSize = metroLandscapeMode
+            ? (isMarsAll ? new Vector2(H * 1.25f, W * 1.05f) : new Vector2(H, W))
+            : (isMarsAll ? new Vector2(H * 1.25f, W * 1.05f) : new Vector2(W, H));
         Vector2 layoutSize = baseSize * canvasBoost;
         metroCanvasRt.sizeDelta = layoutSize;
         metroStationLayer.sizeDelta = layoutSize;
@@ -283,7 +300,9 @@ public partial class DemoBootstrap
 
         if (metroScopeTxt != null)
         {
-            metroScopeTxt.text = metroLastLayout.scopeTitle + "地铁图";
+            metroScopeTxt.text = isMarsAll
+                ? "大火星·全境拼接星轨图"
+                : metroLastLayout.scopeTitle + "城市星轨图";
         }
         if (metroRegionBtnTxt != null)
         {
@@ -314,11 +333,28 @@ public partial class DemoBootstrap
             return;
         }
 
-        // MetroMan 风格：换乘站为大号黑框白芯环，普通站为白芯线色环
-        float size = node.isTransfer ? (metroStyle.stationRadius * 2.85f) : (metroStyle.stationRadius * 1.95f);
+        // MetroMan 风格：三域超级枢纽叠金色双菱星徽，换线接驳站为大号黑框白芯环，普通站为白芯线色环
+        if (node.isSuperHub && spriteDiamond)
+        {
+            float hubSizeA = metroStyle.stationRadius * 4.2f;
+            float hubSizeB = metroStyle.stationRadius * 3.4f;
+            var starA = Rect("SuperStarA_" + node.stationId, metroStationLayer, node.pos.x - hubSizeA * 0.5f, node.pos.y - hubSizeA * 0.5f, hubSizeA, hubSizeA);
+            Img(starA, new Color(0.95f, 0.72f, 0.16f, 0.96f), spriteDiamond).raycastTarget = false;
+            var starB = Rect("SuperStarB_" + node.stationId, metroStationLayer, node.pos.x, node.pos.y, hubSizeB, hubSizeB);
+            var starBRt = starB.GetComponent<RectTransform>();
+            starBRt.pivot = new Vector2(0.5f, 0.5f);
+            starBRt.anchoredPosition = node.pos;
+            starB.transform.localRotation = Quaternion.Euler(0f, 0f, 45f);
+            Img(starB, new Color(0.88f, 0.58f, 0.14f, 0.92f), spriteDiamond).raycastTarget = false;
+        }
+        float size = node.isSuperHub ? (metroStyle.stationRadius * 3.1f)
+            : node.isTransfer ? (metroStyle.stationRadius * 2.85f)
+            : (metroStyle.stationRadius * 1.95f);
         var outerGo = Rect("St_" + node.stationId, metroStationLayer, node.pos.x - size * 0.5f, node.pos.y - size * 0.5f, size, size);
-        Sprite shapeSpr = metroStyle.stationShape == MetroStationShape.Square ? spriteRound : spriteCircle;
-        Color outerCol = node.isTransfer ? metroStyle.transferRingColor : node.primaryColor;
+        Sprite shapeSpr = node.isSuperHub && spriteDiamond ? spriteDiamond
+            : (metroStyle.stationShape == MetroStationShape.Square ? spriteRound : spriteCircle);
+        Color outerCol = node.isSuperHub ? new Color(0.76f, 0.22f, 0.20f, 1f)
+            : (node.isTransfer ? metroStyle.transferRingColor : node.primaryColor);
         var outerImg = Img(outerGo, outerCol, shapeSpr);
         outerImg.raycastTarget = false;
 
@@ -410,7 +446,10 @@ public partial class DemoBootstrap
         outline.effectColor = metroStyle.cardBorderColor;
         outline.effectDistance = new Vector2(1.5f, -1.5f);
 
-        CreateCrispUiText(metroLegendRt, "LegendTitle", metroLastLayout.scopeTitle + "线路", 25, metroStyle.labelColor, 18, cardH - 46, cardW - 36, 36, TextAnchor.MiddleLeft, true);
+        string legendTitle = string.IsNullOrEmpty(metroLastLayout.legendTitle)
+            ? metroLastLayout.scopeTitle + "线路"
+            : metroLastLayout.legendTitle;
+        CreateCrispUiText(metroLegendRt, "LegendTitle", legendTitle, 25, metroStyle.labelColor, 18, cardH - 46, cardW - 36, 36, TextAnchor.MiddleLeft, true);
 
         if (showCount == 0)
         {
@@ -446,7 +485,12 @@ public partial class DemoBootstrap
         float effW = rotated ? bh : bw;
         float effH = rotated ? bw : bh;
 
-        float scale = Mathf.Clamp(Mathf.Min((vw * 0.88f) / effW, (vh * 0.78f) / effH), 0.22f, 3.2f);
+        bool isMarsAll = string.Equals(metroRegionFilter, "火星·全境", StringComparison.Ordinal)
+                      || string.Equals(metroRegionFilter, "火星", StringComparison.Ordinal);
+        float fitScale = (isMarsAll && !rotated)
+            ? Mathf.Min((vw * 1.55f) / effW, (vh * 0.72f) / effH)
+            : Mathf.Min((vw * 0.88f) / effW, (vh * 0.78f) / effH);
+        float scale = Mathf.Clamp(fitScale, (isMarsAll && !rotated) ? 0.52f : 0.22f, 3.2f);
         metroPanContainerRt.localScale = Vector3.one * scale;
 
         Vector2 layoutSize = metroCanvasRt.sizeDelta;
@@ -583,7 +627,7 @@ public class MetroCleanTapCatcher : MonoBehaviour, IPointerDownHandler, IPointer
 }
 
 /// <summary>
-/// 地铁图专用自由缩放拖拽控制器：允许放大后将画布任意一侧拖至屏幕中央，不会锁死边缘。
+/// 城市星轨图专用自由缩放拖拽控制器：允许放大后将画布任意一侧拖至屏幕中央，不会锁死边缘。
 /// </summary>
 public class MetroPanZoomController : MonoBehaviour, IScrollHandler, IBeginDragHandler, IDragHandler, IEndDragHandler
 {

@@ -8,7 +8,7 @@ using UnityEngine.SceneManagement;
 /// <summary>
 /// 项目里只有一个场景 Assets/Scenes/Main.unity。
 /// 打开工程时如果当前没有有效场景，自动打开它；按 Play 时也固定从它启动。
-/// 菜单：铁路大亨2 / 打开主场景 Main
+/// 菜单：星轨纪行 / 打开主场景 Main
 /// </summary>
 [InitializeOnLoad]
 static class DemoSceneTools
@@ -31,7 +31,7 @@ static class DemoSceneTools
             if (File.Exists(TestSavePath))
             {
                 AssetDatabase.ImportAsset(TestSavePath, ImportAssetOptions.ForceUpdate);
-                Debug.Log("[Railway2] 已同步开发测试存档至 " + TestSavePath + "（可提交 Git 跨设备同步）");
+                Debug.Log("[Universe] 已同步开发测试存档至 " + TestSavePath + "（可提交 Git 跨设备同步）");
             }
         }
     }
@@ -45,7 +45,7 @@ static class DemoSceneTools
         var main = AssetDatabase.LoadAssetAtPath<SceneAsset>(ScenePath);
         if (main == null)
         {
-            Debug.LogWarning("[Railway2] 找不到 " + ScenePath);
+            Debug.LogWarning("[Universe] 找不到 " + ScenePath);
             return;
         }
         EditorSceneManager.playModeStartScene = main;
@@ -58,21 +58,21 @@ static class DemoSceneTools
 
 
 
-    [MenuItem("铁路大亨2/选择 Bootstrap（查看编辑说明）", false, 3)]
+    [MenuItem("星轨纪行/选择 Bootstrap（查看编辑说明）", false, 3)]
     static void SelectBootstrap()
     {
         var go = GameObject.Find("Bootstrap");
         if (go != null) { Selection.activeGameObject = go; EditorGUIUtility.PingObject(go); }
     }
 
-    [MenuItem("铁路大亨2/打开 UI 脚本", false, 4)]
+    [MenuItem("星轨纪行/打开 UI 脚本", false, 4)]
     static void OpenUIScripts()
     {
         var asset = AssetDatabase.LoadAssetAtPath<MonoScript>("Assets/Scripts/DemoBootstrap.cs");
         if (asset != null) AssetDatabase.OpenAsset(asset);
     }
 
-    [MenuItem("铁路大亨2/开始游戏（Play）", false, 0)]
+    [MenuItem("星轨纪行/开始游戏（Play）", false, 0)]
     static void PlayMain()
     {
         if (EditorApplication.isPlaying) return;
@@ -83,43 +83,43 @@ static class DemoSceneTools
         }
     }
 
-    [MenuItem("铁路大亨2/打开主场景 Main", false, 1)]
+    [MenuItem("星轨纪行/打开主场景 Main", false, 1)]
     static void OpenMainScene()
     {
         if (EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
             EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
     }
 
-    [MenuItem("铁路大亨2/设为 Play 启动场景", false, 2)]
+    [MenuItem("星轨纪行/设为 Play 启动场景", false, 2)]
     static void SetPlayScene()
     {
         var main = AssetDatabase.LoadAssetAtPath<SceneAsset>(ScenePath);
         if (main == null) return;
         EditorSceneManager.playModeStartScene = main;
-        Debug.Log("[Railway2] Play 启动场景 = " + ScenePath);
+        Debug.Log("[Universe] Play 启动场景 = " + ScenePath);
     }
 
-    [MenuItem("铁路大亨2/同步测试存档（跨设备开发）", false, 20)]
+    [MenuItem("星轨纪行/同步测试存档（跨设备开发）", false, 20)]
     static void ToggleDevTestSaveSync()
     {
         bool next = !DemoBootstrap.DevTestSaveSyncEnabled;
         DemoBootstrap.DevTestSaveSyncEnabled = next;
-        Debug.Log("[Railway2] 开发测试存档自动同步已" + (next ? "开启（启动优先读取并持续写回 " + TestSavePath + "）" : "关闭（仅使用本机 PlayerPrefs）"));
+        Debug.Log("[Universe] 开发测试存档自动同步已" + (next ? "开启（启动优先读取并持续写回 " + TestSavePath + "）" : "关闭（仅使用本机 PlayerPrefs）"));
     }
 
-    [MenuItem("铁路大亨2/同步测试存档（跨设备开发）", true, 20)]
+    [MenuItem("星轨纪行/同步测试存档（跨设备开发）", true, 20)]
     static bool ValidateToggleDevTestSaveSync()
     {
-        Menu.SetChecked("铁路大亨2/同步测试存档（跨设备开发）", DemoBootstrap.DevTestSaveSyncEnabled);
+        Menu.SetChecked("星轨纪行/同步测试存档（跨设备开发）", DemoBootstrap.DevTestSaveSyncEnabled);
         return true;
     }
 
-    [MenuItem("铁路大亨2/打开测试存档 JSON", false, 21)]
+    [MenuItem("星轨纪行/打开测试存档 JSON", false, 21)]
     static void OpenDevTestSaveJson()
     {
         var asset = AssetDatabase.LoadAssetAtPath<TextAsset>(TestSavePath);
         if (asset != null) AssetDatabase.OpenAsset(asset);
-        else Debug.LogWarning("[Railway2] 找不到 " + TestSavePath);
+        else Debug.LogWarning("[Universe] 找不到 " + TestSavePath);
     }
 }
 #endif

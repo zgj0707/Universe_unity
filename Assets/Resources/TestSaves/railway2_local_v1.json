@@ -1,233 +1,23 @@
 {
     "version": 1,
-    "day": 415,
+    "day": 76,
     "speed": 3,
-    "nextId": 26,
-    "dailyBaseline": 113,
+    "nextId": 31,
+    "dailyBaseline": 125,
     "theme": 0,
-    "coins": 4962842.783349436,
-    "diamonds": 425.0,
-    "rp": 3330.0,
-    "clock": 203.41131591796875,
-    "researchClock": 27.42680549621582,
+    "coins": 144127.8922992394,
+    "diamonds": 144.0,
+    "rp": 633.0,
+    "clock": 159.08700561523438,
+    "researchClock": 1.0928831100463867,
     "macau": true,
     "guangdong": true,
     "loan": false,
     "music": true,
-    "region": "榕川",
+    "region": "月之亮面",
     "stations": [
         {
-            "key": "汐港:海晏台",
-            "customName": "home",
-            "level": 10,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 2100.0,
-            "facLevel": 3
-        },
-        {
-            "key": "汐港:鸣钟街",
-            "customName": "",
-            "level": 10,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "汐港:铜环湾",
-            "customName": "",
-            "level": 8,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "汐港:望海咀",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "汐港:翠竹咀",
-            "customName": "",
-            "level": 10,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 165.0,
-            "facLevel": 3
-        },
-        {
-            "key": "汐港:丹石口",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "汐港:旺市角",
-            "customName": "",
-            "level": 9,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 6500.0,
-            "facLevel": 3
-        },
-        {
-            "key": "汐港:龙尾塘",
-            "customName": "",
-            "level": 3,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "汐港:白沙围",
-            "customName": "",
-            "level": 2,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "汐港:南步墟",
-            "customName": "",
-            "level": 3,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "汐港:兰溪湾",
-            "customName": "",
-            "level": 2,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "汐港:镇海门",
-            "customName": "",
-            "level": 2,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "汐港:东山涌",
-            "customName": "",
-            "level": 7,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "汐港:翔翼坪",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "汐港:幻彩湾",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "汐港:北桥关",
-            "customName": "",
-            "level": 8,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "汐港:跨海虹桥",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "汐港:丰年墟",
-            "customName": "",
-            "level": 3,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "汐港:芦花围",
-            "customName": "",
-            "level": 10,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 2100.0,
-            "facLevel": 3
-        },
-        {
-            "key": "汐港:织布埗",
-            "customName": "",
-            "level": 10,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "汐港:清泉围",
-            "customName": "",
-            "level": 2,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "汐港:松岭围",
+            "key": "月之亮面:静海基地",
             "customName": "",
             "level": 4,
             "trafficEvent": 0,
@@ -237,47 +27,7 @@
             "facLevel": 0
         },
         {
-            "key": "汐港:和安里",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "汐港:石梯坡",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "汐港:翠林澳",
-            "customName": "",
-            "level": 2,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "汐港:鞍马山",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "汐港:渔光澳",
+            "key": "月之亮面:阿里亚德港",
             "customName": "",
             "level": 3,
             "trafficEvent": 0,
@@ -287,117 +37,17 @@
             "facLevel": 0
         },
         {
-            "key": "汐港:向阳涌",
-            "customName": "",
-            "level": 2,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "汐港:青衫洲",
+            "key": "月之亮面:澄海枢纽",
             "customName": "",
             "level": 5,
             "trafficEvent": 0,
             "built": true,
             "closed": false,
-            "riderBonus": 6500.0,
-            "facLevel": 3
+            "riderBonus": 1200.0,
+            "facLevel": 2
         },
         {
-            "key": "榕川:东湾（西渡）",
-            "customName": "",
-            "level": 6,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:稻田墟",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:吉安墟",
-            "customName": "",
-            "level": 3,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:百川镇",
-            "customName": "",
-            "level": 3,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:鹅山墟",
-            "customName": "",
-            "level": 10,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 2100.0,
-            "facLevel": 3
-        },
-        {
-            "key": "榕川:南羊城",
-            "customName": "",
-            "level": 10,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 2100.0,
-            "facLevel": 3
-        },
-        {
-            "key": "榕川:明珠镇",
-            "customName": "",
-            "level": 7,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:锦溪墟",
-            "customName": "",
-            "level": 10,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 6500.0,
-            "facLevel": 3
-        },
-        {
-            "key": "榕川:青藤（北关）",
-            "customName": "",
-            "level": 9,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 6500.0,
-            "facLevel": 3
-        },
-        {
-            "key": "汐港:清波湾",
+            "key": "月之亮面:阿波罗11湾",
             "customName": "",
             "level": 2,
             "trafficEvent": 0,
@@ -407,77 +57,7 @@
             "facLevel": 0
         },
         {
-            "key": "镜屿:古石围",
-            "customName": "",
-            "level": 5,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 6500.0,
-            "facLevel": 3
-        },
-        {
-            "key": "镜屿:东帆码头",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "镜屿:莲心仔",
-            "customName": "",
-            "level": 6,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 6500.0,
-            "facLevel": 3
-        },
-        {
-            "key": "镜屿:翠环村",
-            "customName": "",
-            "level": 4,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 6500.0,
-            "facLevel": 3
-        },
-        {
-            "key": "镜屿:木船厂",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "镜屿:芦苇洲",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "镜屿:新海堤",
-            "customName": "",
-            "level": 5,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 2100.0,
-            "facLevel": 3
-        },
-        {
-            "key": "镜屿:望海阁",
+            "key": "月之亮面:马斯克林湾",
             "customName": "",
             "level": 2,
             "trafficEvent": 0,
@@ -487,47 +67,7 @@
             "facLevel": 0
         },
         {
-            "key": "镜屿:钟楼市集",
-            "customName": "",
-            "level": 3,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "镜屿:白墙巷",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "镜屿:杏仁街",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "镜屿:莲东空港",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "镜屿:双莲渡",
+            "key": "月之亮面:危海西港",
             "customName": "",
             "level": 2,
             "trafficEvent": 0,
@@ -537,7 +77,7 @@
             "facLevel": 0
         },
         {
-            "key": "镜屿:叠石澳",
+            "key": "月之亮面:酒海前哨",
             "customName": "",
             "level": 2,
             "trafficEvent": 0,
@@ -547,67 +87,7 @@
             "facLevel": 0
         },
         {
-            "key": "镜屿:墨沙湾",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:西水涌",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:东坡口",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": false,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:芦湾村",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 1,
-            "built": false,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:浅沙墟",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:江边墟",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 2,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:黄沙埠",
+            "key": "月之亮面:皮科洛米尼",
             "customName": "",
             "level": 1,
             "trafficEvent": 1,
@@ -617,277 +97,7 @@
             "facLevel": 0
         },
         {
-            "key": "榕川:石阶墟",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:茶花墟",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:细沙湾",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 4,
-            "built": false,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:丰穗墟",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 1,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:双溪渡",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": false,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:清溪埠",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": false,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:马鞍墟",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:兴隆墟",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 2,
-            "built": false,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:和顺墟",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:安乐坪",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:南坡墟",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:青岗墟",
-            "customName": "",
-            "level": 2,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:平山围",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 2,
-            "built": false,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:南渡墟",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": false,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:前坡墟",
-            "customName": "",
-            "level": 2,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:渔斗门",
-            "customName": "",
-            "level": 3,
-            "trafficEvent": 2,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:三石湾",
-            "customName": "",
-            "level": 2,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:碧海墟",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": false,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:浪花埠",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:木棉墟",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:观海门",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:陶窑坊",
-            "customName": "",
-            "level": 2,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:南村墟",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:良田墟",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": false,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:西桥涌",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": false,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:葵乡墟",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": false,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:平川埠",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": false,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:望台墟",
+            "key": "月之亮面:哥白尼环形山",
             "customName": "",
             "level": 3,
             "trafficEvent": 0,
@@ -897,157 +107,7 @@
             "facLevel": 0
         },
         {
-            "key": "榕川:踏水墟",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": false,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:红土墟",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:白鹤墟",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": false,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:泉水墟",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:晚霞埠",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:麻石墟",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:甘溪墟",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:海角渡",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:清泉墟",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 2,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:响雷墟",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:渔帆埠",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": false,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:东水湾",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 1,
-            "built": false,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:白沙墟",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": false,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:高坡墟",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:橘香渡",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:竹山墟",
+            "key": "月之亮面:艾拉托斯特尼",
             "customName": "",
             "level": 1,
             "trafficEvent": 4,
@@ -1057,447 +117,7 @@
             "facLevel": 0
         },
         {
-            "key": "榕川:石坑口",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": false,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:青鼎墟",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": false,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:石牌渡",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": false,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:翠竹墟",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": false,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:山谷墟",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 2,
-            "built": false,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:四水墟",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": false,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:桥头埠",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:甘水墟",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": false,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:青萝墟",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 3,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:稻香湾",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:寒梅墟",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": false,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:芭蕉坪",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 3,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:青瓷墟",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:温泉汤",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:五峰墟",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": false,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:宁川围",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:丰海墟",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": false,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:丰陆墟",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 3,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:玄石湾",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:水源埠",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": false,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:紫竹墟",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:青龙渡",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 4,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:太和墟",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": false,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:连翠塘",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": false,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:春山墟",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": false,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:东海埠",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": false,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:银浪湾",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": false,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:春风墟",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:茶香墟",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": false,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:采茶墟",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:金羽墟",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:白鹭埠",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 3,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:古榕东",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": false,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:榕荫渡",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:青梅墟",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:灵泉墟",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:云岫墟",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": false,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:石帆渡",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": false,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:禅林墟",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": false,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:翠林墟",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": false,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:泷水埠",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:五岭口",
-            "customName": "",
-            "level": 5,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 6500.0,
-            "facLevel": 3
-        },
-        {
-            "key": "榕川:潮风港",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:银江墟",
-            "customName": "",
-            "level": 3,
-            "trafficEvent": 3,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:雷海埠",
+            "key": "月之亮面:开普勒港",
             "customName": "",
             "level": 2,
             "trafficEvent": 0,
@@ -1507,47 +127,7 @@
             "facLevel": 0
         },
         {
-            "key": "榕川:荔枝城",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:砚山墟",
-            "customName": "",
-            "level": 2,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:寒香镇",
-            "customName": "",
-            "level": 1,
-            "trafficEvent": 0,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:白浪港",
-            "customName": "",
-            "level": 2,
-            "trafficEvent": 3,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:东溪埠",
+            "key": "月之亮面:雨海前哨",
             "customName": "",
             "level": 3,
             "trafficEvent": 0,
@@ -1557,7 +137,17 @@
             "facLevel": 0
         },
         {
-            "key": "榕川:银滩港",
+            "key": "月之亮面:阿基米德站",
+            "customName": "",
+            "level": 3,
+            "trafficEvent": 3,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "月之亮面:亚平宁岭",
             "customName": "",
             "level": 1,
             "trafficEvent": 0,
@@ -1567,17 +157,57 @@
             "facLevel": 0
         },
         {
-            "key": "榕川:北山墟",
+            "key": "月之亮面:汽海枢纽",
             "customName": "",
-            "level": 5,
-            "trafficEvent": 3,
+            "level": 2,
+            "trafficEvent": 0,
             "built": true,
             "closed": false,
             "riderBonus": 0.0,
             "facLevel": 0
         },
         {
-            "key": "榕川:金凤城",
+            "key": "月之亮面:中央湾",
+            "customName": "",
+            "level": 2,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 1200.0,
+            "facLevel": 2
+        },
+        {
+            "key": "月之亮面:知海站",
+            "customName": "",
+            "level": 2,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "月之亮面:云星港",
+            "customName": "",
+            "level": 3,
+            "trafficEvent": 1,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "月之亮面:第谷环港",
+            "customName": "",
+            "level": 2,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "月之亮面:沃尔特站",
             "customName": "",
             "level": 4,
             "trafficEvent": 0,
@@ -1587,19 +217,9 @@
             "facLevel": 0
         },
         {
-            "key": "榕川:榕荫墟",
+            "key": "月之亮面:斯托弗勒",
             "customName": "",
-            "level": 1,
-            "trafficEvent": 2,
-            "built": true,
-            "closed": false,
-            "riderBonus": 0.0,
-            "facLevel": 0
-        },
-        {
-            "key": "榕川:石鼓墟",
-            "customName": "",
-            "level": 3,
+            "level": 2,
             "trafficEvent": 0,
             "built": true,
             "closed": false,
@@ -1607,557 +227,1473 @@
             "facLevel": 0
         },
         {
-            "key": "镜屿:西堤关",
+            "key": "月之亮面:克拉维乌斯",
             "customName": "",
-            "level": 3,
-            "trafficEvent": 4,
+            "level": 1,
+            "trafficEvent": 1,
             "built": true,
             "closed": false,
             "riderBonus": 0.0,
             "facLevel": 0
         },
         {
-            "key": "镜屿:琴海口",
+            "key": "月之亮面:高加索山",
             "customName": "",
-            "level": 4,
+            "level": 2,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "月之亮面:梦湖前哨",
+            "customName": "",
+            "level": 2,
+            "trafficEvent": 3,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "月之亮面:死湖前哨",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "月之亮面:阿尔卑斯谷",
+            "customName": "",
+            "level": 2,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "月之亮面:冷海北站",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "月之亮面:柏拉图环",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "月之亮面:虹湾星门",
+            "customName": "",
+            "level": 2,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "月背:冯·卡门港",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "月背:艾特肯深井",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "月背:智星港",
+            "customName": "",
+            "level": 1,
             "trafficEvent": 0,
             "built": true,
             "closed": false,
             "riderBonus": 6500.0,
             "facLevel": 3
+        },
+        {
+            "key": "月背:加加林环",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "月背:巴甫洛夫站",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "月背:伯克兰港",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "月背:南极深井",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "月背:莱曼前哨",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "月背:普朗克站",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "月背:德弗里斯",
+            "customName": "",
+            "level": 2,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "月背:奥本海默",
+            "customName": "",
+            "level": 2,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "月背:博尔曼湾",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "月背:科罗廖夫环",
+            "customName": "",
+            "level": 2,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "月背:马赫前哨",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "月背:莫斯科海",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "月背:白贝罗港",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "月背:坎贝尔站",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "月背:达朗贝尔环",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "月背:阿波罗星门",
+            "customName": "",
+            "level": 3,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·西半球:奥林匹斯星门",
+            "customName": "",
+            "level": 3,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·西半球:阿卡迪亚西岸",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": false,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·西半球:阿卡迪亚北站",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": false,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·西半球:阿刻戎堑沟",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·西半球:阿尔巴山",
+            "customName": "",
+            "level": 2,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·西半球:塔尔西斯丘",
+            "customName": "",
+            "level": 3,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·西半球:坦佩台地",
+            "customName": "",
+            "level": 2,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·西半球:卡塞谷",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·西半球:阿西达利亚南",
+            "customName": "",
+            "level": 3,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·西半球:阿西达利亚海",
+            "customName": "",
+            "level": 2,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·西半球:阿拉伯西岸",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·西半球:亚马逊平原",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": false,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·西半球:戈尔迪背斜",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": false,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·西半球:曼加拉谷",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·西半球:西绪福斯原",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·西半球:亚马逊西门",
+            "customName": "",
+            "level": 2,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·西半球:比布利斯站",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·西半球:叙利亚南港",
+            "customName": "",
+            "level": 2,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·西半球:奥林西谷",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": false,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·西半球:米伦尼亚谷",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·西半球:朱维斯谷",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·西半球:帕弗尼斯峰",
+            "customName": "",
+            "level": 3,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·西半球:阿尔西亚峰",
+            "customName": "",
+            "level": 2,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·西半球:伊卡里亚堑沟",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·西半球:乌拉纽斯山",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": false,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·西半球:阿斯克雷乌斯",
+            "customName": "",
+            "level": 4,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·西半球:诺克提斯迷宫",
+            "customName": "",
+            "level": 4,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·西半球:克拉罗斯堑沟",
+            "customName": "",
+            "level": 3,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·西半球:陶马西亚高地",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": false,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·西半球:乌拉纽斯谷",
+            "customName": "",
+            "level": 3,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·西半球:凤凰湖门户",
+            "customName": "",
+            "level": 3,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·西半球:伊乌斯峡谷",
+            "customName": "",
+            "level": 2,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·西半球:提托努斯峡谷",
+            "customName": "",
+            "level": 2,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·西半球:卢纳高原",
+            "customName": "",
+            "level": 3,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·西半球:奥菲尔峡谷",
+            "customName": "",
+            "level": 3,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·西半球:坎多尔峡谷",
+            "customName": "",
+            "level": 4,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·西半球:科普剌塔斯",
+            "customName": "",
+            "level": 3,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·西半球:梅拉斯峡谷",
+            "customName": "",
+            "level": 2,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·西半球:克律塞平原",
+            "customName": "",
+            "level": 4,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·西半球:马沃斯谷",
+            "customName": "",
+            "level": 3,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·西半球:希尔达谷",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·西半球:阿瑞斯谷",
+            "customName": "",
+            "level": 2,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·西半球:马里内利谷",
+            "customName": "",
+            "level": 3,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·西半球:子午线星门",
+            "customName": "",
+            "level": 5,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 1200.0,
+            "facLevel": 2
+        },
+        {
+            "key": "火星·西半球:西瑞努姆高地",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·西半球:博斯普鲁斯",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": false,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·西半球:阿耳古瑞盆地",
+            "customName": "",
+            "level": 2,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·西半球:卢罗斯谷",
+            "customName": "",
+            "level": 3,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·西半球:查尔斯环",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": false,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·西半球:尼尔加尔谷",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": false,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·西半球:诺亚西谷",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": false,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·东半球:贝克尔环",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": false,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·东半球:德特罗尼鲁斯",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": false,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·东半球:普罗托尼鲁斯",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": false,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·东半球:尼利堑沟",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": false,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·东半球:塞伯拉斯北口",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": false,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·东半球:乌托邦平原",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·东半球:卡西乌斯港",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·东半球:赫卡忒火山",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·东半球:弗莱格拉山脉",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": false,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·东半球:沙尔巴塔纳",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": false,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·东半球:阿拉伯台地",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": false,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·东半球:克龙梅林环",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·东半球:子午线平原",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·东半球:提柯尼亚",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·东半球:卡西尼环",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·东半球:萨巴亚高地",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": false,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·东半球:安东尼亚迪",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·东半球:惠更斯盆地",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·东半球:耶泽罗陨石坑",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·东半球:大瑟提斯高原",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·东半球:伊希地西港",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·东半球:法蒂玛台地",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·东半球:诺亚高地",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·东半球:霍尔登环",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·东半球:达尔文南站",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·东半球:埃伯斯瓦尔德",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·东半球:赫拉斯盆地",
+            "customName": "",
+            "level": 2,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·东半球:哈德里亚库斯",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": false,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·东半球:赫拉斯东港",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·东半球:伊希地东门",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·东半球:赫拉斯山麓",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·东半球:祝融着陆港",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·东半球:阿蒙蒂斯平原",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": false,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·东半球:赫斯珀里亚",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·东半球:普罗米修斯",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·东半球:赛克利俄斯",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·东半球:盖尔陨石坑",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·东半球:埃里达尼亚",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·东半球:艾律西昂山",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·东半球:阿尔博尔火山",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·东半球:艾律西昂平原",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·东半球:刻耳柏洛斯",
+            "customName": "",
+            "level": 2,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·东半球:仄费里亚平原",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·东半球:马莱阿高原",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·东半球:埃律西昂东麓",
+            "customName": "",
+            "level": 3,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·东半球:卡普里峡谷",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·东半球:俄耳枯斯谷",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·东半球:梅迪乌斯谷",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·东半球:古瑟夫陨石坑",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·东半球:阿波利纳里斯",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": false,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·东半球:马阿迪姆谷",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
+        },
+        {
+            "key": "火星·东半球:阿波罗尼奥",
+            "customName": "",
+            "level": 1,
+            "trafficEvent": 0,
+            "built": true,
+            "closed": false,
+            "riderBonus": 0.0,
+            "facLevel": 0
         }
     ],
     "scenery": [
         {
-            "key": "汐港:望海峰",
-            "found": true,
+            "key": "月之亮面:虹湾金弧",
+            "found": false,
             "unlocked": true
         },
         {
-            "key": "汐港:帆影港",
-            "found": true,
+            "key": "月之亮面:冷海玄冰谷",
+            "found": false,
             "unlocked": true
         },
         {
-            "key": "汐港:云钟古阁",
-            "found": true,
+            "key": "月之亮面:梦湖辉石崖",
+            "found": false,
             "unlocked": true
         },
         {
-            "key": "汐港:灯笼夜市",
-            "found": true,
+            "key": "月之亮面:开普勒辐射环",
+            "found": false,
             "unlocked": true
         },
         {
-            "key": "汐港:清波湾",
-            "found": true,
+            "key": "月之亮面:亚平宁绝壁",
+            "found": false,
             "unlocked": true
         },
         {
-            "key": "汐港:卧狮岩",
-            "found": true,
+            "key": "月之亮面:静海纪念碑",
+            "found": false,
             "unlocked": true
         },
         {
-            "key": "汐港:白鹤古观",
-            "found": true,
+            "key": "月之亮面:云海直壁断崖",
+            "found": false,
             "unlocked": true
         },
         {
-            "key": "汐港:飞鹭芦滩",
-            "found": true,
+            "key": "月之亮面:阿尔泰峭壁",
+            "found": false,
             "unlocked": true
         },
         {
-            "key": "汐港:碧海石崖",
-            "found": true,
+            "key": "月之亮面:第谷辐射纹",
+            "found": false,
             "unlocked": true
         },
         {
-            "key": "镜屿:石门古坊",
-            "found": true,
+            "key": "月背:南极艾特肯深渊",
+            "found": false,
             "unlocked": true
         },
         {
-            "key": "镜屿:望海灯楼",
-            "found": true,
+            "key": "月背:冯·卡门着陆碑",
+            "found": false,
             "unlocked": true
         },
         {
-            "key": "镜屿:饼家老街",
-            "found": true,
+            "key": "月背:莫斯科海玄武原",
+            "found": false,
             "unlocked": true
         },
         {
-            "key": "镜屿:墨沙海滩",
-            "found": true,
+            "key": "月背:科罗廖夫冰丘",
+            "found": false,
             "unlocked": true
         },
         {
-            "key": "镜屿:白塔山",
-            "found": true,
+            "key": "月背:阿波罗环山观测塔",
+            "found": false,
+            "unlocked": true
+        },
+        {
+            "key": "火星·西半球:奥林匹斯峰",
+            "found": false,
+            "unlocked": true
+        },
+        {
+            "key": "火星·西半球:阿尔巴台地",
+            "found": false,
+            "unlocked": true
+        },
+        {
+            "key": "火星·西半球:陶马西亚原",
+            "found": false,
+            "unlocked": false
+        },
+        {
+            "key": "火星·西半球:坎多尔光柱",
+            "found": false,
+            "unlocked": true
+        },
+        {
+            "key": "火星·西半球:克律塞纪念",
+            "found": false,
+            "unlocked": true
+        },
+        {
+            "key": "火星·西半球:阿耳古瑞环",
+            "found": false,
+            "unlocked": true
+        },
+        {
+            "key": "火星·东半球:诺亚方尖碑",
+            "found": false,
+            "unlocked": true
+        },
+        {
+            "key": "火星·东半球:大瑟提斯原",
+            "found": false,
+            "unlocked": true
+        },
+        {
+            "key": "火星·东半球:赫拉斯深坑",
+            "found": false,
+            "unlocked": true
+        },
+        {
+            "key": "火星·东半球:耶泽罗水岸",
+            "found": false,
+            "unlocked": true
+        },
+        {
+            "key": "火星·东半球:艾律西昂峰",
+            "found": false,
+            "unlocked": true
+        },
+        {
+            "key": "火星·东半球:乌托邦冰原",
+            "found": false,
+            "unlocked": true
+        },
+        {
+            "key": "火星·东半球:盖尔着陆点",
+            "found": false,
+            "unlocked": true
+        },
+        {
+            "key": "火星·东半球:古瑟夫陨坑",
+            "found": false,
             "unlocked": true
         }
     ],
     "lines": [
         {
-            "id": 2,
-            "trains": 7,
-            "todayRevenue": 7780,
-            "skin": 3,
-            "baseRemoved": false,
-            "name": "2 号线",
-            "color": {
-                "r": 0.3199999928474426,
-                "g": 0.5199999809265137,
-                "b": 0.4000000059604645,
-                "a": 1.0
-            },
-            "stations": [
-                "汐港:海晏台",
-                "汐港:翠竹咀",
-                "汐港:旺市角",
-                "汐港:龙尾塘",
-                "汐港:渔光澳",
-                "汐港:鞍马山",
-                "汐港:石梯坡",
-                "汐港:南步墟",
-                "汐港:和安里",
-                "汐港:松岭围",
-                "汐港:清泉围",
-                "汐港:北桥关"
-            ],
-            "dispatch": [
-                2,
-                7,
-                7,
-                7
-            ],
-            "fare": 2.0999999046325684,
-            "todayGross": 7780.16015625,
-            "todayMaintenance": 152.6419219970703,
-            "todayTrack": 710.5326538085938,
-            "recent": [
-                14685,
-                14706,
-                14706,
-                14706,
-                14727,
-                14727,
-                14570
-            ]
-        },
-        {
             "id": 3,
-            "trains": 8,
-            "todayRevenue": 37063,
-            "skin": 3,
+            "trains": 2,
+            "todayRevenue": 5561,
+            "skin": -1,
             "baseRemoved": false,
             "name": "3 号线",
             "color": {
-                "r": 0.3199999928474426,
-                "g": 0.5199999809265137,
-                "b": 0.4000000059604645,
-                "a": 1.0
-            },
-            "stations": [
-                "榕川:五岭口",
-                "榕川:北山墟",
-                "榕川:南羊城",
-                "榕川:锦溪墟",
-                "榕川:青藤（北关）",
-                "镜屿:古石围",
-                "镜屿:钟楼市集",
-                "镜屿:新海堤",
-                "镜屿:莲心仔",
-                "镜屿:翠环村",
-                "镜屿:双莲渡",
-                "镜屿:叠石澳",
-                "镜屿:墨沙湾"
-            ],
-            "dispatch": [
-                8,
-                8,
-                8,
-                8
-            ],
-            "fare": 2.0999999046325684,
-            "todayGross": 37063.421875,
-            "todayMaintenance": 258.626708984375,
-            "todayTrack": 1509.6298828125,
-            "recent": [
-                72149,
-                71649,
-                71245,
-                70515,
-                75574,
-                75959,
-                64100
-            ]
-        },
-        {
-            "id": 4,
-            "trains": 4,
-            "todayRevenue": 9369,
-            "skin": -1,
-            "baseRemoved": false,
-            "name": "4 号线",
-            "color": {
-                "r": 0.8799999952316284,
-                "g": 0.5199999809265137,
-                "b": 0.20000000298023224,
-                "a": 1.0
-            },
-            "stations": [
-                "镜屿:琴海口",
-                "镜屿:杏仁街",
-                "镜屿:莲心仔",
-                "镜屿:新海堤",
-                "镜屿:东帆码头",
-                "汐港:跨海虹桥",
-                "汐港:翔翼坪",
-                "汐港:东山涌",
-                "汐港:幻彩湾",
-                "汐港:海晏台",
-                "汐港:鸣钟街",
-                "汐港:铜环湾",
-                "汐港:望海咀",
-                "汐港:清波湾"
-            ],
-            "dispatch": [
-                2,
-                4,
-                4,
-                4
-            ],
-            "fare": 2.700000047683716,
-            "todayGross": 9368.9619140625,
-            "todayMaintenance": 101.90516662597656,
-            "todayTrack": 1226.1168212890625,
-            "recent": [
-                14888,
-                14924,
-                14924,
-                14924,
-                14960,
-                14960,
-                14689
-            ]
-        },
-        {
-            "id": 6,
-            "trains": 4,
-            "todayRevenue": 10328,
-            "skin": -1,
-            "baseRemoved": false,
-            "name": "6 号线",
-            "color": {
-                "r": 0.44999998807907104,
-                "g": 0.6000000238418579,
+                "r": 0.23999999463558197,
+                "g": 0.44999998807907104,
                 "b": 0.7200000286102295,
                 "a": 1.0
             },
             "stations": [
-                "榕川:南羊城",
-                "榕川:锦溪墟",
-                "榕川:渔斗门",
-                "榕川:三石湾",
-                "镜屿:西堤关",
-                "镜屿:芦苇洲",
-                "镜屿:古石围",
-                "镜屿:钟楼市集",
-                "镜屿:望海阁",
-                "镜屿:白墙巷",
-                "镜屿:琴海口"
-            ],
-            "dispatch": [
-                4,
-                4,
-                4,
-                4
-            ],
-            "fare": 1.899999976158142,
-            "todayGross": 10327.8681640625,
-            "todayMaintenance": 105.34593200683594,
-            "todayTrack": 774.3194580078125,
-            "recent": [
-                20231,
-                18651,
-                19344,
-                19243,
-                20663,
-                21881,
-                16537
-            ]
-        },
-        {
-            "id": 10,
-            "trains": 8,
-            "todayRevenue": 13947,
-            "skin": -1,
-            "baseRemoved": true,
-            "name": "10 号线",
-            "color": {
-                "r": 0.8799999952316284,
-                "g": 0.5199999809265137,
-                "b": 0.20000000298023224,
-                "a": 1.0
-            },
-            "stations": [
-                "汐港:海晏台",
-                "汐港:翠竹咀",
-                "汐港:旺市角",
-                "汐港:向阳涌",
-                "汐港:织布埗",
-                "汐港:丰年墟",
-                "汐港:芦花围"
-            ],
-            "dispatch": [
-                7,
-                8,
-                8,
-                8
-            ],
-            "fare": 1.5,
-            "todayGross": 13947.330078125,
-            "todayMaintenance": 180.7748260498047,
-            "todayTrack": 316.433349609375,
-            "recent": [
-                22771,
-                22780,
-                22780,
-                22780,
-                22790,
-                22790,
-                22720
-            ]
-        },
-        {
-            "id": 11,
-            "trains": 3,
-            "todayRevenue": 2452,
-            "skin": -1,
-            "baseRemoved": false,
-            "name": "11 号线",
-            "color": {
-                "r": 0.5199999809265137,
-                "g": 0.36000001430511475,
-                "b": 0.6499999761581421,
-                "a": 1.0
-            },
-            "stations": [
-                "汐港:东山涌",
-                "汐港:青衫洲",
-                "汐港:兰溪湾",
-                "汐港:织布埗",
-                "汐港:松岭围",
-                "汐港:清泉围",
-                "汐港:北桥关"
-            ],
-            "dispatch": [
-                1,
-                3,
-                3,
-                1
-            ],
-            "fare": 2.5999999046325684,
-            "todayGross": 2451.696533203125,
-            "todayMaintenance": 45.21101379394531,
-            "todayTrack": 513.0053100585938,
-            "recent": [
-                4038,
-                4053,
-                4053,
-                4053,
-                4068,
-                4068,
-                3955
-            ]
-        },
-        {
-            "id": 12,
-            "trains": 2,
-            "todayRevenue": 4031,
-            "skin": -1,
-            "baseRemoved": false,
-            "name": "12 号线",
-            "color": {
-                "r": 0.44999998807907104,
-                "g": 0.6000000238418579,
-                "b": 0.7200000286102295,
-                "a": 1.0
-            },
-            "stations": [
-                "汐港:芦花围",
-                "汐港:镇海门",
-                "汐港:青衫洲",
-                "汐港:旺市角",
-                "汐港:翠竹咀",
-                "汐港:海晏台"
-            ],
-            "dispatch": [
-                2,
-                2,
-                2,
-                2
-            ],
-            "fare": 2.299999952316284,
-            "todayGross": 4031.478515625,
-            "todayMaintenance": 47.086273193359375,
-            "todayTrack": 307.0661926269531,
-            "recent": [
-                6121,
-                6130,
-                6130,
-                6130,
-                6139,
-                6139,
-                6071
-            ]
-        },
-        {
-            "id": 13,
-            "trains": 5,
-            "todayRevenue": 3330,
-            "skin": -1,
-            "baseRemoved": false,
-            "name": "13 号线",
-            "color": {
-                "r": 0.7799999713897705,
-                "g": 0.33000001311302185,
-                "b": 0.23999999463558197,
-                "a": 1.0
-            },
-            "stations": [
-                "汐港:松岭围",
-                "汐港:翠林澳",
-                "汐港:龙尾塘",
-                "汐港:丹石口",
-                "汐港:铜环湾",
-                "汐港:海晏台"
-            ],
-            "dispatch": [
-                5,
-                5,
-                5,
-                3
-            ],
-            "fare": 1.5,
-            "todayGross": 3329.97216796875,
-            "todayMaintenance": 101.1104507446289,
-            "todayTrack": 316.77984619140625,
-            "recent": [
-                4931,
-                4940,
-                4940,
-                4940,
-                4950,
-                4950,
-                4880
-            ]
-        },
-        {
-            "id": 14,
-            "trains": 1,
-            "todayRevenue": 802,
-            "skin": -1,
-            "baseRemoved": false,
-            "name": "14 号线",
-            "color": {
-                "r": 0.30000001192092896,
-                "g": 0.6200000047683716,
-                "b": 0.4699999988079071,
-                "a": 1.0
-            },
-            "stations": [
-                "汐港:北桥关",
-                "汐港:南步墟",
-                "汐港:白沙围",
-                "汐港:龙尾塘",
-                "汐港:丹石口",
-                "汐港:鸣钟街"
-            ],
-            "dispatch": [
-                1,
-                1,
-                1,
-                1
-            ],
-            "fare": 1.5,
-            "todayGross": 801.66796875,
-            "todayMaintenance": 23.445114135742188,
-            "todayTrack": 297.9771728515625,
-            "recent": [
-                928,
-                937,
-                937,
-                937,
-                946,
-                946,
-                880
-            ]
-        },
-        {
-            "id": 16,
-            "trains": 5,
-            "todayRevenue": 8866,
-            "skin": -1,
-            "baseRemoved": false,
-            "name": "深湛铁路",
-            "color": {
-                "r": 0.8799999952316284,
-                "g": 0.5199999809265137,
-                "b": 0.20000000298023224,
-                "a": 1.0
-            },
-            "stations": [
-                "榕川:雷海埠",
-                "榕川:荔枝城",
-                "榕川:石鼓墟",
-                "榕川:砚山墟",
-                "榕川:明珠镇",
-                "榕川:南羊城",
-                "榕川:百川镇",
-                "榕川:东湾（西渡）"
-            ],
-            "dispatch": [
-                5,
-                5,
-                5,
-                5
-            ],
-            "fare": 1.899999976158142,
-            "todayGross": 8865.58984375,
-            "todayMaintenance": 139.1303253173828,
-            "todayTrack": 874.5697631835938,
-            "recent": [
-                12541,
-                13618,
-                13257,
-                13622,
-                13733,
-                14103,
-                12208
-            ]
-        },
-        {
-            "id": 17,
-            "trains": 2,
-            "todayRevenue": 1714,
-            "skin": -1,
-            "baseRemoved": false,
-            "name": "珠湛高铁",
-            "color": {
-                "r": 0.5199999809265137,
-                "g": 0.36000001430511475,
-                "b": 0.6499999761581421,
-                "a": 1.0
-            },
-            "stations": [
-                "镜屿:西堤关",
-                "榕川:银滩港",
-                "榕川:荔枝城",
-                "榕川:雷海埠"
+                "月之亮面:冷海北站",
+                "月之亮面:阿尔卑斯谷",
+                "月之亮面:死湖前哨",
+                "月之亮面:梦湖前哨",
+                "月之亮面:澄海枢纽",
+                "月之亮面:汽海枢纽",
+                "月之亮面:中央湾",
+                "月之亮面:沃尔特站",
+                "月之亮面:第谷环港",
+                "月之亮面:克拉维乌斯"
             ],
             "dispatch": [
                 2,
@@ -2166,44 +1702,44 @@
                 2
             ],
             "fare": 1.5,
-            "todayGross": 1713.943359375,
-            "todayMaintenance": 47.23827362060547,
-            "todayTrack": 250.9088134765625,
+            "todayGross": 5560.74365234375,
+            "todayMaintenance": 61.69160461425781,
+            "todayTrack": 982.2608032226563,
             "recent": [
-                2567,
-                2514,
-                2731,
-                2955,
-                2691,
-                3163,
-                2716
+                5067,
+                5137,
+                5426,
+                5475,
+                5475,
+                5572,
+                7414
             ]
         },
         {
-            "id": 18,
+            "id": 5,
             "trains": 6,
-            "todayRevenue": 12357,
+            "todayRevenue": 8988,
             "skin": -1,
             "baseRemoved": false,
-            "name": "广汕铁路",
+            "name": "5 号线",
             "color": {
-                "r": 0.44999998807907104,
-                "g": 0.6000000238418579,
-                "b": 0.7200000286102295,
+                "r": 0.5199999809265137,
+                "g": 0.36000001430511475,
+                "b": 0.6499999761581421,
                 "a": 1.0
             },
             "stations": [
-                "榕川:南羊城",
-                "榕川:百川镇",
-                "榕川:鹅山墟",
-                "榕川:白浪港",
-                "榕川:青梅墟",
-                "榕川:观海门",
-                "榕川:木棉墟",
-                "榕川:浪花埠",
-                "榕川:潮风港",
-                "榕川:金羽墟",
-                "榕川:金凤城"
+                "月之亮面:沃尔特站",
+                "月之亮面:酒海前哨",
+                "月之亮面:马斯克林湾",
+                "月之亮面:静海基地",
+                "月之亮面:澄海枢纽",
+                "月之亮面:阿基米德站",
+                "月之亮面:雨海前哨",
+                "月之亮面:哥白尼环形山",
+                "月之亮面:知海站",
+                "月之亮面:云星港",
+                "月之亮面:沃尔特站"
             ],
             "dispatch": [
                 6,
@@ -2212,23 +1748,148 @@
                 6
             ],
             "fare": 1.5,
-            "todayGross": 12357.3017578125,
-            "todayMaintenance": 154.84580993652344,
-            "todayTrack": 709.541748046875,
+            "todayGross": 8987.6875,
+            "todayMaintenance": 209.89105224609375,
+            "todayTrack": 1506.33056640625,
             "recent": [
-                20177,
-                19628,
-                19962,
-                20026,
-                20825,
-                21895,
-                20165
+                6409,
+                6541,
+                7143,
+                7234,
+                7234,
+                9142,
+                13727
+            ]
+        },
+        {
+            "id": 7,
+            "trains": 4,
+            "todayRevenue": 0,
+            "skin": -1,
+            "baseRemoved": false,
+            "name": "7 号线",
+            "color": {
+                "r": 0.7799999713897705,
+                "g": 0.33000001311302185,
+                "b": 0.23999999463558197,
+                "a": 1.0
+            },
+            "stations": [
+                "月背:马赫前哨",
+                "月背:科罗廖夫环",
+                "月背:德弗里斯",
+                "月背:伯克兰港",
+                "月背:莱曼前哨",
+                "月背:普朗克站"
+            ],
+            "dispatch": [
+                3,
+                3,
+                4,
+                1
+            ],
+            "fare": 1.5,
+            "todayGross": 0.0,
+            "todayMaintenance": 61.60660171508789,
+            "todayTrack": 495.3450927734375,
+            "recent": [
+                -1419,
+                -1370,
+                -1213,
+                -1213,
+                -1213,
+                -1237,
+                -1278
+            ]
+        },
+        {
+            "id": 15,
+            "trains": 1,
+            "todayRevenue": 0,
+            "skin": -1,
+            "baseRemoved": false,
+            "name": "15 号线",
+            "color": {
+                "r": 0.23999999463558197,
+                "g": 0.44999998807907104,
+                "b": 0.7200000286102295,
+                "a": 1.0
+            },
+            "stations": [
+                "月背:坎贝尔站",
+                "月背:莫斯科海",
+                "月背:智星港",
+                "月背:艾特肯深井",
+                "月背:德弗里斯",
+                "月背:奥本海默",
+                "月背:博尔曼湾",
+                "月背:阿波罗星门"
+            ],
+            "dispatch": [
+                1,
+                1,
+                1,
+                1
+            ],
+            "fare": 1.5,
+            "todayGross": 0.0,
+            "todayMaintenance": 28.75397300720215,
+            "todayTrack": 695.3598022460938,
+            "recent": [
+                -1828,
+                -1760,
+                -1539,
+                -1539,
+                -1539,
+                -1572,
+                -1630
+            ]
+        },
+        {
+            "id": 16,
+            "trains": 1,
+            "todayRevenue": 0,
+            "skin": -1,
+            "baseRemoved": false,
+            "name": "16 号线",
+            "color": {
+                "r": 0.8799999952316284,
+                "g": 0.5199999809265137,
+                "b": 0.20000000298023224,
+                "a": 1.0
+            },
+            "stations": [
+                "月背:达朗贝尔环",
+                "月背:白贝罗港",
+                "月背:智星港",
+                "月背:加加林环",
+                "月背:巴甫洛夫站",
+                "月背:普朗克站"
+            ],
+            "dispatch": [
+                1,
+                1,
+                1,
+                1
+            ],
+            "fare": 1.5,
+            "todayGross": 0.0,
+            "todayMaintenance": 27.967424392700195,
+            "todayTrack": 561.3388671875,
+            "recent": [
+                -1486,
+                -1432,
+                -1253,
+                -1253,
+                -1253,
+                -1280,
+                -1327
             ]
         },
         {
             "id": 20,
-            "trains": 2,
-            "todayRevenue": 0,
+            "trains": 3,
+            "todayRevenue": 20716,
             "skin": -1,
             "baseRemoved": false,
             "name": "20 号线",
@@ -2239,35 +1900,53 @@
                 "a": 1.0
             },
             "stations": [
-                "镜屿:莲东空港",
-                "镜屿:翠环村",
-                "镜屿:双莲渡",
-                "镜屿:木船厂"
+                "月背:南极深井",
+                "月背:冯·卡门港",
+                "月背:奥本海默",
+                "月背:科罗廖夫环",
+                "月之亮面:虹湾星门",
+                "火星·西半球:坦佩台地",
+                "火星·西半球:卢纳高原",
+                "火星·西半球:奥菲尔峡谷",
+                "火星·西半球:坎多尔峡谷",
+                "火星·西半球:梅拉斯峡谷",
+                "火星·西半球:卢罗斯谷",
+                "月背:阿波罗星门",
+                "火星·东半球:诺亚高地",
+                "火星·东半球:达尔文南站",
+                "火星·东半球:赫拉斯盆地",
+                "火星·东半球:伊希地东门",
+                "火星·东半球:赫斯珀里亚",
+                "火星·东半球:赛克利俄斯",
+                "火星·东半球:艾律西昂平原",
+                "火星·东半球:刻耳柏洛斯",
+                "火星·东半球:古瑟夫陨石坑",
+                "火星·东半球:阿波罗尼奥"
             ],
             "dispatch": [
-                1,
-                1,
-                2,
-                1
+                3,
+                3,
+                3,
+                3
             ],
             "fare": 1.5,
-            "todayGross": 0.0,
-            "todayMaintenance": 24.971548080444336,
-            "todayTrack": 95.73031616210938,
+            "todayGross": 20715.52734375,
+            "todayMaintenance": 272.5163879394531,
+            "todayTrack": 13001.455078125,
             "recent": [
-                -212,
-                -209,
-                -209,
-                -209,
-                -206,
-                -206,
-                -230
+                -3696,
+                -2304,
+                4035,
+                18534,
+                17330,
+                18061,
+                17046
             ]
         },
         {
             "id": 21,
-            "trains": 3,
-            "todayRevenue": 5843,
+            "trains": 4,
+            "todayRevenue": 16457,
             "skin": -1,
             "baseRemoved": false,
             "name": "21 号线",
@@ -2278,16 +1957,222 @@
                 "a": 1.0
             },
             "stations": [
-                "榕川:东湾（西渡）",
-                "榕川:青岗墟",
-                "榕川:鹅山墟",
-                "榕川:桥头埠",
-                "榕川:东溪埠",
-                "榕川:青龙渡",
-                "榕川:宁川围",
-                "榕川:芭蕉坪",
-                "榕川:寒香镇",
-                "榕川:青瓷墟"
+                "火星·西半球:奥林匹斯星门",
+                "火星·西半球:阿斯克雷乌斯",
+                "火星·西半球:诺克提斯迷宫",
+                "火星·西半球:提托努斯峡谷",
+                "火星·西半球:坎多尔峡谷",
+                "火星·西半球:科普剌塔斯",
+                "火星·西半球:马里内利谷",
+                "火星·西半球:子午线星门",
+                "火星·东半球:提柯尼亚",
+                "火星·东半球:惠更斯盆地",
+                "火星·东半球:大瑟提斯高原",
+                "火星·东半球:伊希地西港",
+                "火星·东半球:祝融着陆港",
+                "火星·东半球:艾律西昂山",
+                "火星·东半球:阿尔博尔火山",
+                "火星·东半球:埃律西昂东麓",
+                "火星·东半球:俄耳枯斯谷",
+                "火星·东半球:梅迪乌斯谷"
+            ],
+            "dispatch": [
+                4,
+                1,
+                4,
+                4
+            ],
+            "fare": 1.5,
+            "todayGross": 16457.107421875,
+            "todayMaintenance": 337.7779235839844,
+            "todayTrack": 12083.9091796875,
+            "recent": [
+                -4084,
+                733,
+                5234,
+                8563,
+                6375,
+                7026,
+                5929
+            ]
+        },
+        {
+            "id": 22,
+            "trains": 1,
+            "todayRevenue": 3512,
+            "skin": -1,
+            "baseRemoved": false,
+            "name": "22 号线",
+            "color": {
+                "r": 0.8799999952316284,
+                "g": 0.5199999809265137,
+                "b": 0.20000000298023224,
+                "a": 1.0
+            },
+            "stations": [
+                "火星·西半球:阿尔巴山",
+                "火星·西半球:阿刻戎堑沟",
+                "火星·西半球:奥林匹斯星门",
+                "火星·西半球:帕弗尼斯峰",
+                "火星·西半球:诺克提斯迷宫",
+                "火星·西半球:乌拉纽斯谷",
+                "火星·西半球:凤凰湖门户"
+            ],
+            "dispatch": [
+                1,
+                1,
+                1,
+                1
+            ],
+            "fare": 1.5,
+            "todayGross": 3512.1845703125,
+            "todayMaintenance": 45.113685607910156,
+            "todayTrack": 2964.258544921875,
+            "recent": [
+                -247,
+                452,
+                1519,
+                1541,
+                1503,
+                1375,
+                1154
+            ]
+        },
+        {
+            "id": 23,
+            "trains": 1,
+            "todayRevenue": 8219,
+            "skin": -1,
+            "baseRemoved": false,
+            "name": "23 号线",
+            "color": {
+                "r": 0.5199999809265137,
+                "g": 0.36000001430511475,
+                "b": 0.6499999761581421,
+                "a": 1.0
+            },
+            "stations": [
+                "月之亮面:虹湾星门",
+                "火星·西半球:塔尔西斯丘",
+                "火星·西半球:朱维斯谷",
+                "火星·西半球:阿斯克雷乌斯",
+                "火星·西半球:诺克提斯迷宫",
+                "火星·西半球:克拉罗斯堑沟",
+                "火星·西半球:凤凰湖门户",
+                "火星·西半球:西瑞努姆高地",
+                "火星·西半球:阿耳古瑞盆地",
+                "火星·西半球:卢罗斯谷",
+                "火星·西半球:马里内利谷",
+                "火星·西半球:阿瑞斯谷",
+                "火星·西半球:马沃斯谷",
+                "火星·西半球:阿西达利亚南",
+                "火星·西半球:卡塞谷",
+                "火星·西半球:坦佩台地",
+                "月之亮面:虹湾星门"
+            ],
+            "dispatch": [
+                1,
+                1,
+                1,
+                1
+            ],
+            "fare": 1.5,
+            "todayGross": 8219.41796875,
+            "todayMaintenance": 79.5473403930664,
+            "todayTrack": 10145.462890625,
+            "recent": [
+                -6919,
+                -6765,
+                -3076,
+                -3232,
+                -3262,
+                -3751,
+                -4592
+            ]
+        },
+        {
+            "id": 24,
+            "trains": 1,
+            "todayRevenue": 5559,
+            "skin": -1,
+            "baseRemoved": false,
+            "name": "24 号线",
+            "color": {
+                "r": 0.44999998807907104,
+                "g": 0.6000000238418579,
+                "b": 0.7200000286102295,
+                "a": 1.0
+            },
+            "stations": [
+                "火星·西半球:阿拉伯西岸",
+                "火星·西半球:阿西达利亚海",
+                "火星·西半球:阿西达利亚南",
+                "火星·西半球:克律塞平原",
+                "火星·西半球:奥菲尔峡谷",
+                "火星·西半球:提托努斯峡谷",
+                "火星·西半球:乌拉纽斯谷",
+                "火星·西半球:克拉罗斯堑沟",
+                "火星·西半球:伊卡里亚堑沟",
+                "火星·西半球:叙利亚南港",
+                "火星·西半球:西绪福斯原",
+                "火星·西半球:亚马逊西门"
+            ],
+            "dispatch": [
+                1,
+                1,
+                1,
+                1
+            ],
+            "fare": 1.5,
+            "todayGross": 5559.09033203125,
+            "todayMaintenance": 62.14208984375,
+            "todayTrack": 6254.59521484375,
+            "recent": [
+                -3210,
+                -2995,
+                -677,
+                -705,
+                -709,
+                -1011,
+                -1530
+            ]
+        },
+        {
+            "id": 25,
+            "trains": 3,
+            "todayRevenue": 19107,
+            "skin": -1,
+            "baseRemoved": false,
+            "name": "25 号线",
+            "color": {
+                "r": 0.7799999713897705,
+                "g": 0.33000001311302185,
+                "b": 0.23999999463558197,
+                "a": 1.0
+            },
+            "stations": [
+                "火星·西半球:亚马逊西门",
+                "火星·西半球:西绪福斯原",
+                "火星·西半球:曼加拉谷",
+                "火星·西半球:阿尔西亚峰",
+                "火星·西半球:诺克提斯迷宫",
+                "火星·西半球:伊乌斯峡谷",
+                "火星·西半球:卢纳高原",
+                "火星·西半球:克律塞平原",
+                "火星·西半球:马沃斯谷",
+                "火星·西半球:希尔达谷",
+                "火星·西半球:子午线星门",
+                "火星·东半球:子午线平原",
+                "火星·东半球:霍尔登环",
+                "火星·东半球:埃伯斯瓦尔德",
+                "火星·东半球:赫拉斯盆地",
+                "火星·东半球:赫拉斯东港",
+                "火星·东半球:赫拉斯山麓",
+                "火星·东半球:普罗米修斯",
+                "火星·东半球:埃里达尼亚",
+                "火星·东半球:马莱阿高原",
+                "火星·东半球:马阿迪姆谷",
+                "火星·西半球:亚马逊西门"
             ],
             "dispatch": [
                 3,
@@ -2296,74 +2181,157 @@
                 3
             ],
             "fare": 1.5,
-            "todayGross": 5843.1123046875,
-            "todayMaintenance": 76.07310485839844,
-            "todayTrack": 624.8275146484375,
+            "todayGross": 19106.783203125,
+            "todayMaintenance": 301.6994323730469,
+            "todayTrack": 15436.419921875,
             "recent": [
-                8773,
-                9171,
-                8915,
-                8766,
-                9739,
-                9849,
-                9128
+                5643,
+                7985,
+                14530,
+                12472,
+                9698,
+                9710,
+                8504
             ]
         },
         {
-            "id": 22,
-            "trains": 8,
-            "todayRevenue": 12629,
-            "skin": 1,
+            "id": 26,
+            "trains": 1,
+            "todayRevenue": 3071,
+            "skin": -1,
             "baseRemoved": false,
-            "name": "港湛普通铁路",
+            "name": "26 号线",
             "color": {
-                "r": 0.8399999737739563,
-                "g": 0.5199999809265137,
-                "b": 0.5799999833106995,
+                "r": 0.30000001192092896,
+                "g": 0.6200000047683716,
+                "b": 0.4699999988079071,
                 "a": 1.0
             },
             "stations": [
-                "榕川:青藤（北关）",
-                "榕川:前坡墟",
-                "榕川:锦溪墟",
-                "榕川:银江墟",
-                "榕川:望台墟",
-                "榕川:红土墟",
-                "榕川:泉水墟",
-                "榕川:春风墟",
-                "榕川:高坡墟",
-                "榕川:橘香渡",
-                "榕川:清泉墟",
-                "榕川:甘溪墟",
-                "榕川:雷海埠"
+                "火星·西半球:阿尔巴山",
+                "火星·西半球:塔尔西斯丘",
+                "火星·西半球:阿斯克雷乌斯",
+                "火星·西半球:帕弗尼斯峰",
+                "火星·西半球:米伦尼亚谷",
+                "火星·西半球:比布利斯站",
+                "火星·西半球:叙利亚南港"
             ],
             "dispatch": [
-                8,
-                8,
-                4,
-                8
+                1,
+                1,
+                1,
+                1
             ],
-            "fare": 1.899999976158142,
-            "todayGross": 12628.9716796875,
-            "todayMaintenance": 210.0906524658203,
-            "todayTrack": 828.288330078125,
+            "fare": 1.5,
+            "todayGross": 3071.468017578125,
+            "todayMaintenance": 42.14876174926758,
+            "todayTrack": 2483.1650390625,
             "recent": [
-                18423,
-                18379,
-                18155,
-                18076,
-                19000,
-                21906,
-                18518
+                523,
+                742,
+                1500,
+                1486,
+                1485,
+                1377,
+                1192
             ]
         },
         {
-            "id": 23,
+            "id": 27,
             "trains": 2,
-            "todayRevenue": 9303,
+            "todayRevenue": 11640,
             "skin": -1,
             "baseRemoved": false,
-            "name": "潮州-韶山线",
+            "name": "27 号线",
+            "color": {
+                "r": 0.23999999463558197,
+                "g": 0.44999998807907104,
+                "b": 0.7200000286102295,
+                "a": 1.0
+            },
+            "stations": [
+                "火星·东半球:达尔文南站",
+                "火星·东半球:子午线平原",
+                "火星·东半球:克龙梅林环",
+                "火星·东半球:卡西尼环",
+                "火星·东半球:安东尼亚迪",
+                "火星·东半球:耶泽罗陨石坑",
+                "火星·东半球:法蒂玛台地",
+                "火星·东半球:乌托邦平原",
+                "火星·东半球:卡西乌斯港",
+                "火星·东半球:赫卡忒火山",
+                "火星·东半球:埃律西昂东麓",
+                "火星·东半球:刻耳柏洛斯",
+                "火星·东半球:仄费里亚平原",
+                "火星·东半球:埃里达尼亚",
+                "火星·东半球:普罗米修斯",
+                "火星·东半球:赫拉斯盆地",
+                "火星·东半球:达尔文南站"
+            ],
+            "dispatch": [
+                1,
+                1,
+                2,
+                2
+            ],
+            "fare": 2.0,
+            "todayGross": 11639.83984375,
+            "todayMaintenance": 164.0551300048828,
+            "todayTrack": 15095.140625,
+            "recent": [
+                -38788,
+                -37316,
+                -32517,
+                -10041,
+                -6089,
+                -5370,
+                -6576
+            ]
+        },
+        {
+            "id": 28,
+            "trains": 2,
+            "todayRevenue": 3021,
+            "skin": -1,
+            "baseRemoved": false,
+            "name": "28 号线",
+            "color": {
+                "r": 0.8799999952316284,
+                "g": 0.5199999809265137,
+                "b": 0.20000000298023224,
+                "a": 1.0
+            },
+            "stations": [
+                "月之亮面:虹湾星门",
+                "月之亮面:雨海前哨",
+                "月之亮面:亚平宁岭",
+                "月之亮面:汽海枢纽",
+                "月之亮面:阿里亚德港",
+                "月之亮面:静海基地",
+                "月之亮面:危海西港"
+            ],
+            "dispatch": [
+                1,
+                1,
+                2,
+                2
+            ],
+            "fare": 1.5,
+            "todayGross": 3020.8466796875,
+            "todayMaintenance": 42.1549186706543,
+            "todayTrack": 367.7504577636719,
+            "recent": [
+                2387,
+                5304
+            ]
+        },
+        {
+            "id": 29,
+            "trains": 3,
+            "todayRevenue": 2554,
+            "skin": -1,
+            "baseRemoved": false,
+            "name": "29 号线",
             "color": {
                 "r": 0.5199999809265137,
                 "g": 0.36000001430511475,
@@ -2371,256 +2339,191 @@
                 "a": 1.0
             },
             "stations": [
-                "榕川:白鹭埠",
-                "榕川:金凤城",
-                "榕川:榕荫渡",
-                "榕川:榕荫墟",
-                "榕川:灵泉墟",
-                "榕川:玄石湾",
-                "榕川:丰陆墟",
-                "榕川:稻香湾",
-                "榕川:鹅山墟",
-                "榕川:青萝墟",
-                "榕川:丰穗墟",
-                "榕川:茶花墟",
-                "榕川:北山墟",
-                "榕川:采茶墟",
-                "榕川:马鞍墟",
-                "榕川:五岭口",
-                "榕川:和顺墟",
-                "榕川:安乐坪"
+                "月之亮面:开普勒港",
+                "月之亮面:哥白尼环形山",
+                "月之亮面:艾拉托斯特尼",
+                "月之亮面:中央湾",
+                "月之亮面:阿波罗11湾",
+                "月之亮面:酒海前哨",
+                "月之亮面:皮科洛米尼"
             ],
             "dispatch": [
-                2,
-                2,
-                2,
-                2
-            ],
-            "fare": 1.5,
-            "todayGross": 9302.9130859375,
-            "todayMaintenance": 62.740299224853516,
-            "todayTrack": 1718.35888671875,
-            "recent": [
-                12370,
-                12702,
-                12364,
-                12080,
-                13413,
-                12857,
-                12610
-            ]
-        },
-        {
-            "id": 24,
-            "trains": 5,
-            "todayRevenue": 10799,
-            "skin": 11,
-            "baseRemoved": false,
-            "name": "潮中北线",
-            "color": {
-                "r": 0.8500000238418579,
-                "g": 0.4000000059604645,
-                "b": 0.36000001430511475,
-                "a": 1.0
-            },
-            "stations": [
-                "榕川:金凤城",
-                "榕川:温泉汤",
-                "榕川:紫竹墟",
-                "榕川:鹅山墟",
-                "榕川:吉安墟",
-                "榕川:锦溪墟"
-            ],
-            "dispatch": [
-                5,
-                5,
-                2,
-                5
-            ],
-            "fare": 2.0,
-            "todayGross": 10798.9267578125,
-            "todayMaintenance": 124.96522521972656,
-            "todayTrack": 456.70916748046875,
-            "recent": [
-                14546,
-                14887,
-                13730,
-                14512,
-                15768,
-                15234,
-                14944
-            ]
-        },
-        {
-            "id": 25,
-            "trains": 6,
-            "todayRevenue": 2001,
-            "skin": -1,
-            "baseRemoved": true,
-            "name": "广州环城线",
-            "color": {
-                "r": 0.7799999713897705,
-                "g": 0.33000001311302185,
-                "b": 0.23999999463558197,
-                "a": 1.0
-            },
-            "stations": [
-                "榕川:浅沙墟",
-                "榕川:江边墟",
-                "榕川:西水涌",
-                "榕川:明珠镇",
-                "榕川:陶窑坊",
-                "榕川:南村墟",
-                "榕川:石阶墟",
-                "榕川:黄沙埠",
-                "榕川:浅沙墟"
-            ],
-            "dispatch": [
-                6,
-                6,
                 3,
-                5
+                1,
+                1,
+                1
             ],
             "fare": 1.5,
-            "todayGross": 2001.239990234375,
-            "todayMaintenance": 111.87499237060547,
-            "todayTrack": 203.26235961914063,
+            "todayGross": 2554.457275390625,
+            "todayMaintenance": 43.99227523803711,
+            "todayTrack": 470.3351135253906,
             "recent": [
-                2616,
-                2475,
-                2430,
-                2423,
-                2535,
-                2899,
-                2649
+                962,
+                3189
+            ]
+        },
+        {
+            "id": 30,
+            "trains": 5,
+            "todayRevenue": 1723,
+            "skin": -1,
+            "baseRemoved": false,
+            "name": "30 号线",
+            "color": {
+                "r": 0.44999998807907104,
+                "g": 0.6000000238418579,
+                "b": 0.7200000286102295,
+                "a": 1.0
+            },
+            "stations": [
+                "月之亮面:柏拉图环",
+                "月之亮面:冷海北站",
+                "月之亮面:阿尔卑斯谷",
+                "月之亮面:高加索山",
+                "月之亮面:澄海枢纽",
+                "月之亮面:汽海枢纽",
+                "月之亮面:中央湾"
+            ],
+            "dispatch": [
+                1,
+                3,
+                5,
+                1
+            ],
+            "fare": 1.5,
+            "todayGross": 1723.1500244140625,
+            "todayMaintenance": 45.05781173706055,
+            "todayTrack": 296.2901611328125,
+            "recent": [
+                3090
             ]
         }
     ],
     "vehicles": [
         {
-            "node": 12,
+            "node": 3,
+            "lineId": 27
+        },
+        {
+            "node": 3,
+            "lineId": 28
+        },
+        {
+            "node": 3,
+            "lineId": 30
+        },
+        {
+            "node": 3,
+            "lineId": 30
+        },
+        {
+            "node": 3,
+            "lineId": 3
+        },
+        {
+            "node": 3,
+            "lineId": 30
+        },
+        {
+            "node": 3,
+            "lineId": 30
+        },
+        {
+            "node": 3,
+            "lineId": 29
+        },
+        {
+            "node": 3,
+            "lineId": 29
+        },
+        {
+            "node": 3,
             "lineId": 0
         }
     ],
     "tech": [
         "pressure",
-        "dispatch_basic",
-        "piston",
         "valve",
-        "steamengine",
         "rail",
+        "piston",
+        "steamengine",
         "study_pressure_seals",
-        "study_boiler_inspect",
-        "study_wheel_iron",
         "loco19:0",
-        "cylinder",
+        "study_wheel_iron",
         "rack",
-        "minehaul",
+        "cylinder",
         "walking",
-        "firetube",
-        "loco19:1",
-        "twocyl",
         "adhesion",
+        "firetube",
+        "study_boiler_inspect",
         "pressureloss",
+        "loco19:1",
         "coupled",
-        "study_safety_watch",
+        "twocyl",
         "rods",
+        "minehaul",
         "locoworks",
         "study_drive_rods",
-        "loco19:2",
-        "loco19:3",
-        "boilerburst",
-        "ramsvalve",
-        "cylinderdrain",
-        "rebuild",
-        "tubes",
-        "returnflue",
         "study_mine_runs",
-        "study_water_stops",
-        "blast",
-        "study_passenger_access",
-        "loco19:4",
-        "rainhill",
-        "public",
-        "speedrisk",
-        "dispatch_peak",
-        "loco19:6",
-        "study_crew_practice",
-        "study_scheduled_depart",
-        "guide",
-        "study_route_connections",
-        "study_wheel_guidance",
-        "loco19:5",
-        "leadingtruck",
-        "study_spring_valve",
-        "study_boiler_tubes",
-        "study_train_brake",
-        "braking",
-        "feed",
-        "straightbrake",
-        "firebox",
-        "study_boiler_feed",
-        "study_air_brake_trial",
-        "brakefault",
-        "directair",
-        "autobrake",
-        "study_brake_leaks",
-        "study_auto_brake",
-        "network_expand1",
-        "study_traffic_counts",
-        "study_service_pattern",
-        "manufacture",
-        "loco19:7",
-        "network_expand2",
-        "injector",
-        "fare_policy",
+        "dispatch_basic",
         "damage",
         "study_axle_load",
-        "twinreturn",
-        "study_rail_check",
-        "study_ticket_office",
-        "study_draft_control",
-        "study_injector_continuity",
-        "study_through_ticket",
-        "giffard",
-        "study_injector_routine",
-        "linkmotion",
-        "study_workshop_parts",
-        "study_firebox_care",
-        "study_variable_cutoff",
+        "loco19:2",
+        "loco19:3",
+        "study_passenger_access",
+        "study_scheduled_depart",
         "study_passenger_shelter",
+        "blast",
+        "study_traffic_counts",
+        "returnflue",
+        "boilerburst",
+        "study_safety_watch",
+        "rebuild",
+        "ramsvalve",
+        "study_crew_practice",
+        "study_water_stops",
+        "public",
+        "dispatch_peak",
+        "fare_policy",
+        "study_service_pattern",
+        "study_ticket_office",
+        "twinreturn",
+        "tubes",
         "study_departure_board",
-        "study_station_flow",
-        "study_fare_display",
-        "study_passenger_capacity",
-        "tripvalve",
+        "study_route_connections",
+        "study_boiler_tubes",
+        "loco19:4",
+        "study_through_ticket",
+        "rainhill",
+        "loco19:6",
+        "guide",
+        "feed",
+        "study_wheel_guidance",
+        "loco19:5",
+        "firebox",
+        "leadingtruck",
+        "study_rail_check",
+        "study_draft_control",
+        "manufacture",
+        "speedrisk",
+        "study_workshop_parts",
+        "linkmotion",
+        "study_train_brake",
+        "study_boiler_feed",
+        "study_spring_valve",
+        "network_expand1",
+        "study_firebox_care",
+        "network_expand2",
         "superheated_steam",
-        "streamline_body",
-        "loco20:9",
-        "loco20:10",
-        "loco20:11",
-        "auto_block",
-        "double_track",
-        "diesel_traction",
-        "study_track_geometry",
-        "safetyact",
-        "study_train_connection",
-        "study_cylinder_water",
-        "running",
-        "loco19:8",
-        "study_express_braking",
-        "study_fast_run",
-        "study_brake_maintenance",
-        "study_reliable_service",
-        "study_safety_inspect",
-        "study_maintenance_records",
-        "study_express_connections",
-        "study_railway_management",
-        "loco20:12",
         "era20_belpaire_firebox",
-        "era20_boiler_pressure_up"
+        "braking",
+        "straightbrake"
     ],
-    "story": [],
+    "story": [
+        "mars_3",
+        "new_line",
+        "five_stations"
+    ],
     "skins": [],
     "themes": [
         0
@@ -2629,66 +2532,57 @@
     "adCounts": [],
     "trialThemes": [],
     "trialEnds": [],
-    "companyName": "山海铁道社",
-    "companySeal": 2,
-    "companyPolicy": 1,
+    "companyName": "深空轨社",
+    "companySeal": 0,
+    "companyPolicy": 0,
     "bondDaysLeft": 0,
-    "lastPolicyDay": 128,
-    "lastAdSubsidyDay": 349,
-    "dailyTaskClaimedDay": 352,
+    "lastPolicyDay": -1,
+    "lastAdSubsidyDay": -1,
+    "dailyTaskClaimedDay": -1,
     "bondPrincipal": 0,
     "bondDailyDue": 0,
     "bondsRepaid": 0,
     "consultantId": -1,
     "consultantDaysLeft": 0,
-    "economyCycle": 3,
-    "nextEconomyCycle": 2,
+    "economyCycle": 0,
+    "nextEconomyCycle": 3,
     "turboDaysLeft": 0,
     "autoDispatchDaysLeft": 0,
-    "lastAwardDay": 375,
+    "lastAwardDay": 60,
     "bondSubsidized": false,
     "boardPartners": [],
     "contracts": [
         {
-            "id": 166,
-            "type": 3,
-            "startValue": 14,
-            "targetValue": 14,
-            "rewardCoins": 11650,
-            "rewardRp": 15,
-            "rewardDiamonds": 6,
-            "deadlineDay": 414,
+            "id": 24,
+            "type": 2,
+            "startValue": 0,
+            "targetValue": 72200,
+            "rewardCoins": 15700,
+            "rewardRp": 22,
+            "rewardDiamonds": 4,
+            "deadlineDay": 79,
             "claimed": false
         },
         {
-            "id": 167,
-            "type": 3,
-            "startValue": 14,
-            "targetValue": 14,
-            "rewardCoins": 11650,
-            "rewardRp": 15,
-            "rewardDiamonds": 6,
-            "deadlineDay": 421,
+            "id": 25,
+            "type": 2,
+            "startValue": 0,
+            "targetValue": 400,
+            "rewardCoins": 1300,
+            "rewardRp": 22,
+            "rewardDiamonds": 4,
+            "deadlineDay": 82,
             "claimed": false
         }
     ],
     "storyStage": 5,
     "tutorialSkipped": true,
-    "coTech": [
-        "co20_root_1900",
-        "co20_0002",
-        "co20_0005",
-        "co20_0007",
-        "co20_0004",
-        "co20_0001",
-        "co20_0014",
-        "co20_0003"
-    ],
+    "coTech": [],
     "talents": [],
     "talentPool": [
         {
             "id": 0,
-            "name": "钟清嘉",
+            "name": "江予安",
             "role": 3,
             "rarity": 1,
             "level": 1,
@@ -2696,28 +2590,14 @@
             "assignKind": 0,
             "assignLineId": 0,
             "assignStationKey": "",
-            "flawIndex": 2,
+            "flawIndex": 1,
             "flawCleansed": false,
-            "bio": "出身三代铁路世家，箱底藏着一本泛黄的蒸汽机车保养札记。"
+            "bio": "毕业于星湾统计研修班，喜欢带着算盘与钢笔巡检每一段磁轨。"
         },
         {
             "id": 0,
-            "name": "潘星桥",
+            "name": "温青晏",
             "role": 3,
-            "rarity": 1,
-            "level": 1,
-            "xp": 0,
-            "assignKind": 0,
-            "assignLineId": 0,
-            "assignStationKey": "",
-            "flawIndex": 0,
-            "flawCleansed": false,
-            "bio": "擅长协调跨区口岸站务，再拥挤的换乘通道也能理出秩序。"
-        },
-        {
-            "id": 0,
-            "name": "谢知微",
-            "role": 2,
             "rarity": 2,
             "level": 1,
             "xp": 0,
@@ -2726,203 +2606,83 @@
             "assignStationKey": "",
             "flawIndex": 3,
             "flawCleansed": false,
-            "bio": "擅长协调跨区口岸站务，再拥挤的换乘通道也能理出秩序。"
+            "bio": "热衷拍摄星域风物明信片，总能把普通登船台办成旅途里的打卡地。"
+        },
+        {
+            "id": 0,
+            "name": "顾若水",
+            "role": 2,
+            "rarity": 1,
+            "level": 1,
+            "xp": 0,
+            "assignKind": 0,
+            "assignLineId": 0,
+            "assignStationKey": "",
+            "flawIndex": 2,
+            "flawCleansed": false,
+            "bio": "出身三代星轨世家，箱底藏着一本泛黄的等离子飞车保养札记。"
         }
     ],
-    "nextTalentId": 7,
-    "lastTalentRefreshDay": 415,
-    "lastReadNoticeDay": 394,
+    "nextTalentId": 1,
+    "lastTalentRefreshDay": 76,
+    "lastReadNoticeDay": 71,
     "readPatchNoteVersion": "2026.11.23",
-    "memorialPlaques": [
-        "plaque_tongqu",
-        "plaque_shanhai"
-    ],
+    "memorialPlaques": [],
     "memorialTickets": [
         "tkt_first_line",
         "tkt_hk_6",
         "tkt_macau",
         "tkt_gd",
-        "tkt_bay"
+        "tkt_bay",
+        "tkt_retire"
     ],
     "retiredVehiclesCount": 0,
-    "lastDisplayedSolarTerm": 6,
-    "nextContractId": 168,
+    "lastDisplayedSolarTerm": 1,
+    "nextContractId": 26,
     "hasYesterdayReport": true,
     "yesterdayReport": {
-        "settledDay": 414,
-        "bottleneckStation": 37,
-        "gross": 293503.5625,
-        "commercialRent": 114299.640625,
-        "maintAndTax": 52392.08203125,
-        "netProfit": 355411.125,
-        "passengers": 430854.0,
-        "bestLineNet": 64100.22265625,
-        "worstLineNet": -229.5336456298828,
-        "crowdLost": 26796.853515625,
-        "unreachedLost": 541499.875,
-        "elasticLost": 108802.0625,
-        "bestLineName": "3 号线",
-        "worstLineName": "20 号线",
-        "bottleneckNote": "尚有约 26037 人次热门去向未接入路网"
+        "settledDay": 75,
+        "bottleneckStation": 2,
+        "gross": 247124.28125,
+        "commercialRent": 10398.1650390625,
+        "maintAndTax": 197509.4375,
+        "netProfit": 60013.0078125,
+        "passengers": 91230.1640625,
+        "bestLineNet": 17045.724609375,
+        "worstLineNet": -6575.5478515625,
+        "crowdLost": 0.0,
+        "unreachedLost": 208962.75,
+        "elasticLost": 1540.0413818359375,
+        "bestLineName": "20 号线",
+        "worstLineName": "27 号线",
+        "bottleneckNote": "尚有约 13309 人次热门去向未接入星轨网"
     },
     "frozenLines": [
         {
-            "lineId": 3,
+            "lineId": 20,
             "revenue": [
-                75074.0625,
-                69671.1171875,
-                82197.1875,
-                56403.50390625
+                53961.75390625,
+                52150.5234375,
+                56663.4765625,
+                41622.17578125
             ],
             "demand": [
-                259749.65625,
-                211217.546875,
-                311792.9375,
-                167905.53125
+                216826.203125,
+                148972.796875,
+                215202.984375,
+                106548.3515625
             ],
             "served": [
-                209598.234375,
-                198023.484375,
-                237609.765625,
-                160384.625
+                139907.84375,
+                122170.296875,
+                148190.90625,
+                103058.8203125
             ],
             "peak": [
-                65804.9375,
-                47253.40625,
-                70327.8828125,
-                46838.79296875
-            ],
-            "valid": [
-                true,
-                true,
-                true,
-                true
-            ]
-        },
-        {
-            "lineId": 6,
-            "revenue": [
-                19979.349609375,
-                20196.16015625,
-                20447.884765625,
-                15927.0439453125
-            ],
-            "demand": [
-                152382.015625,
-                111764.421875,
-                170952.609375,
-                73378.8046875
-            ],
-            "served": [
-                94686.8984375,
-                87061.7734375,
-                99101.328125,
-                69865.671875
-            ],
-            "peak": [
-                70160.421875,
-                42624.3359375,
-                63393.16796875,
-                25800.330078125
-            ],
-            "valid": [
-                true,
-                true,
-                true,
-                true
-            ]
-        },
-        {
-            "lineId": 16,
-            "revenue": [
-                20488.0859375,
-                13635.6826171875,
-                20447.888671875,
-                13749.3125
-            ],
-            "demand": [
-                172625.28125,
-                107338.4765625,
-                183881.28125,
-                95959.6875
-            ],
-            "served": [
-                101577.078125,
-                81397.4609375,
-                109073.5,
-                78580.265625
-            ],
-            "peak": [
-                74632.390625,
-                54735.27734375,
-                63061.43359375,
-                48599.05859375
-            ],
-            "valid": [
-                true,
-                true,
-                true,
-                true
-            ]
-        },
-        {
-            "lineId": 17,
-            "revenue": [
-                3667.93505859375,
-                2814.65869140625,
-                4486.14306640625,
-                2718.743896484375
-            ],
-            "demand": [
-                20850.0546875,
-                14403.7548828125,
-                37626.98828125,
-                12248.99609375
-            ],
-            "served": [
-                16528.1015625,
-                12235.6650390625,
-                18743.5625,
-                12130.04296875
-            ],
-            "peak": [
-                13298.2685546875,
-                9967.001953125,
-                30654.220703125,
-                7791.3212890625
-            ],
-            "valid": [
-                true,
-                true,
-                true,
-                true
-            ]
-        },
-        {
-            "lineId": 18,
-            "revenue": [
-                23248.0703125,
-                21357.060546875,
-                25704.90234375,
-                21128.841796875
-            ],
-            "demand": [
-                142138.96875,
-                100806.9609375,
-                151889.765625,
-                98166.015625
-            ],
-            "served": [
-                100125.0546875,
-                85986.9140625,
-                107157.65625,
-                87255.609375
-            ],
-            "peak": [
-                51669.7578125,
-                46859.5,
-                54587.5546875,
-                46120.1796875
+                30587.353515625,
+                17947.572265625,
+                25556.0625,
+                11852.0029296875
             ],
             "valid": [
                 true,
@@ -2934,28 +2694,28 @@
         {
             "lineId": 21,
             "revenue": [
-                11968.8759765625,
-                9595.669921875,
-                12478.49609375,
-                9630.30859375
+                47416.16015625,
+                17186.912109375,
+                52325.03125,
+                32482.3359375
             ],
             "demand": [
-                103326.6796875,
-                53996.50390625,
-                113947.8046875,
-                54148.82421875
+                187147.25,
+                94232.5859375,
+                184801.765625,
+                89904.4609375
             ],
             "served": [
-                60785.43359375,
-                45867.2109375,
-                67885.8046875,
-                46985.83984375
+                126942.046875,
+                52931.18359375,
+                138317.3125,
+                85687.9921875
             ],
             "peak": [
-                41246.4140625,
-                26193.92578125,
-                40300.421875,
-                26098.52734375
+                31931.36328125,
+                13759.8642578125,
+                29676.2734375,
+                14066.498046875
             ],
             "valid": [
                 true,
@@ -2967,28 +2727,28 @@
         {
             "lineId": 22,
             "revenue": [
-                26979.373046875,
-                21896.107421875,
-                18995.166015625,
-                19463.58984375
+                7810.5107421875,
+                7980.3173828125,
+                8460.427734375,
+                8035.986328125
             ],
             "demand": [
-                143967.0,
-                100036.109375,
-                133636.96875,
-                81273.40625
+                68879.515625,
+                38516.31640625,
+                63153.9921875,
+                31677.013671875
             ],
             "served": [
-                109605.921875,
-                93813.0234375,
-                87345.140625,
-                79577.5546875
+                26675.9375,
+                25240.439453125,
+                29592.53515625,
+                27252.1171875
             ],
             "peak": [
-                61422.5625,
-                38945.109375,
-                43227.94921875,
-                33339.75390625
+                23910.048828125,
+                9464.228515625,
+                15687.6494140625,
+                6742.57958984375
             ],
             "valid": [
                 true,
@@ -3000,28 +2760,28 @@
         {
             "lineId": 23,
             "revenue": [
-                17408.568359375,
-                16154.453125,
-                17625.48046875,
-                15966.7236328125
+                17582.9765625,
+                17431.23046875,
+                18307.68359375,
+                19395.76953125
             ],
             "demand": [
-                138773.640625,
-                93760.2421875,
-                131913.5625,
-                89565.0625
+                145725.296875,
+                123228.6328125,
+                143148.859375,
+                76874.71875
             ],
             "served": [
-                100326.265625,
-                86179.9375,
-                94924.5546875,
-                84252.609375
+                56497.125,
+                57846.4375,
+                58989.96875,
+                59101.07421875
             ],
             "peak": [
-                26943.36328125,
-                16363.92578125,
-                23259.998046875,
-                15563.7783203125
+                17179.783203125,
+                18028.205078125,
+                16667.7421875,
+                9310.5615234375
             ],
             "valid": [
                 true,
@@ -3033,28 +2793,28 @@
         {
             "lineId": 24,
             "revenue": [
-                22309.9609375,
-                18292.912109375,
-                11457.75390625,
-                17441.87109375
+                11888.509765625,
+                12357.5,
+                13043.8525390625,
+                13062.9794921875
             ],
             "demand": [
-                128826.2421875,
-                84165.390625,
-                71621.4453125,
-                77951.6796875
+                92698.15625,
+                56160.1640625,
+                103459.1953125,
+                42815.3125
             ],
             "served": [
-                90448.3125,
-                78440.765625,
-                46477.1953125,
-                74372.7109375
+                34106.3671875,
+                35064.546875,
+                37626.5859375,
+                34126.5234375
             ],
             "peak": [
-                52254.640625,
-                35587.48828125,
-                22802.390625,
-                32948.765625
+                24610.341796875,
+                12017.2109375,
+                20840.583984375,
+                10164.2470703125
             ],
             "valid": [
                 true,
@@ -3066,28 +2826,28 @@
         {
             "lineId": 25,
             "revenue": [
-                4281.33203125,
-                3188.114990234375,
-                4144.82470703125,
-                3261.975341796875
+                49617.81640625,
+                44293.51171875,
+                55989.34765625,
+                38876.39453125
             ],
             "demand": [
-                86116.3046875,
-                61512.046875,
-                80759.578125,
-                57985.578125
+                178044.625,
+                125548.15625,
+                191507.875,
+                97726.3046875
             ],
             "served": [
-                53954.4375,
-                48194.9375,
-                52330.69921875,
-                48420.984375
+                125940.421875,
+                104419.5703125,
+                142697.34375,
+                96165.3828125
             ],
             "peak": [
-                28618.484375,
-                22072.94921875,
-                21832.5546875,
-                19524.572265625
+                29119.51171875,
+                20443.76171875,
+                22718.7578125,
+                15559.833984375
             ],
             "valid": [
                 true,
@@ -3097,30 +2857,30 @@
             ]
         },
         {
-            "lineId": 2,
+            "lineId": 26,
             "revenue": [
-                11391.208984375,
-                18505.0703125,
-                36416.02734375,
-                12544.5146484375
+                6686.79638671875,
+                6442.21044921875,
+                7754.4052734375,
+                7177.54931640625
             ],
             "demand": [
-                97945.09375,
-                76275.265625,
-                156570.96875,
-                50244.6796875
+                58578.6875,
+                44371.0703125,
+                60256.56640625,
+                31826.306640625
             ],
             "served": [
-                55613.59375,
-                74521.2265625,
-                152057.625,
-                50244.6796875
+                23395.640625,
+                23398.09765625,
+                26978.3515625,
+                25126.630859375
             ],
             "peak": [
-                38469.1796875,
-                45929.515625,
-                44697.6171875,
-                28638.845703125
+                17175.36328125,
+                12225.88671875,
+                12945.470703125,
+                7828.52490234375
             ],
             "valid": [
                 true,
@@ -3130,30 +2890,30 @@
             ]
         },
         {
-            "lineId": 4,
+            "lineId": 3,
             "revenue": [
-                17730.5078125,
-                19783.91015625,
-                30734.490234375,
-                13914.5673828125
+                16679.71484375,
+                9613.712890625,
+                12425.2451171875,
+                10150.9560546875
             ],
             "demand": [
-                94820.984375,
-                73767.3828125,
-                119786.2109375,
-                51189.6640625
+                75576.875,
+                33387.9765625,
+                53583.84765625,
+                38320.36328125
             ],
             "served": [
-                68021.578125,
-                73647.9609375,
-                114113.765625,
-                51189.6640625
+                65143.0546875,
+                33230.5,
+                45464.53515625,
+                38320.36328125
             ],
             "peak": [
-                22540.86328125,
-                18138.21875,
-                25818.50390625,
-                12858.9013671875
+                19026.783203125,
+                8173.576171875,
+                18438.98828125,
+                9235.24609375
             ],
             "valid": [
                 true,
@@ -3163,30 +2923,30 @@
             ]
         },
         {
-            "lineId": 10,
+            "lineId": 5,
             "revenue": [
-                29744.228515625,
-                26906.154296875,
-                36900.7734375,
-                19992.2734375
+                31954.201171875,
+                16852.2109375,
+                34796.8671875,
+                13424.5927734375
             ],
             "demand": [
-                157996.65625,
-                129999.546875,
-                175023.515625,
-                95261.359375
+                120638.1484375,
+                59412.37109375,
+                127441.8671875,
+                47642.99609375
             ],
             "served": [
-                140104.9375,
-                129790.1015625,
-                173128.875,
-                95261.359375
+                108942.9921875,
+                59350.76953125,
+                118922.9921875,
+                47642.99609375
             ],
             "peak": [
-                49521.71875,
-                37460.87109375,
-                51563.1875,
-                26903.806640625
+                22556.69921875,
+                8774.98046875,
+                21295.734375,
+                6688.1162109375
             ],
             "valid": [
                 true,
@@ -3196,30 +2956,30 @@
             ]
         },
         {
-            "lineId": 11,
+            "lineId": 27,
             "revenue": [
-                5303.45947265625,
-                5615.94091796875,
-                11633.9892578125,
-                2938.30224609375
+                23349.162109375,
+                23985.083984375,
+                35876.78125,
+                28571.62890625
             ],
             "demand": [
-                41200.1015625,
-                23113.48046875,
-                56017.98046875,
-                12823.5869140625
+                114701.796875,
+                92790.0390625,
+                147918.34375,
+                76352.9296875
             ],
             "served": [
-                25468.84765625,
-                23113.48046875,
-                49872.9921875,
-                12823.5869140625
+                57681.8984375,
+                54296.1953125,
+                82972.1640625,
+                68875.203125
             ],
             "peak": [
-                11238.828125,
-                6968.01806640625,
-                18084.64453125,
-                3272.286376953125
+                26892.98046875,
+                20765.86328125,
+                35594.28515625,
+                17186.046875
             ],
             "valid": [
                 true,
@@ -3229,30 +2989,30 @@
             ]
         },
         {
-            "lineId": 12,
+            "lineId": 28,
             "revenue": [
-                9830.427734375,
-                6993.20703125,
-                10569.6796875,
-                5422.123046875
+                8293.3134765625,
+                7247.88427734375,
+                10538.73046875,
+                5880.86962890625
             ],
             "demand": [
-                82724.2734375,
-                23716.01171875,
-                67795.1953125,
-                18610.408203125
+                56532.7578125,
+                39363.23046875,
+                62522.65234375,
+                30221.9609375
             ],
             "served": [
-                34202.8125,
-                23647.2578125,
-                35753.11328125,
-                18610.408203125
+                47758.99609375,
+                38572.85546875,
+                57897.265625,
+                30221.9609375
             ],
             "peak": [
-                45215.375,
-                10591.380859375,
-                37456.6796875,
-                8066.20068359375
+                11490.037109375,
+                8815.154296875,
+                12426.3232421875,
+                5772.591796875
             ],
             "valid": [
                 true,
@@ -3262,30 +3022,30 @@
             ]
         },
         {
-            "lineId": 13,
+            "lineId": 29,
             "revenue": [
-                10832.9755859375,
-                4637.4033203125,
-                11040.1845703125,
-                3345.798095703125
+                8646.5712890625,
+                5804.912109375,
+                6830.3369140625,
+                3978.160888671875
             ],
             "demand": [
-                76972.8671875,
-                26841.677734375,
-                62913.7265625,
-                19639.830078125
+                48986.9453125,
+                30225.359375,
+                48714.20703125,
+                21291.349609375
             ],
             "served": [
-                56199.546875,
-                26708.314453125,
-                61355.203125,
-                19639.830078125
+                46522.2421875,
+                30171.0390625,
+                38417.17578125,
+                21291.349609375
             ],
             "peak": [
-                42913.52734375,
-                11099.544921875,
-                20870.48046875,
-                7745.52685546875
+                12686.6123046875,
+                5994.2529296875,
+                14546.6220703125,
+                4153.2958984375
             ],
             "valid": [
                 true,
@@ -3295,30 +3055,30 @@
             ]
         },
         {
-            "lineId": 14,
+            "lineId": 30,
             "revenue": [
-                1906.114990234375,
-                1392.8388671875,
-                2713.908447265625,
-                1109.336181640625
+                4719.658203125,
+                8716.94140625,
+                14897.7333984375,
+                2884.141357421875
             ],
             "demand": [
-                19511.861328125,
-                9862.1962890625,
-                21923.279296875,
-                7844.92041015625
+                33122.50390625,
+                40160.29296875,
+                81419.609375,
+                12902.916015625
             ],
             "served": [
-                13106.771484375,
-                9701.919921875,
-                19564.75,
-                7844.92041015625
+                20527.74609375,
+                39777.98828125,
+                71394.828125,
+                12902.916015625
             ],
             "peak": [
-                10110.29296875,
-                6139.66259765625,
-                7463.02587890625,
-                4621.01611328125
+                20117.63671875,
+                14223.9658203125,
+                24394.8203125,
+                5423.4892578125
             ],
             "valid": [
                 true,
@@ -3327,5 +3087,11 @@
                 true
             ]
         }
+    ],
+    "unlockedRegions": [
+        "月之亮面",
+        "月背",
+        "火星·西半球",
+        "火星·东半球"
     ]
 }

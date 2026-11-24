@@ -10,6 +10,7 @@ public class MetroNodeLayout
     public Vector2 labelOffset;
     public int degree;
     public bool isTransfer;
+    public bool isSuperHub;
     public bool isPortalHint;
     public Color primaryColor = new Color(0.22f, 0.25f, 0.30f, 1f);
 }
@@ -33,6 +34,7 @@ public class MetroLegendItem
 public class MetroLayoutResult
 {
     public string scopeTitle;
+    public string legendTitle;
     public int stationCount;
     public int lineCount;
     public Vector2 boundsMin;
@@ -43,7 +45,7 @@ public class MetroLayoutResult
 }
 
 /// <summary>
-/// 区域地铁拓扑图布局引擎（LOOM / Stott 严格保序八方向网格优化 + Rail Map Painter 135° 顺向折线）：
+/// 区域城市星轨拓扑图布局引擎（LOOM / Stott 严格保序八方向网格优化 + Rail Map Painter 135° 顺向折线）：
 /// 1. 按区域提取已建成子图并保留跨区出口提示；
 /// 2. 加密离散整数网格量化（先用单调保序分布铺开密集区，再量化落格）；
 /// 3. 带“东西南北相对方位不翻转”硬约束的 Stott 局部爬山优化，确保不乱跑、不拧麻花；
@@ -59,7 +61,7 @@ public static class MetroLayoutBuilder
         new Vector2Int(-1, 1), new Vector2Int(-1, -1)
     };
 
-    // 16 色柔和印刷级地铁色板（控制饱和度，白底久看不晃眼且区分度高）
+    // 16 色柔和印刷级城市星轨色板（控制饱和度，白底久看不晃眼且区分度高）
     static readonly Color[] DistinctPalette =
     {
         new Color(0.76f, 0.34f, 0.32f, 1f), // 砖红
@@ -93,9 +95,13 @@ public static class MetroLayoutBuilder
 
         string targetRegion = string.IsNullOrEmpty(regionFilter) ? "月之亮面" : regionFilter;
         bool filterByCity = !string.IsNullOrEmpty(cityFilter) && cityFilter != "全区";
-        result.scopeTitle = filterByCity ? cityFilter : targetRegion;
+        bool isMarsAll = string.Equals(targetRegion, "火星·全境", StringComparison.Ordinal)
+                      || string.Equals(targetRegion, "火星", StringComparison.Ordinal);
+        result.scopeTitle = filterByCity ? cityFilter : (isMarsAll ? "火星全境拼接" : targetRegion);
+        result.legendTitle = (filterByCity ? cityFilter : targetRegion) + "线路";
+        if (isMarsAll) result.legendTitle = "大火星线路";
 
-        // 1. 收集区域内已建成站点
+        // 1. 收集区域内已建成港点（跨区星门只要服务本区，同样纳入，绝不再被误判出界）
         var includedMap = new Dictionary<int, DemoBootstrap.Station>();
         var stationById = new Dictionary<int, DemoBootstrap.Station>();
         for (int i = 0; i < allStations.Count; i++)
@@ -104,8 +110,9 @@ public static class MetroLayoutBuilder
             if (st == null) continue;
             stationById[st.id] = st;
             if (!st.built || st.closed) continue;
-            if (!string.Equals(st.region, targetRegion, StringComparison.Ordinal)) continue;
             if (filterByCity && !string.Equals(st.city, cityFilter, StringComparison.Ordinal)) continue;
+            bool serves = isMarsAll ? StationIsMars(st) : StationServesRegion(st, targetRegion);
+            if (!serves) continue;
             includedMap[st.id] = st;
         }
 
@@ -116,15 +123,15 @@ public static class MetroLayoutBuilder
             return result;
         }
 
-        // 2. 筛选有效线路并生成跨区出口提示点
-        var activeLines = new List<(DemoBootstrap.Line line, List<int> seq, Color color)>();
+        // 2. 筛选有效线路：逐站扫描切分“连续可见段”，跨区星门不再截断整条线
+        var segments = new List<(DemoBootstrap.Line line, List<int> seq)>();
         var portalNodes = new Dictionary<string, MetroNodeLayout>();
         var rawPositions = new Dictionary<int, Vector2>();
         var nodeLineSet = new Dictionary<int, HashSet<int>>();
 
         foreach (var kv in includedMap)
         {
-            rawPositions[kv.Key] = new Vector2(kv.Value.x, kv.Value.y);
+            rawPositions[kv.Key] = GetStationRawPos(kv.Value, targetRegion, isMarsAll);
             nodeLineSet[kv.Key] = new HashSet<int>();
         }
 
@@ -137,56 +144,111 @@ public static class MetroLayoutBuilder
                 if (line == null || line.st == null || line.st.Count < 2) continue;
 
                 var subSeq = new List<int>();
+                Vector2 prevVisibleRaw = Vector2.zero;
+                bool hasPrevVisible = false;
+
                 for (int si = 0; si < line.st.Count; si++)
                 {
                     int sid = line.st[si];
-                    if (includedMap.ContainsKey(sid))
+                    if (includedMap.TryGetValue(sid, out var curSt))
                     {
-                        subSeq.Add(sid);
-                        nodeLineSet[sid].Add(line.id);
-                    }
-                    else if (subSeq.Count > 0 && stationById.TryGetValue(sid, out var outsideSt))
-                    {
-                        int prevId = subSeq[subSeq.Count - 1];
-                        if (includedMap.TryGetValue(prevId, out var prevSt))
+                        Vector2 curRaw = rawPositions[sid];
+                        bool crossDateline = isMarsAll && subSeq.Count > 0 && hasPrevVisible
+                            && Mathf.Abs(prevVisibleRaw.x - curRaw.x) > 0.5f;
+
+                        if (crossDateline)
                         {
-                            string pKey = prevId + "->" + (string.IsNullOrEmpty(outsideSt.city) ? outsideSt.region : outsideSt.city);
-                            if (!portalNodes.TryGetValue(pKey, out var pNode))
-                            {
-                                Vector2 dir = new Vector2(outsideSt.x - prevSt.x, outsideSt.y - prevSt.y);
-                                if (dir.sqrMagnitude < 1e-6f) dir = Vector2.right;
-                                dir.Normalize();
+                            // 环火背面越过 ±180°：两端各插一个边缘衔接提示，绝不拉出横贯全图的假直线
+                            int prevId = subSeq[subSeq.Count - 1];
+                            string prevName = includedMap.TryGetValue(prevId, out var prevSt) ? prevSt.name : "上一站";
+                            bool prevOnEast = prevVisibleRaw.x >= 0.5f;
 
-                                int vid = virtualIdSeed--;
-                                string destLabel = !string.IsNullOrEmpty(outsideSt.city) && outsideSt.city != prevSt.city
-                                    ? outsideSt.city
-                                    : outsideSt.name;
-                                pNode = new MetroNodeLayout
-                                {
-                                    stationId = vid,
-                                    name = "往 " + destLabel,
-                                    isPortalHint = true,
-                                    degree = 1
-                                };
-                                portalNodes[pKey] = pNode;
-                                rawPositions[vid] = new Vector2(prevSt.x, prevSt.y) + dir * 0.045f;
-                                nodeLineSet[vid] = new HashSet<int> { line.id };
-                            }
-                            subSeq.Add(pNode.stationId);
+                            int exitVid = EnsurePortalHint(
+                                virtualIdSeed--, "WX|" + prevId + "|" + sid, "往 " + curSt.name,
+                                new Vector2(prevOnEast ? 0.978f : 0.022f, Mathf.Clamp(prevVisibleRaw.y, 0.05f, 0.95f)),
+                                line.id, portalNodes, rawPositions, nodeLineSet);
+                            subSeq.Add(exitVid);
+                            if (subSeq.Count >= 2) segments.Add((line, subSeq));
+
+                            subSeq = new List<int>();
+                            int entryVid = EnsurePortalHint(
+                                virtualIdSeed--, "WE|" + sid + "|" + prevId, "往 " + prevName,
+                                new Vector2(prevOnEast ? 0.022f : 0.978f, Mathf.Clamp(curRaw.y, 0.05f, 0.95f)),
+                                line.id, portalNodes, rawPositions, nodeLineSet);
+                            subSeq.Add(entryVid);
+                            subSeq.Add(sid);
+                            nodeLineSet[sid].Add(line.id);
                         }
-                        break;
+                        else
+                        {
+                            subSeq.Add(sid);
+                            nodeLineSet[sid].Add(line.id);
+                        }
+
+                        prevVisibleRaw = curRaw;
+                        hasPrevVisible = true;
+                    }
+                    else
+                    {
+                        // 出区：补一个“往 XXX”出口提示后收段，然后继续扫描后续可能重返本区的线段
+                        if (subSeq.Count > 0)
+                        {
+                            int prevId = subSeq[subSeq.Count - 1];
+                            Vector2 baseRaw = rawPositions[prevId];
+                            string destLabel = null;
+                            Vector2 dir = Vector2.right;
+                            if (stationById.TryGetValue(sid, out var outsideSt))
+                            {
+                                destLabel = !string.IsNullOrEmpty(outsideSt.city) ? outsideSt.city : outsideSt.name;
+                                Vector2 outsideRaw = GetStationRawPos(outsideSt, targetRegion, isMarsAll);
+                                dir = outsideRaw - baseRaw;
+                            }
+                            if (dir.sqrMagnitude < 1e-6f) dir = Vector2.right;
+                            dir.Normalize();
+
+                            if (!string.IsNullOrEmpty(destLabel))
+                            {
+                                int vid = EnsurePortalHint(
+                                    virtualIdSeed--, "PX|" + prevId + "|" + destLabel, "往 " + destLabel,
+                                    baseRaw + dir * 0.045f, line.id, portalNodes, rawPositions, nodeLineSet);
+                                subSeq.Add(vid);
+                            }
+                            if (subSeq.Count >= 2) segments.Add((line, subSeq));
+                        }
+                        subSeq.Clear();
+                        hasPrevVisible = false;
                     }
                 }
 
-                if (subSeq.Count >= 2)
-                {
-                    activeLines.Add((line, subSeq, line.color));
-                }
+                if (subSeq.Count >= 2) segments.Add((line, subSeq));
             }
         }
 
-        // 2.5 为有效线路分配柔和且不撞色的色板
-        AssignDistinctLineColors(activeLines);
+        // 2.5 同一条线的多个分段共用同一配色，并为线路分配柔和且不撞色的色板
+        var uniqueLines = new List<(DemoBootstrap.Line line, List<int> seq, Color color)>();
+        var uniqueLineIndex = new Dictionary<int, int>();
+        for (int i = 0; i < segments.Count; i++)
+        {
+            var seg = segments[i];
+            if (!uniqueLineIndex.TryGetValue(seg.line.id, out int ui))
+            {
+                ui = uniqueLines.Count;
+                uniqueLineIndex[seg.line.id] = ui;
+                uniqueLines.Add((seg.line, new List<int>(), seg.line.color));
+            }
+            uniqueLines[ui].seq.AddRange(seg.seq);
+        }
+        AssignDistinctLineColors(uniqueLines);
+
+        var colorByLine = new Dictionary<int, Color>(uniqueLines.Count);
+        for (int i = 0; i < uniqueLines.Count; i++) colorByLine[uniqueLines[i].line.id] = uniqueLines[i].color;
+
+        var activeLines = new List<(DemoBootstrap.Line line, List<int> seq, Color color)>(segments.Count);
+        for (int i = 0; i < segments.Count; i++)
+        {
+            var seg = segments[i];
+            activeLines.Add((seg.line, seg.seq, colorByLine[seg.line.id]));
+        }
 
         // 3. 加密整数网格量化（先用单调保序撑开密集区再落格，彻底防止核心区挤成麻花）
         var ids = new List<int>(rawPositions.Keys);
@@ -208,8 +270,12 @@ public static class MetroLayoutBuilder
         float spanX = Mathf.Max(0.01f, maxX - minX);
         float spanY = Mathf.Max(0.01f, maxY - minY);
         bool landscape = canvasSize.x > canvasSize.y;
-        int baseCols = Mathf.Clamp(Mathf.RoundToInt(Mathf.Sqrt(ids.Count) * (landscape ? 3.2f : 2.2f)), 14, 28);
-        int baseRows = Mathf.Clamp(Mathf.RoundToInt(baseCols * (spanY / spanX)), 12, 34);
+        int baseCols = isMarsAll
+            ? Mathf.Clamp(Mathf.RoundToInt(Mathf.Sqrt(ids.Count) * 4.4f), 28, 46)
+            : Mathf.Clamp(Mathf.RoundToInt(Mathf.Sqrt(ids.Count) * (landscape ? 3.2f : 2.2f)), 14, 28);
+        int baseRows = isMarsAll
+            ? Mathf.Clamp(Mathf.RoundToInt(baseCols * (spanY / spanX) * 0.48f), 12, 22)
+            : Mathf.Clamp(Mathf.RoundToInt(baseCols * (spanY / spanX)), 12, 34);
 
         var gridPos = new Dictionary<int, Vector2Int>(ids.Count);
         var originGrid = new Dictionary<int, Vector2Int>(ids.Count);
@@ -302,9 +368,9 @@ public static class MetroLayoutBuilder
 
         float gSpanX = Mathf.Max(1f, gMaxX - gMinX);
         float gSpanY = Mathf.Max(1f, gMaxY - gMinY);
-        float padX = canvasSize.x * 0.12f;
-        float padY = canvasSize.y * 0.14f;
-        float cellSize = Mathf.Clamp(Mathf.Min((canvasSize.x - padX * 2f) / gSpanX, (canvasSize.y - padY * 2f) / gSpanY), 84f, 165f);
+        float padX = canvasSize.x * (isMarsAll ? 0.06f : 0.11f);
+        float padY = canvasSize.y * (isMarsAll ? 0.08f : 0.13f);
+        float cellSize = Mathf.Clamp(Mathf.Min((canvasSize.x - padX * 2f) / gSpanX, (canvasSize.y - padY * 2f) / gSpanY), isMarsAll ? 92f : 84f, 165f);
         float totalW = gSpanX * cellSize;
         float totalH = gSpanY * cellSize;
         float startX = (canvasSize.x - totalW) * 0.5f;
@@ -399,18 +465,36 @@ public static class MetroLayoutBuilder
                 : rawPts;
 
             result.polylines.Add(poly);
+        }
 
-            int realCount = 0;
-            for (int si = 0; si < item.seq.Count; si++)
+        // 7.5 图例按线路去重（同一条线切段后仍只出现一次，站数取并集）
+        var legendStationSet = new Dictionary<int, HashSet<int>>();
+        var legendOrder = new List<int>();
+        for (int li = 0; li < activeLines.Count; li++)
+        {
+            int lineId = activeLines[li].line.id;
+            if (!legendStationSet.TryGetValue(lineId, out var set))
             {
-                if (includedMap.ContainsKey(item.seq[si])) realCount++;
+                set = new HashSet<int>();
+                legendStationSet[lineId] = set;
+                legendOrder.Add(lineId);
             }
+            var seq = activeLines[li].seq;
+            for (int si = 0; si < seq.Count; si++)
+            {
+                if (includedMap.ContainsKey(seq[si])) set.Add(seq[si]);
+            }
+        }
+        for (int i = 0; i < legendOrder.Count; i++)
+        {
+            int lineId = legendOrder[i];
+            var lineMeta = uniqueLines[uniqueLineIndex[lineId]];
             result.legends.Add(new MetroLegendItem
             {
-                lineId = item.line.id,
-                lineName = poly.lineName,
-                color = poly.color,
-                stationCount = realCount
+                lineId = lineId,
+                lineName = string.IsNullOrEmpty(lineMeta.line.name) ? (lineId + "号线") : lineMeta.line.name,
+                color = colorByLine[lineId],
+                stationCount = legendStationSet[lineId].Count
             });
         }
 
@@ -438,13 +522,15 @@ public static class MetroLayoutBuilder
             int deg = nodeLineSet[kv.Key].Count;
             string dispName = string.IsNullOrEmpty(kv.Value.customName) ? kv.Value.name : kv.Value.customName;
             Color pCol = nodePrimaryColor.TryGetValue(kv.Key, out var lc) ? lc : style.stationStrokeColor;
+            bool superHub = kv.Value.IsSuperHubPortal();
             var node = new MetroNodeLayout
             {
                 stationId = kv.Key,
                 name = dispName,
                 pos = p,
                 degree = deg,
-                isTransfer = deg >= 2,
+                isTransfer = deg >= 2 || superHub,
+                isSuperHub = superHub,
                 isPortalHint = false,
                 primaryColor = pCol
             };
@@ -463,10 +549,126 @@ public static class MetroLayoutBuilder
         ComputeLabelOffsets(result.nodes, result.polylines, style);
 
         result.stationCount = includedMap.Count;
-        result.lineCount = result.polylines.Count;
+        result.lineCount = legendOrder.Count;
         result.boundsMin = new Vector2(bMinX - 100f, bMinY - 100f);
         result.boundsMax = new Vector2(bMaxX + 100f, bMaxY + 100f);
         return result;
+    }
+
+    /// <summary>
+    /// 港点是否服务目标区域：本区站点，或任一通往本区的星门（含二次跃迁与多区门户）。
+    /// 跨区星门即使原生 region 在月球/邻区，也必须被视为本区可见站，线路穿过它继续连通。
+    /// </summary>
+    public static bool StationServesRegion(DemoBootstrap.Station st, string region)
+    {
+        if (st == null || string.IsNullOrEmpty(region)) return false;
+        if (string.Equals(st.region, region, StringComparison.Ordinal)) return true;
+        if (string.Equals(st.portalTo, region, StringComparison.Ordinal)) return true;
+        if (string.Equals(st.portalTo2, region, StringComparison.Ordinal)) return true;
+        if (st.portalRegions != null)
+        {
+            foreach (string pr in st.portalRegions)
+            {
+                if (string.Equals(pr, region, StringComparison.Ordinal)) return true;
+            }
+        }
+        return false;
+    }
+
+    /// <summary>港点是否属于火星体系（原生火星分区或任一火星门户）。</summary>
+    public static bool StationIsMars(DemoBootstrap.Station st)
+    {
+        if (st == null) return false;
+        if (!string.IsNullOrEmpty(st.region) && st.region.StartsWith("火星", StringComparison.Ordinal)) return true;
+        if (!string.IsNullOrEmpty(st.portalTo) && st.portalTo.StartsWith("火星", StringComparison.Ordinal)) return true;
+        if (!string.IsNullOrEmpty(st.portalTo2) && st.portalTo2.StartsWith("火星", StringComparison.Ordinal)) return true;
+        if (st.portalRegions != null)
+        {
+            foreach (string pr in st.portalRegions)
+            {
+                if (!string.IsNullOrEmpty(pr) && pr.StartsWith("火星", StringComparison.Ordinal)) return true;
+            }
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// 取港点在当前视图下的原始落点：
+    /// 全境模式优先真实经纬度全局投影；单区模式优先该区的绑定坐标，其次星门对端坐标。
+    /// </summary>
+    public static Vector2 GetStationRawPos(DemoBootstrap.Station st, string regionFilter, bool isMarsAll)
+    {
+        if (st == null) return Vector2.zero;
+
+        if (isMarsAll)
+        {
+            if (st.hasGeo) return DemoBootstrap.MarsGlobalNormalized(st.lon, st.lat);
+
+            if (st.regionPositions != null)
+            {
+                if (!string.IsNullOrEmpty(st.region) && st.region.StartsWith("火星", StringComparison.Ordinal)
+                    && st.regionPositions.TryGetValue(st.region, out var selfPos)) return selfPos;
+
+                if (st.portalRegions != null)
+                {
+                    foreach (string pr in st.portalRegions)
+                    {
+                        if (!string.IsNullOrEmpty(pr) && pr.StartsWith("火星", StringComparison.Ordinal)
+                            && st.regionPositions.TryGetValue(pr, out var prPos)) return prPos;
+                    }
+                }
+                if (st.portal && !string.IsNullOrEmpty(st.portalTo)
+                    && st.portalTo.StartsWith("火星", StringComparison.Ordinal)
+                    && st.regionPositions.TryGetValue(st.portalTo, out var p1)) return p1;
+                if (!string.IsNullOrEmpty(st.portalTo2)
+                    && st.portalTo2.StartsWith("火星", StringComparison.Ordinal)
+                    && st.regionPositions.TryGetValue(st.portalTo2, out var p2)) return p2;
+            }
+            return new Vector2(st.x, st.y);
+        }
+
+        if (st.regionPositions != null && !string.IsNullOrEmpty(regionFilter)
+            && st.regionPositions.TryGetValue(regionFilter, out var regionPos)) return regionPos;
+        if (st.portal && string.Equals(st.portalTo, regionFilter, StringComparison.Ordinal))
+            return new Vector2(st.otherX, st.otherY);
+        if (string.Equals(st.portalTo2, regionFilter, StringComparison.Ordinal))
+            return new Vector2(st.thirdX, st.thirdY);
+        return new Vector2(st.x, st.y);
+    }
+
+    /// <summary>创建/复用虚拟出口提示节点，保证同一条线或同一出站口只生成一个提示。</summary>
+    static int EnsurePortalHint(
+        int vid,
+        string key,
+        string label,
+        Vector2 rawPos,
+        int lineId,
+        Dictionary<string, MetroNodeLayout> portalNodes,
+        Dictionary<int, Vector2> rawPositions,
+        Dictionary<int, HashSet<int>> nodeLineSet)
+    {
+        if (portalNodes.TryGetValue(key, out var node) && node != null)
+        {
+            if (!nodeLineSet.TryGetValue(node.stationId, out var set))
+            {
+                set = new HashSet<int>();
+                nodeLineSet[node.stationId] = set;
+            }
+            set.Add(lineId);
+            return node.stationId;
+        }
+
+        node = new MetroNodeLayout
+        {
+            stationId = vid,
+            name = label,
+            isPortalHint = true,
+            degree = 1
+        };
+        portalNodes[key] = node;
+        rawPositions[vid] = rawPos;
+        nodeLineSet[vid] = new HashSet<int> { lineId };
+        return vid;
     }
 
     static Dictionary<int, float> WarpAxisMonotonic(List<int> ids, Dictionary<int, Vector2> rawPositions, bool useX)
@@ -521,7 +723,7 @@ public static class MetroLayoutBuilder
     }
 
     /// <summary>
-    /// 硬约束：禁止爬山移动导致与相连站点的东西/南北相对方位发生翻转（东侧站点绝对不会跑到西侧）。
+    /// 硬约束：禁止爬山移动导致与相连港点的东西/南北相对方位发生翻转（东侧港点绝对不会跑到西侧）。
     /// </summary>
     static bool ViolatesNeighborOrder(
         int nodeId,

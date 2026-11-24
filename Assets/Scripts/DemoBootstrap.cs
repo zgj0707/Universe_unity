@@ -22,7 +22,7 @@ public partial class DemoBootstrap : MonoBehaviour
     static Color Matcha = new Color(0.435f, 0.627f, 0.353f);
     static Color Gold = new Color(0.851f, 0.663f, 0.306f);
     static Color Sakura = new Color(0.910f, 0.627f, 0.706f);
-    static Color Sea = new Color(0.663f, 0.788f, 0.808f);
+    static Color Sea = new Color(0.16f, 0.19f, 0.25f);
     static readonly Color[] LineColors = {
         new Color(0.78f,0.33f,0.24f), new Color(0.30f,0.62f,0.47f),
         new Color(0.24f,0.45f,0.72f), new Color(0.88f,0.52f,0.20f),
@@ -34,7 +34,35 @@ public partial class DemoBootstrap : MonoBehaviour
         public string name, customName; public float x, y; public int level; public bool built, closed; public int trafficEvent;
         public bool portal, county; public string portalTo, portalTo2, city; public int administrativeCode; public string region = "月之亮面"; public float otherX, otherY, thirdX, thirdY;
         public float riderBonus; public int facLevel;
+        public float lon, lat; public bool hasGeo; public int roleHint;
+        [NonSerialized] public Dictionary<string, Vector2> regionPositions = new Dictionary<string, Vector2>(StringComparer.Ordinal);
+        public List<string> portalRegions = new List<string>();
         public Station(string n,float px,float py){name=n;x=px;y=py;level=1;}
+        public void BindRegionPos(string reg, float px, float py)
+        {
+            if (string.IsNullOrEmpty(reg)) return;
+            regionPositions[reg] = new Vector2(px, py);
+            if (!portalRegions.Contains(reg)) portalRegions.Add(reg);
+        }
+        public bool IsSuperHubPortal()
+        {
+            if (!portal || portalRegions == null || portalRegions.Count < 3) return false;
+            var uniq = new HashSet<string>(portalRegions, StringComparer.Ordinal);
+            return uniq.Count >= 3;
+        }
+        public bool ServesRegion(string reg)
+        {
+            if (string.IsNullOrEmpty(reg)) return false;
+            if (region == reg || portalTo == reg || portalTo2 == reg) return true;
+            return portalRegions != null && portalRegions.Contains(reg);
+        }
+        public Vector2 GetNormalizedPos(string reg)
+        {
+            if (!string.IsNullOrEmpty(reg) && regionPositions != null && regionPositions.TryGetValue(reg, out var rp)) return rp;
+            if (portal && portalTo == reg) return new Vector2(otherX, otherY);
+            if (portalTo2 == reg) return new Vector2(thirdX, thirdY);
+            return new Vector2(x, y);
+        }
     }
     [Serializable] public class Scenery { public string name; public float x,y; public bool natural; public bool found, unlocked; public string triggerStation; public string region = "月之亮面"; }
     [Serializable] public class Line {
@@ -48,7 +76,7 @@ public partial class DemoBootstrap : MonoBehaviour
     }
 
     // ---------- state ----------
-    Font font;
+    Font font, stationFont;
     Sprite spriteRound, spriteCircle, spriteWhite, spriteDiamond, spriteRing, spriteStationRing, spriteHandStroke;
     Canvas canvas; RectTransform root, mapRect, lineLayer, stationLayer, trainLayer, floaterLayer, previewLayer;
     MapWheelZoom mapWheelZoom;
@@ -67,7 +95,10 @@ public partial class DemoBootstrap : MonoBehaviour
     Dictionary<int, LineVisual> lineVisuals = new Dictionary<int, LineVisual>();
     List<string> techDone = new List<string>();
     Text coinTxt, incomeTxt, diamondTxt, progTxt, rpTxt, dayTxt;
-    string currentRegion = "月之亮面"; Text regionTitle; GameObject hkMapArt, macauMapArt, guangdongMapArt;
+    string currentRegion = "月之亮面"; Text regionTitle;
+    readonly Dictionary<string, GameObject> regionMapArts = new Dictionary<string, GameObject>(StringComparer.Ordinal);
+    readonly Dictionary<string, RawImage> regionMapRaws = new Dictionary<string, RawImage>(StringComparer.Ordinal);
+    GameObject hkMapArt, macauMapArt, guangdongMapArt;
     bool macauUnlocked, guangdongUnlocked;
     const float MacauIncomeRequired = 600f, GuangdongIncomeRequired = 1200f;
     RectTransform progFill;
@@ -84,7 +115,7 @@ public partial class DemoBootstrap : MonoBehaviour
     List<int> draft = new List<int>();
     readonly List<float> draftSegNeeds = new List<float>();
     int draftCost; Image previewImg;
-    int nextLineId = 2;
+    int nextLineId = 1;
     List<Scenery> pendingCheckin = new List<Scenery>();
     GameObject sceneryBadge;
     RectTransform odArcLayer;
@@ -124,6 +155,8 @@ public partial class DemoBootstrap : MonoBehaviour
     float lastRespW = -1f, lastRespH = -1f;
     Rect lastRespSafe;
     MapBackdropGraphic backdropGraphic;
+    RawImage planetBackdropRaw;
+    Sprite spriteStarship;
     readonly List<GameObject> leftRailGos = new List<GameObject>();
     int currentTheme = 0;
     readonly HashSet<int> ownedThemes = new HashSet<int> { 0 };
@@ -231,6 +264,8 @@ public partial class DemoBootstrap : MonoBehaviour
         fontSizeTier = Mathf.Clamp(PlayerPrefs.GetInt("font_size_tier", 1), 0, FontSizeScales.Length - 1);
         font = Resources.Load<Font>("Fonts/LXGWWenKai-Regular");
         if (font == null) { Debug.LogError("FONT MISSING"); font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf"); }
+        stationFont = Resources.Load<Font>("Fonts/NotoSansCJKsc-Medium");
+        if (stationFont == null) stationFont = font;
         spriteWhite = MakeWhite();
         spriteRound = MakeRounded(96, 24);
         spriteCircle = MakeCircle(128);
@@ -238,6 +273,7 @@ public partial class DemoBootstrap : MonoBehaviour
         spriteRing = MakeRing(96, 6f);
         spriteStationRing = MakeHandDrawnRing(96, 7f);
         spriteHandStroke = MakeHandDrawnStroke(192, 36);
+        spriteStarship = MakeStarshipSprite();
         BuildData();
         bool restored = RestoreGame();
         if (!restored) dailyStationBaseline = DailyConnectedCount();
@@ -256,7 +292,7 @@ public partial class DemoBootstrap : MonoBehaviour
         saveReady = true;
         EnsureTapTapSdkBridge();
         if (saveBlocked) Toast("存档读取失败，原存档已保留");
-        Debug.Log("COASTAL RAIL READY");
+        Debug.Log("STARLINE COSMOS READY");
     }
 
     void BuildData()
@@ -281,30 +317,31 @@ public partial class DemoBootstrap : MonoBehaviour
         AddMoonNear("汽海枢纽", 3.6f, 13.3f);
         AddMoonNear("中央湾", 2.1f, 1.8f);
         AddMoonNear("知海站", -20.9f, -10.5f);
-        AddMoonNear("云海港", -17.2f, -21.3f);
+        AddMoonNear("云星港", -17.2f, -21.3f);
         AddMoonNear("第谷环港", -11.2f, -43.3f);
         AddMoonNear("沃尔特站", 1.0f, -33.2f);
         AddMoonNear("斯托弗勒", 6.0f, -41.1f);
         AddMoonNear("克拉维乌斯", -14.1f, -58.4f);
         AddMoonNear("高加索山", 10.0f, 38.4f);
-        AddMoonNear("梦湖驿站", 32.8f, 38.0f);
+        AddMoonNear("梦湖前哨", 32.8f, 38.0f);
         AddMoonNear("死湖前哨", 24.4f, 45.0f);
         AddMoonNear("阿尔卑斯谷", 3.2f, 48.5f);
         AddMoonNear("冷海北站", 1.4f, 56.0f);
 
-        var luo = new Station("柏拉图跃迁港", MoonNearX(-9.3f), MoonNearY(51.6f));
-        luo.portal = true; luo.portalTo = "火星"; luo.otherX = 0.70f; luo.otherY = 0.25f;
-        stations.Add(luo);
+        AddMoonNear("柏拉图环", -9.3f, 51.6f);
 
         var hz = new Station("虹湾星门", MoonNearX(-31.5f), MoonNearY(44.1f));
-        hz.portal = true; hz.portalTo = "火星"; hz.otherX = 0.535f; hz.otherY = 0.400f;
-        hz.portalTo2 = "月背"; hz.thirdX = MoonFarX(163.9f); hz.thirdY = MoonFarY(50.8f);
+        hz.portal = true; hz.portalTo = "月背";
+        hz.otherX = MoonFarX(188.0f); hz.otherY = MoonFarY(22.0f);
+        hz.administrativeCode = 200200; hz.city = "虹湾双月界";
+        hz.BindRegionPos("月之亮面", hz.x, hz.y);
+        hz.BindRegionPos("月背", hz.otherX, hz.otherY);
         stations.Add(hz);
 
         // 月背：真实月球背面经纬度 (145°E~215°E, -62°~+62°)
         AddMoonFar("冯·卡门港", 176.2f, -44.8f);
         AddMoonFar("艾特肯深井", 173.4f, -16.8f);
-        AddMoonFar("智海港", 168.0f, -12.3f);
+        AddMoonFar("智星港", 168.0f, -12.3f);
         AddMoonFar("加加林环", 149.2f, -20.2f);
         AddMoonFar("巴甫洛夫站", 146.5f, -28.6f);
         AddMoonFar("伯克兰港", 173.9f, -30.2f);
@@ -315,51 +352,35 @@ public partial class DemoBootstrap : MonoBehaviour
         AddMoonFar("奥本海默", 193.7f, -35.2f);
         AddMoonFar("博尔曼湾", 211.8f, -38.8f);
         AddMoonFar("科罗廖夫环", 202.6f, -4.0f);
-        AddMoonFar("马赫驿站", 210.7f, 18.5f);
+        AddMoonFar("马赫前哨", 210.7f, 18.5f);
         AddMoonFar("莫斯科海", 147.9f, 27.3f);
         AddMoonFar("白贝罗港", 165.6f, 36.7f);
         AddMoonFar("坎贝尔站", 151.4f, 45.3f);
 
-        AddMoonFarGateway("达朗贝尔门", 163.9f, 50.8f, 0.466f, 0.416f);
-        AddMoonFarGateway("阿波罗星门", 208.2f, -36.1f, 0.474f, 0.402f);
+        AddMoonFar("达朗贝尔环", 163.9f, 50.8f);
+        AddMoonFarGateway("阿波罗星门", 208.2f, -36.1f, 0f, 0f);
 
-        ApplyGuangdongStations();
-        var marsNorth = stations.Find(s => s.region == "火星" && s.name == "阿西达利亚海");
-        if (marsNorth != null)
-        {
-            marsNorth.name = "阿西达利亚（月背门）"; marsNorth.portal = true; marsNorth.portalTo = "月背";
-            marsNorth.otherX = MoonFarX(163.9f); marsNorth.otherY = MoonFarY(50.8f);
-        }
-        luo.otherX = 0.585f; luo.otherY = 0.466f; luo.administrativeCode = 200101; luo.city = "塔尔西斯星区";
-        var marsPort = stations.Find(s => s.region == "火星" && s.name == "奥林匹斯港");
-        if (marsPort != null)
-        {
-            marsPort.name = "奥林匹斯（月面门）"; marsPort.portal = true; marsPort.portalTo = "月之亮面";
-            marsPort.otherX = MoonNearX(-9.3f); marsPort.otherY = MoonNearY(51.6f);
-        }
+        PopulateMarsFourSectors();
 
-        // 月之亮面奇观（9处）
-        sceneries.Add(new Scenery{name="静海纪念碑", x=MoonNearX(23.5f), y=MoonNearY(0.7f), natural=false, triggerStation="阿波罗11湾"});
-        sceneries.Add(new Scenery{name="哥白尼中央峰", x=MoonNearX(-20.0f), y=MoonNearY(9.7f), natural=true, triggerStation="哥白尼环形山"});
-        sceneries.Add(new Scenery{name="第谷辐射纹", x=MoonNearX(-11.2f), y=MoonNearY(-43.3f), natural=true, triggerStation="第谷环港"});
-        sceneries.Add(new Scenery{name="亚平宁绝壁", x=MoonNearX(-3.7f), y=MoonNearY(18.9f), natural=true, triggerStation="亚平宁岭"});
-        sceneries.Add(new Scenery{name="阿尔卑斯月谷", x=MoonNearX(3.2f), y=MoonNearY(48.5f), natural=true, triggerStation="阿尔卑斯谷"});
-        sceneries.Add(new Scenery{name="雨海熔岩海", x=MoonNearX(-15.6f), y=MoonNearY(32.8f), natural=true, triggerStation="雨海前哨"});
-        sceneries.Add(new Scenery{name="虹湾金弧", x=MoonNearX(-31.5f), y=MoonNearY(44.1f), natural=true, triggerStation="虹湾星门"});
-        sceneries.Add(new Scenery{name="克拉维乌斯穹顶", x=MoonNearX(-14.1f), y=MoonNearY(-58.4f), natural=false, triggerStation="克拉维乌斯"});
-        sceneries.Add(new Scenery{name="柏拉图黑曜台", x=MoonNearX(-9.3f), y=MoonNearY(51.6f), natural=false, triggerStation="柏拉图跃迁港"});
+        // 月之亮面奇观（9处，九宫格均匀选点且紧贴各自触发站 ~40-66px）
+        sceneries.Add(new Scenery{name="虹湾金弧", x=MoonNearX(-28.0f), y=MoonNearY(47.0f), natural=true, triggerStation="虹湾星门"});
+        sceneries.Add(new Scenery{name="冷海玄冰谷", x=MoonNearX(5.0f), y=MoonNearY(56.0f), natural=true, triggerStation="冷海北站"});
+        sceneries.Add(new Scenery{name="梦湖辉石崖", x=MoonNearX(29.5f), y=MoonNearY(40.5f), natural=true, triggerStation="梦湖前哨"});
+        sceneries.Add(new Scenery{name="开普勒辐射环", x=MoonNearX(-29.5f), y=MoonNearY(11.5f), natural=true, triggerStation="开普勒港"});
+        sceneries.Add(new Scenery{name="亚平宁绝壁", x=MoonNearX(-0.2f), y=MoonNearY(22.0f), natural=true, triggerStation="亚平宁岭"});
+        sceneries.Add(new Scenery{name="静海纪念碑", x=MoonNearX(27.0f), y=MoonNearY(11.5f), natural=false, triggerStation="静海基地"});
+        sceneries.Add(new Scenery{name="云海直壁断崖", x=MoonNearX(-20.5f), y=MoonNearY(-18.5f), natural=true, triggerStation="云星港"});
+        sceneries.Add(new Scenery{name="阿尔泰峭壁", x=MoonNearX(29.0f), y=MoonNearY(-26.5f), natural=true, triggerStation="皮科洛米尼"});
+        sceneries.Add(new Scenery{name="第谷辐射纹", x=MoonNearX(-14.5f), y=MoonNearY(-45.5f), natural=true, triggerStation="第谷环港"});
 
-        // 月背奇观（5处）
-        sceneries.Add(new Scenery{name="南极艾特肯深渊", x=MoonFarX(173.4f), y=MoonFarY(-16.8f), natural=true, triggerStation="艾特肯深井", region="月背"});
-        sceneries.Add(new Scenery{name="冯·卡门着陆碑", x=MoonFarX(176.2f), y=MoonFarY(-44.8f), natural=false, triggerStation="冯·卡门港", region="月背"});
-        sceneries.Add(new Scenery{name="莫斯科海玄武原", x=MoonFarX(147.9f), y=MoonFarY(27.3f), natural=true, triggerStation="莫斯科海", region="月背"});
-        sceneries.Add(new Scenery{name="科罗廖夫冰丘", x=MoonFarX(202.6f), y=MoonFarY(-4.0f), natural=true, triggerStation="科罗廖夫环", region="月背"});
-        sceneries.Add(new Scenery{name="阿波罗环山观测塔", x=MoonFarX(208.2f), y=MoonFarY(-36.1f), natural=false, triggerStation="阿波罗星门", region="月背"});
+        // 月背奇观（5处，紧贴各自触发站且分散四方）
+        sceneries.Add(new Scenery{name="南极艾特肯深渊", x=MoonFarX(170.0f), y=MoonFarY(-14.0f), natural=true, triggerStation="艾特肯深井", region="月背"});
+        sceneries.Add(new Scenery{name="冯·卡门着陆碑", x=MoonFarX(179.5f), y=MoonFarY(-42.0f), natural=false, triggerStation="冯·卡门港", region="月背"});
+        sceneries.Add(new Scenery{name="莫斯科海玄武原", x=MoonFarX(151.0f), y=MoonFarY(30.0f), natural=true, triggerStation="莫斯科海", region="月背"});
+        sceneries.Add(new Scenery{name="科罗廖夫冰丘", x=MoonFarX(199.0f), y=MoonFarY(-1.0f), natural=true, triggerStation="科罗廖夫环", region="月背"});
+        sceneries.Add(new Scenery{name="阿波罗环山观测塔", x=MoonFarX(204.5f), y=MoonFarY(-33.5f), natural=false, triggerStation="阿波罗星门", region="月背"});
+        PopulateMarsFourSectorSceneries();
 
-        var l1 = new Line { id = 1, name = "1 号星轨", color = LineColors[0] };
-        l1.st.Add(0); l1.st.Add(1); l1.st.Add(2);
-        lines.Add(l1);
-        foreach (int index in l1.st) stations[index].built = true;
         RebuildRegionStationIndexCache();
     }
     readonly Dictionary<string, List<int>> regionStationIndices = new Dictionary<string, List<int>>();
@@ -370,6 +391,11 @@ public partial class DemoBootstrap : MonoBehaviour
         {
             stations[i].id = i;
             AddStationToRegionCache(stations[i].region, i);
+            if (stations[i].portalRegions != null)
+            {
+                for (int r = 0; r < stations[i].portalRegions.Count; r++)
+                    AddStationToRegionCache(stations[i].portalRegions[r], i);
+            }
             if (stations[i].portal)
             {
                 if (!string.IsNullOrEmpty(stations[i].portalTo)) AddStationToRegionCache(stations[i].portalTo, i);
@@ -395,38 +421,27 @@ public partial class DemoBootstrap : MonoBehaviour
     void Add(string n, float x, float y, string region = "月之亮面") { stations.Add(new Station(n, x, y) { region = region }); }
     // 月之亮面底图范围：经度 -35°~+35°，纬度 -62°~+62°。
     float MoonNearX(float longitude) { return Mathf.Clamp((longitude + 35.0f) / 70.0f, 0.06f, 0.94f); }
-    float MoonNearY(float latitude) { return Mathf.Clamp((latitude + 62.0f) / 124.0f, 0.14f, 0.86f); }
+    float MoonNearY(float latitude) { return Mathf.Clamp((latitude + 62.0f) / 124.0f, 0.08f, 0.92f); }
     void AddMoonNear(string n, float longitude, float latitude) { Add(n, MoonNearX(longitude), MoonNearY(latitude), "月之亮面"); }
 
     // 月背底图范围：经度 145°E~215°E，纬度 -62°~+62°。
     float MoonFarX(float longitude) { return Mathf.Clamp((longitude - 145.0f) / 70.0f, 0.06f, 0.94f); }
-    float MoonFarY(float latitude) { return Mathf.Clamp((latitude + 62.0f) / 124.0f, 0.14f, 0.86f); }
-    void AddMoonFar(string n, float longitude, float latitude) { Add(n, MoonFarX(longitude), MoonFarY(latitude), "月背"); }
+    float MoonFarY(float latitude) { return Mathf.Clamp((latitude + 62.0f) / 124.0f, 0.08f, 0.92f); }
+    void AddMoonFar(string n, float longitude, float latitude)
+    {
+        float px = MoonFarX(longitude), py = MoonFarY(latitude);
+        var st = new Station(n, px, py) { region = "月背", lon = longitude, lat = latitude };
+        st.BindRegionPos("月背", px, py);
+        stations.Add(st);
+    }
 
-    [Serializable] sealed class GuangdongStationList { public GuangdongStationRecord[] stations; }
-    [Serializable] sealed class GuangdongStationRecord { public string name, city; public int code; public float x, y; public bool legacy; }
-    void ApplyGuangdongStations()
-    {
-        var file = Resources.Load<TextAsset>("MapData/mars_stations");
-        if (!file) { Debug.LogError("火星星港站点数据缺失"); return; }
-        var data = JsonUtility.FromJson<GuangdongStationList>(file.text);
-        foreach (var record in data.stations)
-        {
-            var station = record.legacy ? stations.Find(s => s.region == "火星" && s.name == record.name) : null;
-            if (station == null) { station = new Station(record.name, record.x, record.y) { region = "火星" }; stations.Add(station); }
-            station.x = record.x; station.y = record.y; station.city = record.city;
-            station.county = !record.legacy; station.administrativeCode = record.code;
-        }
-    }
-    void SetMacauGateway(string name, float x, float y)
-    {
-        var station = stations.Find(s => s.region == "月背" && s.name == name);
-        if (station == null) return;
-        station.portal = true; station.portalTo = "火星"; station.otherX = x; station.otherY = y;
-    }
     void AddMoonFarGateway(string name, float longitude, float latitude, float x, float y)
     {
-        AddMoonFar(name, longitude, latitude); SetMacauGateway(name, x, y);
+        AddMoonFar(name, longitude, latitude);
+        var station = stations[stations.Count - 1];
+        station.portal = true;
+        station.portalTo = "火星·西半球";
+        station.roleHint = 4;
     }
     // 玩家界面统一使用别称。
     static string DisplayPlaceAliases(string text)
@@ -437,15 +452,29 @@ public partial class DemoBootstrap : MonoBehaviour
     {
         var station = stations[index];
         if (!string.IsNullOrEmpty(station.customName)) return station.customName;
-        return station.name == "奥林匹斯（月面门）" && region == "月之亮面" ? "月面门（奥林匹斯）" : station.name;
+        return station.name;
     }
     string PortalSubtitle(Station station, string region)
     {
-        if (station.name == "奥林匹斯（月面门）") return region == "月之亮面" ? "奥林匹斯港" : "月之亮面";
-        if (station.name == "虹湾星门")
-            return region == "月背" ? "火星/月之亮面" : region == "月之亮面" ? "火星/月背" : "月之亮面/月背";
-        if (station.region == "月背") return region == "月背" ? "火星" : "月背";
-        return region == station.region ? station.portalTo : station.region;
+        var targets = new List<string>();
+        void TryAddTarget(string reg)
+        {
+            if (string.IsNullOrEmpty(reg) || reg == region) return;
+            string clean = NormalizeLegacyRegionId(reg);
+            if (!IsMarsRegion(region) && IsMarsRegion(clean))
+                clean = "火星";
+            else if (IsMarsRegion(region) && clean.StartsWith("火星·", StringComparison.Ordinal))
+                clean = clean.Substring(3);
+            if (!targets.Contains(clean)) targets.Add(clean);
+        }
+        if (station.region != region) TryAddTarget(station.region);
+        if (station.portalRegions != null)
+            for (int i = 0; i < station.portalRegions.Count; i++) TryAddTarget(station.portalRegions[i]);
+        TryAddTarget(station.portalTo);
+        TryAddTarget(station.portalTo2);
+        if (targets.Count == 0) return "";
+        string joined = string.Join(" / ", targets);
+        return station.IsSuperHubPortal() ? ("✦ " + joined) : joined;
     }
 
     void BuildUI()
@@ -468,6 +497,18 @@ public partial class DemoBootstrap : MonoBehaviour
         backdropGraphic = backdrop.AddComponent<MapBackdropGraphic>();
         backdropGraphic.raycastTarget = false;
 
+        // 全屏星球底图延伸层：各种横竖屏比例下均以当前星域底图铺满屏幕，避免割裂
+        var pBg = Rect("PlanetBackdrop", backdrop.transform, 0, 0, W, H);
+        var pBgRt = pBg.GetComponent<RectTransform>();
+        pBgRt.anchorMin = new Vector2(0.5f, 0.5f); pBgRt.anchorMax = new Vector2(0.5f, 0.5f);
+        pBgRt.pivot = new Vector2(0.5f, 0.5f); pBgRt.anchoredPosition = Vector2.zero;
+        planetBackdropRaw = pBg.AddComponent<RawImage>();
+        planetBackdropRaw.raycastTarget = false;
+        SetMirrorTexture(planetBackdropRaw, Resources.Load<Texture2D>("MapArt/moon_nearside"));
+        var pFitter = pBg.AddComponent<AspectRatioFitter>();
+        pFitter.aspectMode = AspectRatioFitter.AspectMode.EnvelopeParent;
+        pFitter.aspectRatio = W / H;
+
         // 主舞台自适应铺满整个 Canvas（兼容 9:16、20:9 全面屏、3:4 平板与刘海安全区）
         var stage = Rect("Stage", cgo.transform, 0, 0, W, H);
         var stageRt = stage.GetComponent<RectTransform>();
@@ -477,7 +518,7 @@ public partial class DemoBootstrap : MonoBehaviour
         stageRt.offsetMax = Vector2.zero;
         root = stageRt;
 
-        var bg = Rect("Paper", root, 0, 0, W, H); Img(bg, Sea).raycastTarget = false;
+        var bg = Rect("Paper", root, 0, 0, W, H); Img(bg, new Color(Sea.r, Sea.g, Sea.b, 0f)).raycastTarget = false;
         var bgRt = bg.GetComponent<RectTransform>();
         bgRt.anchorMin = Vector2.zero; bgRt.anchorMax = Vector2.one;
         bgRt.pivot = new Vector2(0.5f, 0.5f);
@@ -514,7 +555,7 @@ public partial class DemoBootstrap : MonoBehaviour
         camGo.transform.SetParent(transform, false);
         var cam = camGo.GetComponent<Camera>();
         cam.clearFlags = CameraClearFlags.SolidColor;
-        cam.backgroundColor = new Color(0.66f, 0.79f, 0.81f);
+        cam.backgroundColor = new Color(0.16f, 0.19f, 0.25f);
         cam.cullingMask = 0;
         cam.orthographic = true;
         cam.depth = -10;
@@ -571,9 +612,10 @@ public partial class DemoBootstrap : MonoBehaviour
         var tape = Rect("CapTape", cap.transform, 130, 150, 140, 24);
         var tapeIm = Img(tape, new Color(0.88f, 0.78f, 0.62f, 0.75f), spriteRound); tapeIm.type = Image.Type.Sliced; tapeIm.raycastTarget = false;
         tape.transform.localRotation = Quaternion.Euler(0, 0, -1.5f);
-        string regTitle = currentRegion == "月之亮面" ? "月之亮面" : currentRegion == "月背" ? "月 背" : "火 星";
-        var title = Txt(cap.transform, regTitle, 48, Ink, 0, 106, 400, 52, TextAnchor.MiddleCenter);
-        title.fontSize = ScaledFontSize(48, 1.22f);
+        var curSpec = GetRegionSpec(currentRegion);
+        string regTitle = curSpec != null ? curSpec.spacedTitle : currentRegion;
+        var title = Txt(cap.transform, regTitle, 46, Ink, 16, 106, 368, 52, TextAnchor.MiddleCenter);
+        title.resizeTextForBestFit = true; title.resizeTextMinSize = 30; title.resizeTextMaxSize = ScaledFontSize(46, 1.2f);
         regionTitle = title;
         var regionEntry = cap.AddComponent<Button>(); regionEntry.targetGraphic = cap.GetComponent<Image>();
         regionEntry.onClick.AddListener(OpenRegionScreen);
@@ -585,14 +627,14 @@ public partial class DemoBootstrap : MonoBehaviour
         topBarDiaRt = c3.GetComponent<RectTransform>();
         var diaIcon = Rect("Icon", c3.transform, 12, 18, 52, 52); Img(diaIcon, Sakura, spriteDiamond).raycastTarget = false;
         diamondTxt = Txt(c3.transform, "20", 42, Ink, 66, 19, 102, 54, TextAnchor.MiddleCenter);
-        Btn(c3.transform, "DiamondInfo", "?", 32, 172, 14, 62, 64, Matcha, () => Toast("钻石可通过名胜打卡和机车里程碑获得"));
+        Btn(c3.transform, "DiamondInfo", "?", 32, 172, 14, 62, 64, Matcha, () => Toast("钻石可通过名胜打卡和飞车里程碑获得"));
 
         var gb = Btn(bar.transform, "Gear", "设置", 27, 24, -32, 86, 68, CardBg, OpenAudioSettings);
         topBarGearRt = gb.GetComponent<RectTransform>();
         gb.GetComponentInChildren<Text>().color = Ink;
         Img(Rect("StampTop", gb.transform, 10, 61, 66, 5), Indigo, spriteRound).raycastTarget = false;
         SoftShadow(gb.gameObject);
-        var hb = Btn(bar.transform, "Help", "帮助", 27, 122, -32, 86, 68, CardBg, () => HelpPopup("长按车站拖到下一站即可铺线，拖回起点成环。\n已有线路端点拖出可延线，中间站拖出可建新线；长按线路拖至新站可插站。\n点开图鉴大图即完成名胜打卡；交界站可跨区衔接。\n右上可调运行倍速（1× 下 6 分钟为一游戏日）。"));
+        var hb = Btn(bar.transform, "Help", "帮助", 27, 122, -32, 86, 68, CardBg, () => HelpPopup("长按星港拖到下一站即可铺线，拖回起点成环。\n已有线路端点拖出可延线，中间站拖出可建新线；长按线路拖至新站可插站。\n点开图鉴大图即完成名胜打卡；交界港可跨区衔接。\n右上可调运行倍速（1× 下 6 分钟为一游戏日）。"));
         topBarHelpRt = hb.GetComponent<RectTransform>();
         hb.GetComponentInChildren<Text>().color = InkSoft;
         Img(Rect("StampTop", hb.transform, 10, 61, 66, 5), Matcha, spriteRound).raycastTarget = false;
@@ -613,7 +655,7 @@ public partial class DemoBootstrap : MonoBehaviour
         nbg.type = Image.Type.Sliced;
         nbg.raycastTarget = false;
         SoftShadow(zoomNotice);
-        zoomNoticeTxt = Txt(zoomNotice.transform, "已隐藏 0 个站点 · 双指放大", 25, Ink, 12, 4, 516, 52, TextAnchor.MiddleCenter);
+        zoomNoticeTxt = Txt(zoomNotice.transform, "已隐藏 0 个港点 · 双指放大", 25, Ink, 12, 4, 516, 52, TextAnchor.MiddleCenter);
         zoomNoticeTxt.raycastTarget = false;
         zoomNotice.SetActive(false);
     }
@@ -622,22 +664,23 @@ public partial class DemoBootstrap : MonoBehaviour
     {
         var map = Rect("Map", root, 0, 0, W, H);
         mapRect = map.GetComponent<RectTransform>();
-        Img(map, new Color(1, 1, 1, 0));
+        // 宽幅地图拖出中心 1080×1920 矩形后，底层超大透明接收层保证边缘仍可接收滚轮缩放与拖拽事件
+        var hitArea = Rect("MapHitArea", mapRect, -2.5f * W, -1.5f * H, 6f * W, 4f * H);
+        Img(hitArea, new Color(1, 1, 1, 0));
         var mapZoom = map.AddComponent<MapWheelZoom>();
         mapWheelZoom = mapZoom;
         mapZoom.map = mapRect; mapZoom.viewport = root;
         mapZoom.canZoom = () => !dragging && !lineInsertActive && pageRoot == null && activePanel == null && sceneryViewer == null;
-        mapZoom.maxZoom = () => currentRegion == "火星" ? 12f : 2.5f;
+        mapZoom.minZoom = () => { var s = GetRegionSpec(currentRegion); return s != null ? s.minZoom : 1f; };
+        mapZoom.maxZoom = () => { var s = GetRegionSpec(currentRegion); return s != null ? s.maxZoom : 2.5f; };
+        mapZoom.panMarginRatio = () => { var s = GetRegionSpec(currentRegion); return s != null ? s.panMargin : new Vector2(0.25f, 0.25f); };
         mapZoom.onPanStart = () => { pressing = false; pressIdx = -1; HidePressRing(); };
-        hkMapArt = Rect("HongKongArt", map.transform, 0, 0, W, H);
-        BuildRasterMap(hkMapArt.transform);
-        guangdongMapArt = BuildGuangdongMap(map.transform);
-        macauMapArt = BuildMacauMap(map.transform);
-        guangdongMapArt.SetActive(false); macauMapArt.SetActive(false);
+        BuildAllRegionMaps(map.transform);
 
-        // 底图四缘海面渐隐羽化带：仅柔化底图矩形接缝到全屏 Paper 海面，不遮挡线网与站点
+        // 底图四缘海面渐隐羽化带：仅柔化底图矩形接缝到全屏 Paper 海面，不遮挡线网与港点
         var fade = MakeFadeTexture();
         var featherGo = Rect("MapEdgeFeather", mapRect, 0, 0, W, H);
+        featherGo.SetActive(false);
         var featherCol = new Color(Sea.r, Sea.g, Sea.b, 0.90f);
         var themeFadeCol = Themes[Mathf.Clamp(currentTheme, 0, Themes.Length - 1)].fade;
         var featherTopCol = new Color(themeFadeCol.r, themeFadeCol.g, themeFadeCol.b, 0.85f);
@@ -678,38 +721,41 @@ public partial class DemoBootstrap : MonoBehaviour
         floaterLayer = Rect("IncomeFloaters", mapRect, 0, 0, W, H).GetComponent<RectTransform>();
         AttachSubCanvas(floaterLayer.gameObject, false);
 
-        Label(hkMapArt.GetComponent<RectTransform>(), "北 岭", 34, 0.55f, 0.90f, new Color(0.40f,0.38f,0.32f,0.75f), 180);
-        Label(hkMapArt.GetComponent<RectTransform>(), "月之亮面本岛", 26, 0.50f, 0.170f, new Color(0.40f,0.38f,0.32f,0.72f), 150);
-        Label(hkMapArt.GetComponent<RectTransform>(), "苍岚岛", 24, 0.20f, 0.105f, new Color(0.40f,0.38f,0.32f,0.70f), 140);
-        Label(hkMapArt.GetComponent<RectTransform>(), "银潮湾", 18, 0.40f, 0.360f, new Color(0.33f,0.48f,0.53f,0.80f), 190);
-        PortalLabel(hkMapArt.GetComponent<RectTransform>(), 0.80f, 0.925f, "→ 火星");
-        PortalLabel(hkMapArt.GetComponent<RectTransform>(), 0.25f, 0.505f, "→ 火星 / 月背");
+        var terrainCol = new Color(1.00f, 0.96f, 0.80f, 0.88f);
+        Label(hkMapArt.GetComponent<RectTransform>(), "雨  海", 32, MoonNearX(-15.0f), MoonNearY(26.0f), terrainCol, 160);
+        Label(hkMapArt.GetComponent<RectTransform>(), "静  海", 30, MoonNearX(22.0f), MoonNearY(13.0f), terrainCol, 160);
+        Label(hkMapArt.GetComponent<RectTransform>(), "云  海", 28, MoonNearX(-15.0f), MoonNearY(-26.0f), terrainCol, 160);
+        Label(hkMapArt.GetComponent<RectTransform>(), "第谷高地", 25, MoonNearX(-2.0f), MoonNearY(-50.0f), terrainCol, 180);
+        PortalLabel(hkMapArt.GetComponent<RectTransform>(), MoonNearX(27.0f), MoonNearY(23.0f), "→ 塔尔西斯");
+        PortalLabel(hkMapArt.GetComponent<RectTransform>(), MoonNearX(-30.0f), MoonNearY(38.0f), "✦ 月背 / 塔尔西斯");
 
-        // 顶部/底部奶油渐隐，让悬浮 UI 压得住地图
+        // 隐藏顶/底遮罩条，保持全屏星球地形连续感
         Color fadeCol = Themes[Mathf.Clamp(currentTheme, 0, Themes.Length - 1)].fade;
         var top = Rect("TopFade", root, 0, H-320, W, 320);
-        var tri = top.AddComponent<RawImage>(); tri.texture = fade; tri.color = new Color(fadeCol.r, fadeCol.g, fadeCol.b, 0.92f); tri.raycastTarget = false;
-        topFadeImg = tri;
+        var tri = top.AddComponent<RawImage>(); tri.texture = fade; tri.color = new Color(fadeCol.r, fadeCol.g, fadeCol.b, 0f); tri.raycastTarget = false;
+        topFadeImg = tri; top.SetActive(false);
         var bot = Rect("BotFade", root, 0, 0, W, 240);
-        var bri = bot.AddComponent<RawImage>(); bri.texture = fade; bri.color = new Color(fadeCol.r, fadeCol.g, fadeCol.b, 0.85f); bri.raycastTarget = false;
+        var bri = bot.AddComponent<RawImage>(); bri.texture = fade; bri.color = new Color(fadeCol.r, fadeCol.g, fadeCol.b, 0f); bri.raycastTarget = false;
         bri.uvRect = new Rect(0, 1, 1, -1);
-        botFadeImg = bri;
+        botFadeImg = bri; bot.SetActive(false);
     }
 
     void SwitchRegion(string destination)
     {
+        destination = NormalizeLegacyRegionId(destination);
         if (dragging || activePanel || sceneryViewer || !RegionUnlocked(destination)) return;
         if (destination == currentRegion) { ClosePage(); return; }
         FreezeRegionTraffic();
         ClearStationOdArcs();
         ClosePage(); CloseLineBubble(); CancelDraft(); ClearFloaters(); currentRegion = destination;
-        hkMapArt.SetActive(currentRegion == "月之亮面"); macauMapArt.SetActive(currentRegion == "月背");
-        guangdongMapArt.SetActive(currentRegion == "火星");
+        SetActiveRegionMapArt(currentRegion);
         SyncRegionMapTextureMemory();
         RequestResourceTrim(false);
         trainsDirty = true;
-        mapRect.localScale = Vector3.one;
-        mapRect.anchoredPosition = mapWheelZoom ? mapWheelZoom.CenterPosition(1f) : Vector2.zero;
+        var spec = GetRegionSpec(currentRegion);
+        float initScale = spec != null ? spec.initZoom : 1f;
+        mapRect.localScale = Vector3.one * initScale;
+        mapRect.anchoredPosition = mapWheelZoom ? mapWheelZoom.CenterPosition(initScale) : Vector2.zero;
         foreach (var kv in stationImgs)
         {
             int i = kv.Key; var marker = kv.Value.transform.parent;
@@ -726,7 +772,7 @@ public partial class DemoBootstrap : MonoBehaviour
         RefreshSceneryViews();
         LayoutStationLabels();
         UpdateRegionalMarkers(true);
-        regionTitle.text = DisplayPlaceAliases(currentRegion == "月之亮面" ? "月之亮面" : currentRegion == "月背" ? "月 背" : "火 星");
+        if (regionTitle) regionTitle.text = spec != null ? spec.spacedTitle : currentRegion;
         CreateLineVisuals(); RefreshStationDots();
         RecalcIncome(); RefreshHUD();
         PlayRegionCurtain(currentRegion);
@@ -737,10 +783,6 @@ public partial class DemoBootstrap : MonoBehaviour
         Toast("已切换至" + currentRegion);
     }
 
-    bool RegionUnlocked(string region)
-    {
-        return region == "月之亮面" || (region == "月背" && macauUnlocked) || (region == "火星" && guangdongUnlocked);
-    }
     int ConnectedOrdinaryStations(string region)
     {
         var found = new HashSet<int>();
@@ -750,10 +792,26 @@ public partial class DemoBootstrap : MonoBehaviour
     }
     void UpdateRegionUnlocks()
     {
-        if (!macauUnlocked && income >= MacauIncomeRequired && ConnectedOrdinaryStations("月之亮面") >= 4)
-        { macauUnlocked = true; Toast("月背区域已解锁"); QueueStory("macau_open", "海的另一边", "月背发来一封简短的邀请：客流已经准备好了，缺的只是一条可靠的线路。\n下一站，去海的另一边。"); }
-        if (macauUnlocked && !guangdongUnlocked && income >= GuangdongIncomeRequired && ConnectedOrdinaryStations("月背") >= 2)
-        { guangdongUnlocked = true; Toast("火星区域已解锁"); QueueStory("guangdong_open", "向北的邀请", "月背的站台刚刚热闹起来，火星的合作邀请便送到了桌上。\n这一次，你要把一座城市的故事，接到更远的地方。"); }
+        for (int i = 1; i < RegionOrder.Length; i++)
+        {
+            string reg = RegionOrder[i];
+            if (RegionUnlocked(reg)) continue;
+            var spec = GetRegionSpec(reg);
+            if (spec == null) continue;
+            if (!string.IsNullOrEmpty(spec.prevRegion) && !RegionUnlocked(spec.prevRegion)) continue;
+            if (income < spec.unlockIncome) continue;
+            if (!string.IsNullOrEmpty(spec.prevRegion) && ConnectedOrdinaryStations(spec.prevRegion) < spec.unlockStations) continue;
+            SetRegionUnlocked(reg, true);
+            Toast(reg + " 区域已解锁");
+            if (reg == "月背")
+                QueueMilestoneBubble("M-01", () => SwitchRegion("月背"));
+            else if (reg == "火星·西半球")
+                QueueMilestoneBubble("M-02", () => SwitchRegion("火星·西半球"));
+            else if (reg == "火星·东半球")
+                QueueMilestoneBubble("M-03", () => SwitchRegion("火星·东半球"));
+            else
+                QueueStory("mars_" + spec.order, reg + " 贯通许可", "随着前线星港客流攀升，星盟正式批准开辟「" + reg + "」星区。\n打开区域版图，将火星星轨继续向东拼接吧。");
+        }
     }
 
     void BuildStationViews()
@@ -768,7 +826,7 @@ public partial class DemoBootstrap : MonoBehaviour
             var ringGo = Rect("Ring", go.transform, -14, -14, 84, 84);
             var ring = Img(ringGo, new Color(1,1,1,0), spriteRing); ring.raycastTarget = false;
             stationRings.Add(ring);
-            // 长按 0.42s 的进度环：只显示正在长按的站点
+            // 长按 0.42s 的进度环：只显示正在长按的港点
             var pressGo = Rect("PressRing", go.transform, -14, -14, 84, 84);
             var press = Img(pressGo, new Color(0.95f, 0.42f, 0.26f, 0.95f), spriteRing);
             press.type = Image.Type.Filled;
@@ -779,31 +837,50 @@ public partial class DemoBootstrap : MonoBehaviour
             press.raycastTarget = false;
             pressGo.SetActive(false);
             pressRings[i] = press;
-            // 圆点按级别分级：门户最大、县区最小，缩小时画面才有层次
-            float dotSize = s.portal ? 24f : s.county ? 13f : 20f;
-            float ringSize = dotSize + 8f;
+            // 圆点按级别分级：超级三域枢纽（金色八角星芒双菱）、常规星门、骨干站、支线站
+            bool superHub = s.IsSuperHubPortal();
+            float dotSize = superHub ? 26f : s.portal ? 24f : s.county ? 13f : 20f;
+            float ringSize = superHub ? 36f : dotSize + 8f;
+            if (superHub && spriteDiamond)
+            {
+                var starA = Rect("SuperStarA", go.transform, (56f - 40f) * 0.5f, (56f - 40f) * 0.5f, 40f, 40f);
+                Img(starA, new Color(1.00f, 0.82f, 0.24f, 0.96f), spriteDiamond).raycastTarget = false;
+                var starB = Rect("SuperStarB", go.transform, 28f, 28f, 32f, 32f);
+                var starBRt = starB.GetComponent<RectTransform>();
+                starBRt.pivot = new Vector2(0.5f, 0.5f);
+                starBRt.anchoredPosition = new Vector2(28f, 28f);
+                starB.transform.localRotation = Quaternion.Euler(0f, 0f, 45f);
+                Img(starB, new Color(0.98f, 0.72f, 0.18f, 0.94f), spriteDiamond).raycastTarget = false;
+            }
             var outline = Rect("DotRing", go.transform, (56f - ringSize) * 0.5f, (56f - ringSize) * 0.5f, ringSize, ringSize);
-            Color ringColor = s.portal ? new Color(0.82f,0.28f,0.22f,0.92f) : new Color(0.24f,0.21f,0.18f,0.85f);
+            Color ringColor = superHub ? new Color(1.00f, 0.84f, 0.28f, 1f)
+                : s.portal ? new Color(0.82f, 0.28f, 0.22f, 0.92f)
+                : new Color(0.24f, 0.21f, 0.18f, 0.85f);
             Img(outline, ringColor, spriteStationRing).raycastTarget = false;
             var dotGo = Rect("DotFill", go.transform, (56f - dotSize) * 0.5f, (56f - dotSize) * 0.5f, dotSize, dotSize);
-            var img = Img(dotGo, s.portal ? Vermilion : new Color(0.985f,0.97f,0.94f,0.98f), spriteCircle);
+            Color fillCol = superHub ? new Color(0.76f, 0.22f, 0.20f, 1f)
+                : s.portal ? Vermilion
+                : new Color(0.985f, 0.97f, 0.94f, 0.98f);
+            var img = Img(dotGo, fillCol, superHub && spriteDiamond ? spriteDiamond : spriteCircle);
             img.raycastTarget = false;
             if (s.portal)
             {
                 var innerDot = Rect("PortalCore", dotGo.transform, dotSize * 0.28f, dotSize * 0.28f, dotSize * 0.44f, dotSize * 0.44f);
-                Img(innerDot, Color.white, spriteCircle).raycastTarget = false;
+                Img(innerDot, superHub ? new Color(1.00f, 0.95f, 0.65f, 1f) : Color.white, superHub && spriteDiamond ? spriteDiamond : spriteCircle).raycastTarget = false;
             }
             var sp = go.AddComponent<StationPress>(); sp.index = i; sp.boot = this;
-            var label = Txt(go.transform, StationDisplayName(i, currentRegion), s.portal ? 24 : 26, new Color(0.16f,0.14f,0.11f,0.96f), -104, -48, 240, 38, TextAnchor.MiddleCenter);
-            TextShadow(label, new Color(0.99f,0.98f,0.94f,0.95f));
+            var label = Txt(go.transform, StationDisplayName(i, currentRegion), superHub ? 26 : s.portal ? 24 : 26, superHub ? new Color(1.00f, 0.94f, 0.72f, 1f) : Color.white, -104, -48, 240, 38, TextAnchor.MiddleCenter);
+            label.font = stationFont;
+            TextShadow(label, new Color(0f, 0f, 0f, 0.55f));
             if (s.county) { label.resizeTextForBestFit = true; label.resizeTextMinSize = 17; label.resizeTextMaxSize = 26; label.verticalOverflow = VerticalWrapMode.Truncate; }
             stationLabels[i] = label;
-            var leader = Img(Rect("NameLeader", go.transform, 0, 0, 1, 2), new Color(0.15f, 0.14f, 0.13f, 0.32f), spriteWhite);
+            var leader = Img(Rect("NameLeader", go.transform, 0, 0, 1, 2), new Color(1f, 1f, 1f, 0.40f), spriteWhite);
             leader.raycastTarget = false; leader.gameObject.SetActive(false); stationLeaders[i] = leader;
             if (s.portal)
             {
-                var pl = Txt(go.transform, PortalSubtitle(s, currentRegion), 21, new Color(0.38f,0.35f,0.31f,0.9f), -100, -80, 220, 30, TextAnchor.MiddleCenter);
-                TextShadow(pl, new Color(1,0.99f,0.96f,0.95f));
+                var pl = Txt(go.transform, PortalSubtitle(s, currentRegion), superHub ? 22 : 21, superHub ? new Color(1.00f, 0.88f, 0.42f, 1.00f) : new Color(1.00f, 0.92f, 0.62f, 1.00f), -100, -80, 240, 30, TextAnchor.MiddleCenter);
+                pl.font = stationFont;
+                TextShadow(pl, new Color(0f, 0f, 0f, 0.55f));
                 stationDestinations[i] = pl;
             }
             stationImgs[i] = img;
@@ -931,6 +1008,21 @@ public partial class DemoBootstrap : MonoBehaviour
     {
         bool haveVisibility = stationVisible.Length == stations.Count;
         labelRects.Clear();
+        // 避开四周固定 HUD 按钮与栏位（左栏、右栏、顶栏、底栏）
+        labelRects.Add(new Rect(0f, 430f, 132f, 750f));
+        labelRects.Add(new Rect(946f, 740f, 134f, 490f));
+        labelRects.Add(new Rect(0f, 1650f, 1080f, 270f));
+        labelRects.Add(new Rect(0f, 0f, 1080f, 250f));
+        float scale = mapRect ? mapRect.localScale.x : 1f;
+        Vector2 pan = mapRect ? mapRect.anchoredPosition : Vector2.zero;
+        for (int s = 0; s < sceneries.Count; s++)
+        {
+            var sc = sceneries[s];
+            if (sc.region != currentRegion) continue;
+            Vector2 scCenter = pan + new Vector2(MAP_X + sc.x * MAP_W, MAP_Y + sc.y * MAP_H) * scale;
+            labelRects.Add(new Rect(scCenter.x - 24f, scCenter.y - 24f, 48f, 48f));
+            labelRects.Add(new Rect(scCenter.x - 115f, scCenter.y + 20f, 230f, 44f));
+        }
         for (int pass = 0; pass < 5; pass++)
             for (int i = 0; i < stations.Count; i++)
             {
@@ -942,7 +1034,7 @@ public partial class DemoBootstrap : MonoBehaviour
     }
 
     float regionalMarkerScale = -1f;
-    // 地图放大时，线路 / 草稿线按 1/zoom 反向补偿，和站点一样保持屏幕尺寸恒定。
+    // 地图放大时，线路 / 草稿线按 1/zoom 反向补偿，和港点一样保持屏幕尺寸恒定。
     // 只改厚度与图标缩放，不改长度与位置——长度必须留在地图坐标系里。
     void ApplyZoomToOverlays(float scale)
     {
@@ -981,11 +1073,11 @@ public partial class DemoBootstrap : MonoBehaviour
     readonly List<int> markerOrder = new List<int>();
     readonly List<Vector2> takenDots = new List<Vector2>();
 
-    // 拖线站点优先，其次是青锦交界站，再是其他交界站和已开站点。
+    // 拖线港点优先，其次是青锦交界港，再是其他交界港和已开港点。
     int MarkerRank(int i)
     {
         if (dragging && (i == dragFrom || i == hoverStation)) return -2;
-        if (currentRegion == "火星" && stations[i].name == "奥林匹斯（月面门）") return -1;
+        if (stations[i].IsSuperHubPortal() || (IsMarsRegion(currentRegion) && stations[i].name == "奥林匹斯星门")) return -1;
         if (IsOpen(i) || stations[i].portal) return 0;
         return stations[i].county ? 2 : 1;
     }
@@ -993,22 +1085,20 @@ public partial class DemoBootstrap : MonoBehaviour
     bool MatchesStationFilter(int i)
     {
         var station = stations[i];
-        // 月之亮面/月背使用站区而非县级行政区；保留所有交界站与本地站点。
-        if (currentRegion != "火星" || station.portal || stationFilter == 0) return true;
-        int code = station.administrativeCode;
-        bool prefecture = code > 0 && code % 100 == 0;
-        bool countyCity = code > 0 && code % 100 >= 81;
-        return prefecture || (stationFilter == 2 && countyCity);
+        if (station.portal || IsOpen(i) || stationFilter == 0) return true;
+        int kind = StationKind(i);
+        if (stationFilter == 1) return kind == 2 || kind == 3; // 星球枢纽：商业枢纽与核心奇观大站
+        return kind == 1 || kind == 2 || kind == 3;            // 区域中继：含居住、商业与奇观大站
     }
 
     void CycleStationFilter()
     {
         if (dragging) { Toast("请先完成当前线路"); return; }
         stationFilter = (stationFilter + 1) % 3;
-        string[] names = { "全部城市", "地级市以上", "除市辖区" };
+        string[] names = { "全部", "星球枢纽", "区域中继" };
         if (stationFilterText) stationFilterText.text = names[stationFilter];
         UpdateRegionalMarkers(true);
-        Toast("站点筛选：" + names[stationFilter]);
+        Toast("港点筛选：" + names[stationFilter]);
     }
 
     void UpdateRegionalMarkers(bool force)
@@ -1017,7 +1107,7 @@ public partial class DemoBootstrap : MonoBehaviour
         float scale = mapRect.localScale.x;
         Vector2 pan = mapRect.anchoredPosition;
         bool zoomChanged = Mathf.Abs(scale - regionalMarkerScale) >= 0.005f;
-        // 缩放和解算平移都要触发重算：拖动地图后站点/线路的疏密会变
+        // 缩放和解算平移都要触发重算：拖动地图后港点/线路的疏密会变
         if (!force && !zoomChanged && (pan - regionalMarkerPos).sqrMagnitude < 1f) return;
         regionalMarkerScale = scale;
         regionalMarkerPos = pan;
@@ -1040,8 +1130,8 @@ public partial class DemoBootstrap : MonoBehaviour
             foreach (var kv in stationImgs) kv.Value.transform.parent.localScale = invScale;
         }
 
-        // 屏幕空间碰撞过滤（1 代做法）：靠得太近的站点自动让位。
-        // 拖线站点 > 青锦交界站 > 其他交界站及已开站点 > 普通 > 县区
+        // 屏幕空间碰撞过滤（1 代做法）：靠得太近的港点自动让位。
+        // 拖线港点 > 青锦交界港 > 其他交界港及已开港点 > 普通 > 星区
         if (stationVisible.Length != stations.Count) stationVisible = new bool[stations.Count];
         for (int i = 0; i < stationVisible.Length; i++) stationVisible[i] = false;
 
@@ -1056,7 +1146,7 @@ public partial class DemoBootstrap : MonoBehaviour
             }
         }
 
-        // 已被筛选排除的站点不能留下旧图标或接受吸附。
+        // 已被筛选排除的港点不能留下旧图标或接受吸附。
         for (int r = 0; r < scanCount; r++)
         {
             int i = regionIndices != null ? regionIndices[r] : r;
@@ -1072,8 +1162,11 @@ public partial class DemoBootstrap : MonoBehaviour
             Vector2 sp = pan + Pos(i) * scale;                 // 相对 Stage 左下角的屏幕坐标
             float viewW = RootW, viewH = RootH;
             bool inView = sp.x >= -48f && sp.x <= viewW + 48f && sp.y >= -48f && sp.y <= viewH + 48f;
-            // 间距与圆点尺寸匹配：主干 44、普通 34、县区 26（屏幕像素），避免两点相切成一片
-            float gap = rank <= 0 ? 44f : rank == 2 ? 26f : 34f;
+            // 火星四区采用均匀网格布点，默认俯瞰保持适中碰撞距以展现饱满星网，同时防重叠
+            bool marsOverview = IsMarsRegion(currentRegion) && scale < 1.05f;
+            float gap = marsOverview
+                ? (rank <= 0 ? 44f : rank == 2 ? 78f : 56f)
+                : (rank <= 0 ? 44f : rank == 2 ? 26f : 34f);
             bool show = inView;
             if (show)
                 for (int q = 0; q < takenDots.Count; q++)
@@ -1091,12 +1184,12 @@ public partial class DemoBootstrap : MonoBehaviour
         // 站名统一在这一步排：圆点露出来就给名字，挤不下就外移并用引导线连回
         LayoutStationLabels();
 
-        // 状态驱动：只要有站点被疏密挤掉就提示，全部显示出来就自动收起
+        // 状态驱动：只要有港点被疏密挤掉就提示，全部显示出来就自动收起
         if (zoomNotice)
         {
             if (hiddenCount > 0)
             {
-                if (zoomNoticeTxt) zoomNoticeTxt.text = "已隐藏 " + hiddenCount + " 个站点 · 双指放大";
+                if (zoomNoticeTxt) zoomNoticeTxt.text = "已隐藏 " + hiddenCount + " 个港点 · 双指放大";
                 if (!zoomNotice.activeSelf) zoomNotice.SetActive(true);
             }
             else if (zoomNotice.activeSelf) zoomNotice.SetActive(false);
@@ -1123,7 +1216,7 @@ public partial class DemoBootstrap : MonoBehaviour
     {
         leftRailGos.Clear();
         string[] names = { "任务", "图鉴", "排行" };
-        string[] icons = { "手帐", "博物", "番位" };
+        string[] icons = { "手帐", "博物", "评级" };
         Color[] accents = { new Color(0.85f,0.48f,0.28f,0.95f), Matcha, Indigo };
         for (int i = 0; i < 3; i++)
         {
@@ -1174,7 +1267,7 @@ public partial class DemoBootstrap : MonoBehaviour
         var tag = Rect("FilterTag", button.transform, 10, 12, 98, 30);
         Rounded(tag, new Color(Paper2.r, Paper2.g, Paper2.b, 0.78f));
         tag.GetComponent<Image>().raycastTarget = false;
-        string[] filterShort = { "全部", "地级市以上", "除市辖区" };
+        string[] filterShort = { "全部", "星球枢纽", "区域中继" };
         stationFilterText = Txt(tag.transform, filterShort[Mathf.Clamp(stationFilter, 0, 2)], 20, InkSoft, 4, 0, 90, 30, TextAnchor.MiddleCenter);
         stationFilterText.resizeTextForBestFit = true; stationFilterText.resizeTextMinSize = 15; stationFilterText.resizeTextMaxSize = ScaledFontSize(20);
         var control = button.AddComponent<Button>(); control.targetGraphic = button.GetComponent<Image>();
@@ -1261,7 +1354,7 @@ public partial class DemoBootstrap : MonoBehaviour
         var noticeTag = Rect("Tag", noticeGo.transform, 12, 12, 86, 30);
         Rounded(noticeTag, new Color(Paper2.r, Paper2.g, Paper2.b, 0.78f));
         noticeTag.GetComponent<Image>().raycastTarget = false;
-        Txt(noticeTag.transform, "驿报", 20, InkSoft, 0, 0, 86, 30, TextAnchor.MiddleCenter);
+        Txt(noticeTag.transform, "公报", 20, InkSoft, 0, 0, 86, 30, TextAnchor.MiddleCenter);
         Img(Rect("BadgeRing", noticeGo.transform, 4, 74, 24, 24), CardBg, spriteCircle).raycastTarget = false;
         noticeUnreadDot = Rect("Badge", noticeGo.transform, 6, 76, 20, 20);
         Img(noticeUnreadDot, Vermilion, spriteCircle).raycastTarget = false;
@@ -1288,7 +1381,7 @@ public partial class DemoBootstrap : MonoBehaviour
     {
         dock = Rect("Dock", root, 22, 16, 1036, 156);
         Rounded(dock, CardBg); SoftShadow(dock);
-        string[] names = { "线路", "列车", "公司", "科技" };
+        string[] names = { "线路", "星车编队", "公司", "科技" };
         string[] ens = { "LINE", "TRAIN", "COMPANY", "TECH" };
         Color[] cols = { Vermilion, Indigo, Matcha, Gold };
         for (int i = 0; i < 4; i++)
@@ -1436,10 +1529,10 @@ public partial class DemoBootstrap : MonoBehaviour
         }
 
         if (storyObjectiveBannerGo)
-            storyObjectiveBannerGo.GetComponent<RectTransform>().anchoredPosition = new Vector2(safeL + (safeW - 680f) * 0.5f, barY - 76f);
+            storyObjectiveBannerGo.GetComponent<RectTransform>().anchoredPosition = new Vector2(safeL + (safeW - 680f) * 0.5f, barY - 114f);
 
         if (zoomNotice)
-            zoomNotice.GetComponent<RectTransform>().anchoredPosition = new Vector2(safeL + (safeW - 540f) * 0.5f, barY - 158f);
+            zoomNotice.GetComponent<RectTransform>().anchoredPosition = new Vector2(safeL + (safeW - 540f) * 0.5f, barY - 190f);
 
         float dockY = safeB + 16f;
         if (dock)
@@ -1545,22 +1638,48 @@ public partial class DemoBootstrap : MonoBehaviour
     {
         if (Time.unscaledTime < nextPortalEndHint) return;
         nextPortalEndHint = Time.unscaledTime + 1.5f;
-        Toast("交界站只能作为本区域线路的起点或终点");
+        Toast("交界港只能作为本区域线路的起点或终点");
+    }
+    float nextConnectHintTime;
+    void ShowConnectHint(string msg)
+    {
+        if (Time.unscaledTime < nextConnectHintTime) return;
+        nextConnectHintTime = Time.unscaledTime + 1.2f;
+        Toast(msg);
     }
     bool TryConnect(int a, int b)
     {
-        if (a == b || !StationInRegion(a, currentRegion) || !StationInRegion(b, currentRegion)) return false;
-        // 交界站可像普通站一样过站与闭环，仅禁止两座交界站直接相连，避免跨图归属二义性。
-        if (stations[a].portal && stations[b].portal) { Toast("请通过区域内普通站连接交界站"); return false; }
+        if (a == b) return false;
+        if (!StationInRegion(a, currentRegion) || !StationInRegion(b, currentRegion))
+        {
+            ShowConnectHint("无法跨星域直接拉线，请经由星门中转");
+            return false;
+        }
+        // 交界港可像普通站一样过站与闭环，仅禁止两座交界港直接相连，避免跨图归属二义性。
+        if (stations[a].portal && stations[b].portal) { ShowConnectHint("两座星门之间不能直连，请经由普通星港中转"); return false; }
         bool closeLoop = draft.Count >= 3 && b == draft[0] && !IsLoop(draft);
-        if (draft.Contains(b) && !closeLoop) { Toast("同一条线不能重复经过同一站"); return false; }
+        if (draft.Contains(b) && !closeLoop)
+        {
+            if (b == draft[0] && draft.Count == 2)
+                ShowConnectHint("至少连接 3 座不同星港才能闭合成环");
+            else
+                ShowConnectHint("该星港已在当前草稿中，从另一端连接试试");
+            return false;
+        }
         draft.Add(b); draftCost = DraftCostOf(draft);
         TriggerHaptic(12); PlaySnapSfx();
+        if (closeLoop) ShowConnectHint("已闭合成环，松手确认开通");
         return true;
     }
     void FinishDraft()
     {
-        if (draft.Count < 2) { CancelDraft(); return; }
+        if (draft.Count < 2)
+        {
+            if (Time.unscaledTime >= nextConnectHintTime)
+                Toast("未吸附到目标星港，请拖至下一座星港或从另一端连接试试");
+            CancelDraft();
+            return;
+        }
         if (draftCost > coins) { Toast("金币不足：还差 ¥" + FormatShortfall(draftCost - coins)); CancelDraft(); return; }
         int cost = draftCost;
         var snapshot = new List<int>(draft);
@@ -1606,10 +1725,13 @@ public partial class DemoBootstrap : MonoBehaviour
         CreateLineVisuals(); RefreshAllLines(); RefreshStationDots(); RecalcIncome(); RefreshHUD();
         nextLineId++;
         CheckSceneryOnLine(snapshot);
-        QueueStory("new_line", "不被看好的新线", "有人说这条线不会有乘客。首班车靠站时，等车的人却排到了街角。\n你把时刻表贴上墙：从今天起，这座城市多了一条路。");
+        QueueStory("new_line", "不被看好的新线", "有人说这条线不会有乘客。首班车靠站时，等车的人却排到了街角。\n你把星航时刻表贴上墙：从今天起，这座城市多了一条路。");
         CheckLineStory(line);
         PlayBuildSfx(); TriggerHaptic(22);
         PlayStationPathSparkles(snapshot, line.color);
+        if (lines.Count == 1) QueueGuideBubble("G-02");
+        CheckPortalMilestoneFromPath(snapshot);
+        CheckCrossBayMilestoneBubbles();
         SyncStoryProgression(true);
         EndUndo();
     }
@@ -1629,14 +1751,33 @@ public partial class DemoBootstrap : MonoBehaviour
         CheckLineStory(line);
         PlayBuildSfx(); TriggerHaptic(18);
         PlayStationPathSparkles(draftStations, line.color);
+        CheckPortalMilestoneFromPath(draftStations);
+        CheckCrossBayMilestoneBubbles();
         SyncStoryProgression(true);
         EndUndo();
     }
 
     void CheckLineStory(Line line)
     {
-        if (UniqueCount(line.st) >= 5) QueueStory("five_stations", "第五站的灯", "第五座站台亮灯时，最早质疑你的人也挤进了人群。\n“原来那条线，真的能通到这里。”\n你笑了笑，把下一段线路图展开。");
-        if (IsLoop(line.st)) QueueStory("first_loop", "首尾相连", "最后一段轨道合拢，列车没有掉头，沿着城市的脉络继续前行。\n曾经分散的街区，终于连成了一个完整的圆。");
+        if (UniqueCount(line.st) >= 5) QueueStory("five_stations", "第五站的灯", "第五座登船台亮灯时，最早质疑你的人也挤进了人群。\n“原来那条线，真的能通到这里。”\n你笑了笑，把下一段线路图展开。");
+        if (IsLoop(line.st))
+        {
+            QueueStory("first_loop", "首尾相连", "最后一段轨道合拢，星车编队没有掉头，沿着城市的脉络继续前行。\n曾经分散的街区，终于连成了一个完整的圆。");
+            QueueGuideBubble("G-07");
+        }
+    }
+    void CheckPortalMilestoneFromPath(List<int> path)
+    {
+        if (path == null) return;
+        for (int i = 0; i < path.Count; i++)
+        {
+            int sid = path[i];
+            if (sid >= 0 && sid < stations.Count && stations[sid].portal)
+            {
+                QueueMilestoneBubble("M-04", OpenCompanyScreen);
+                break;
+            }
+        }
     }
 
     List<int> BuildExtendPath(Line line, int from, List<int> draftStations)
@@ -1679,37 +1820,129 @@ public partial class DemoBootstrap : MonoBehaviour
         if (ReferenceEquals(st, line.st) && traffic != null) return TrafficRevenue(line, traffic);
         return TrafficRevenue(line, CalculateTraffic(line, st));
     }
-    float EstimateNetworkDelta(Line line, List<int> path, bool isNew)
+    float EstimateNetworkDeltaFast(Line line, List<int> path, bool isNew)
     {
-        // Bounded route-only estimate; settlement retains the complete network solver.
-        var candidate = new Line { id = isNew ? nextLineId : line.id, st = path,
-            trains = isNew ? 1 : line.trains, fare = isNew ? 1.5f : line.fare,
-            skin = isNew ? -1 : line.skin };
-        if (!isNew) candidate.dispatch = (int[])line.dispatch.Clone();
-        float before = isNew ? 0f : EstimateLocalRouteProfit(line);
-        return EstimateLocalRouteProfit(candidate) - before;
-    }
-    float EstimateLocalRouteProfit(Line line)
-    {
-        float profit = 0f, savedClock = dayClock;
-        var seen = new HashSet<int>();
-        float distance = EconomicPathLength(line.st) / Mathf.Max(1, line.st.Count - 1);
-        float fare = line.fare + 0.0036f * distance;
+        if (path == null || path.Count < 2) return 0f;
+        const int repSlot = 1; // 日间代表时段，兼顾精度与响应速度
+        bool reuseSlot = hasForecastSignature && pendingForecastMask == 0 && trafficSlots[repSlot] != null;
+        TrafficResult beforeSlot = reuseSlot ? trafficSlots[repSlot] : ComputeSlotResult(repSlot);
+        float beforeProfit = EvaluateSingleSlotProfit(beforeSlot, repSlot);
+
+        float afterProfit = beforeProfit;
+        Line added = null;
+        List<int> savedPath = null;
         try
         {
-            for (int slot = 0; slot < 4; slot++)
+            if (isNew)
             {
-                dayClock = ForecastSlotHours[slot] * GameDaySeconds / 24f;
-                seen.Clear(); float demand = 0f;
-                foreach (int station in line.st)
-                    if (seen.Add(station) && !stations[station].closed) demand += StationBaseDemand(station);
-                float carried = Mathf.Min(demand * 0.325f, FleetCapacity(line));
-                float net = carried * fare / 10f - VehicleMaintenance(line) - TrackMaintenance(line);
-                profit += (net - Mathf.Max(0f, net) * 0.1f) * ForecastSlotFractions[slot];
+                added = new Line
+                {
+                    id = nextLineId,
+                    name = nextLineId + " 号线",
+                    color = LineColors[(nextLineId - 1) % LineColors.Length],
+                    st = new List<int>(path)
+                };
+                lines.Add(added);
+            }
+            else if (line != null)
+            {
+                savedPath = line.st;
+                line.st = path;
+            }
+            TrafficResult afterSlot = ComputeSlotResult(repSlot);
+            afterProfit = EvaluateSingleSlotProfit(afterSlot, repSlot);
+        }
+        finally
+        {
+            if (added != null) lines.Remove(added);
+            if (!isNew && line != null && savedPath != null) line.st = savedPath;
+        }
+        return afterProfit - beforeProfit;
+    }
+    float EvaluateSingleSlotProfit(TrafficResult slotResult, int slot)
+    {
+        if (slotResult == null) return 0f;
+        float totalProfit = 0f, savedClock = dayClock;
+        try
+        {
+            dayClock = ForecastSlotHours[slot] * GameDaySeconds / 24f;
+            for (int i = 0; i < lines.Count; i++)
+            {
+                var current = lines[i];
+                float net = TrafficRevenue(current, slotResult) - VehicleMaintenance(current) - TrackMaintenance(current);
+                totalProfit += net - Mathf.Max(0f, net) * 0.1f;
             }
         }
         finally { dayClock = savedClock; }
-        return profit;
+        return totalProfit;
+    }
+    float EstimateNetworkDelta(Line line, List<int> path, bool isNew)
+    {
+        if (path == null || path.Count < 2) return 0f;
+        var beforeSlots = new TrafficResult[4];
+        bool reuseSlots = hasForecastSignature && pendingForecastMask == 0;
+        for (int slot = 0; slot < 4; slot++)
+            beforeSlots[slot] = reuseSlots && trafficSlots[slot] != null ? trafficSlots[slot] : ComputeSlotResult(slot);
+        float beforeProfit = EvaluateAllLinesProfit(beforeSlots);
+
+        float afterProfit = beforeProfit;
+        var afterSlots = new TrafficResult[4];
+        Line added = null;
+        List<int> savedPath = null;
+        try
+        {
+            if (isNew)
+            {
+                added = new Line
+                {
+                    id = nextLineId,
+                    name = nextLineId + " 号线",
+                    color = LineColors[(nextLineId - 1) % LineColors.Length],
+                    st = new List<int>(path)
+                };
+                lines.Add(added);
+            }
+            else if (line != null)
+            {
+                savedPath = line.st;
+                line.st = path;
+            }
+            for (int slot = 0; slot < 4; slot++)
+                afterSlots[slot] = ComputeSlotResult(slot);
+            afterProfit = EvaluateAllLinesProfit(afterSlots);
+        }
+        finally
+        {
+            if (added != null) lines.Remove(added);
+            if (!isNew && line != null && savedPath != null) line.st = savedPath;
+        }
+        return afterProfit - beforeProfit;
+    }
+    float EvaluateAllLinesProfit(TrafficResult[] slots)
+    {
+        float totalProfit = 0f, savedClock = dayClock;
+        try
+        {
+            for (int i = 0; i < lines.Count; i++)
+            {
+                var current = lines[i];
+                float gross = 0f, vehicle = 0f, track = 0f;
+                for (int slot = 0; slot < 4; slot++)
+                {
+                    var projected = slots[slot];
+                    if (projected == null) continue;
+                    dayClock = ForecastSlotHours[slot] * GameDaySeconds / 24f;
+                    float frac = ForecastSlotFractions[slot];
+                    gross += TrafficRevenue(current, projected) * frac;
+                    vehicle += VehicleMaintenance(current) * frac;
+                    track += TrackMaintenance(current) * frac;
+                }
+                float net = gross - vehicle - track;
+                totalProfit += net - Mathf.Max(0f, net) * 0.1f;
+            }
+        }
+        finally { dayClock = savedClock; }
+        return totalProfit;
     }
 
     string UniquePathText(List<int> st)
@@ -1743,7 +1976,7 @@ public partial class DemoBootstrap : MonoBehaviour
         return res;
     }
 
-    // 交界站可作为普通站过站与闭环，但任意一段轨道不可直接连接两个交界站。
+    // 交界港可作为普通站过站与闭环，但任意一段轨道不可直接连接两个交界港。
     bool PortalEndsAreValid(List<int> path)
     {
         for (int i = 0; i < path.Count - 1; i++)
@@ -1762,12 +1995,17 @@ public partial class DemoBootstrap : MonoBehaviour
             string region = SegmentRegion(path[i], path[i + 1]);
             if (region == null) continue;
             float px = Vector2.Distance(PosInRegion(path[i], region), PosInRegion(path[i + 1], region));
-            float kmPerPx = region == "火星" ? 0.68f : region == "月之亮面" ? 0.050f : 0.00954f;
+            var regSpec = GetRegionSpec(region);
+            float kmPerPx = regSpec != null ? regSpec.kmPerPx : (IsMarsRegion(region) ? 4.93f : 2.00f);
             totalKm += px * kmPerPx;
         }
         return totalKm;
     }
-    string FormatLineKm(List<int> path) => LineLengthKm(path).ToString("0.0") + " km";
+    string FormatLineKm(List<int> path)
+    {
+        float km = LineLengthKm(path);
+        return (km >= 100f ? km.ToString("0") : km.ToString("0.0")) + " km";
+    }
     string RouteEndpointsSummary(List<int> st)
     {
         if (st == null || st.Count == 0) return "";
@@ -1797,8 +2035,16 @@ public partial class DemoBootstrap : MonoBehaviour
     }
 
     int connectPopupVersion;
+    Coroutine connectGainCo;
+    readonly Dictionary<int, int> connectGainCache = new Dictionary<int, int>();
+    void StopConnectGainEstimate()
+    {
+        if (connectGainCo != null) { StopCoroutine(connectGainCo); connectGainCo = null; }
+    }
     void ShowConnectPopup(int from, List<int> snapshot, int cost, int selected)
     {
+        StopConnectGainEstimate();
+        if (selected < 0) connectGainCache.Clear();
         StartCoroutine(ShowConnectPopupDeferred(from, snapshot, cost, selected, ++connectPopupVersion));
     }
     System.Collections.IEnumerator ShowConnectPopupDeferred(int from, List<int> snapshot, int cost, int selected, int version)
@@ -1820,50 +2066,138 @@ public partial class DemoBootstrap : MonoBehaviour
                 opts.Add(new ConnectOpt { isNew = false, line = l, path = path });
         }
         if (RegionLineCount(currentRegion) < LineLimit()) opts.Add(new ConnectOpt { isNew = true });
-        if (opts.Count == 0) { Toast(currentRegion + "线路已达上限（" + LineLimit() + " 条）"); CancelDraft(); return; }
+        if (opts.Count == 0)
+        {
+            bool hasNonLoopFrom = false;
+            bool isEndpoint = false;
+            foreach (var l in lines)
+            {
+                if (!l.st.Contains(from) || IsLoop(l.st)) continue;
+                hasNonLoopFrom = true;
+                if (l.st[0] == from || l.st[l.st.Count - 1] == from) { isEndpoint = true; break; }
+            }
+            if (hasNonLoopFrom && !isEndpoint)
+                Toast("该站是航线中途站，请从航线另一端（首尾端点）连接试试");
+            else if (hasNonLoopFrom)
+                Toast("延长方案与已有途经港冲突，请避开重合站点或从另一端连接试试");
+            else
+                Toast(currentRegion + "航线已达上限（" + LineLimit() + " 条），请从既有航线首尾端点延长");
+            CancelDraft();
+            return;
+        }
         if (selected < 0) selected = DefaultConnectOption(from, opts);
         selected = Mathf.Clamp(selected, 0, opts.Count - 1);
-        var sel = opts[selected];
+        int curSelected = selected;
+        int popupVer = connectPopupVersion;
+        var sel = opts[curSelected];
         string title = sel.isNew ? ("开通 " + nextLineId + " 号线") : ("延长 " + sel.line.name);
         const float rowStep = 106f, rowH = 96f, pathViewW = 750f;
         float viewHeight = Mathf.Min(opts.Count, 5) * rowStep;
         float h = 264f + viewHeight;
-        var p = OpenBubble(title, h, 920, Pos(snapshot[snapshot.Count - 1]), "connect_opts_" + from);
+        string panelKey = "connect_opts_" + from;
+        var p = OpenBubble(title, h, 920, Pos(snapshot[snapshot.Count - 1]), panelKey);
+        Text headingTxt = null;
+        foreach (var t in p.GetComponentsInChildren<Text>(true))
+            if (t.transform.parent == p.transform && t.text == title) { headingTxt = t; break; }
         Txt(p.transform, "从 " + StationDisplayName(from, currentRegion) + " 起 · 新增 " + (UniqueCount(snapshot) - 1) + " 站 · 造价 ¥" + cost, 22, InkSoft, 30, h - 114, 820, 30, TextAnchor.MiddleLeft);
         var view = Rect("OptionsViewport", p.transform, 24, 122, 872, viewHeight);
-        Img(view, new Color(1,1,1,0.01f)); var mask = view.AddComponent<Mask>(); mask.showMaskGraphic = false;
-        var scroll = view.AddComponent<ScrollRect>(); scroll.horizontal = false; scroll.vertical = true; scroll.scrollSensitivity = 100f;
-        scroll.viewport = view.GetComponent<RectTransform>();
+        bool needVScroll = opts.Count > 5;
+        ScrollRect scroll = null;
+        if (needVScroll)
+        {
+            Img(view, new Color(1, 1, 1, 0f)).raycastTarget = true;
+            view.AddComponent<RectMask2D>();
+            scroll = view.AddComponent<ScrollRect>(); scroll.horizontal = false; scroll.vertical = true; scroll.scrollSensitivity = 100f;
+            scroll.viewport = view.GetComponent<RectTransform>();
+        }
         var content = Rect("Options", view.transform, 0, 0, 872, opts.Count * rowStep);
         var contentRt = content.GetComponent<RectTransform>(); contentRt.anchorMin = contentRt.anchorMax = new Vector2(0,1);
-        contentRt.pivot = new Vector2(0,1); contentRt.anchoredPosition = Vector2.zero; scroll.content = contentRt;
-        BindScrollPosition(scroll, "connect:" + from);
+        contentRt.pivot = new Vector2(0,1); contentRt.anchoredPosition = Vector2.zero;
+        if (scroll)
+        {
+            scroll.content = contentRt;
+            BindScrollPosition(scroll, "connect:" + from);
+        }
+
+        var rowImgs = new Image[opts.Count];
+        var checkMarks = new GameObject[opts.Count];
+        var pathLabels = new Text[opts.Count];
+        var pathContentRts = new RectTransform[opts.Count];
+        var routePrefixes = new string[opts.Count];
+
+        void ApplyRowLabel(int idx, string suffix)
+        {
+            if (idx < 0 || idx >= opts.Count || !pathLabels[idx]) return;
+            pathLabels[idx].text = DisplayPlaceAliases(routePrefixes[idx] + suffix);
+            float w = Mathf.Max(pathViewW, Mathf.Ceil(pathLabels[idx].preferredWidth) + 12f);
+            pathLabels[idx].rectTransform.sizeDelta = new Vector2(w, 34);
+            if (pathContentRts[idx]) pathContentRts[idx].sizeDelta = new Vector2(w, 34);
+        }
+
+        int GetOrComputeGain(int idx)
+        {
+            if (connectGainCache.TryGetValue(idx, out int cached)) return cached;
+            var o = opts[idx];
+            int g = Mathf.RoundToInt(EstimateNetworkDeltaFast(o.line, o.isNew ? snapshot : o.path, o.isNew));
+            connectGainCache[idx] = g;
+            return g;
+        }
+
+        void SelectConnectRow(int nextIdx, bool playSfx)
+        {
+            if (nextIdx < 0 || nextIdx >= opts.Count) return;
+            if (playSfx) PlayClickSfx();
+            int prevIdx = curSelected;
+            curSelected = nextIdx;
+            var curOpt = opts[curSelected];
+            if (headingTxt)
+                headingTxt.text = DisplayPlaceAliases(curOpt.isNew ? ("开通 " + nextLineId + " 号线") : ("延长 " + curOpt.line.name));
+
+            for (int r = 0; r < opts.Count; r++)
+            {
+                bool active = r == curSelected;
+                if (rowImgs[r]) rowImgs[r].color = active ? new Color(0.985f, 0.948f, 0.862f, 1f) : new Color(1, 1, 1, 0.94f);
+                if (checkMarks[r]) checkMarks[r].SetActive(active);
+                if (!active && r == prevIdx) ApplyRowLabel(r, " · 选择后查看预计收益");
+            }
+
+            int gain = GetOrComputeGain(curSelected);
+            ApplyRowLabel(curSelected, " · 粗估 " + (gain >= 0 ? "+" : "") + gain + "/天");
+        }
+
         for (int i = 0; i < opts.Count; i++)
         {
             var opt = opts[i]; int k = i;
             var row = Rect("Opt"+i, content.transform, 0, opts.Count * rowStep - (rowH + 5f) - i * rowStep, 872, rowH);
-            Rounded(row, i == selected ? new Color(0.985f,0.948f,0.862f,1f) : new Color(1,1,1,0.94f));
+            Rounded(row, i == curSelected ? new Color(0.985f,0.948f,0.862f,1f) : new Color(1,1,1,0.94f));
+            rowImgs[i] = row.GetComponent<Image>();
             SoftShadow(row);
             Color accent = opt.isNew ? Vermilion : opt.line.color;
-            Img(Rect("Bar", row.transform, 0, 20, 7, 56), accent, spriteRound);
+            var barImg = Img(Rect("Bar", row.transform, 0, 20, 7, 56), accent, spriteRound);
+            barImg.raycastTarget = false;
             string t1 = opt.isNew ? "开通新线路" : ("延长 " + opt.line.name);
             string route = opt.isNew
                 ? (nextLineId + " 号线 · " + RouteEndpointsSummary(snapshot) + " · " + UniqueCount(snapshot) + " 站")
                 : (RouteEndpointsSummary(opt.path ?? opt.line.st) + " · +" + (snapshot.Count - 1) + " 站");
-            int gain = i == selected ? Mathf.RoundToInt(EstimateNetworkDelta(opt.line, opt.isNew ? snapshot : opt.path, opt.isNew)) : 0;
-            string t2 = route + (i == selected ? " · 粗估 " + (gain >= 0 ? "+" : "") + gain + "/天" : " · 选择后查看预计收益");
+            routePrefixes[i] = route;
+            int initGain = i == curSelected ? GetOrComputeGain(i) : 0;
+            string initSuffix = i == curSelected
+                ? (" · 粗估 " + (initGain >= 0 ? "+" : "") + initGain + "/天")
+                : " · 选择后查看预计收益";
             Txt(row.transform, t1, 30, Ink, 28, 50, 520, 38, TextAnchor.MiddleLeft);
             var pathView = Rect("PathViewport", row.transform, 28, 11, pathViewW, 34);
-            var pathHit = Img(pathView, new Color(1, 1, 1, 0.004f));
+            var pathHit = Img(pathView, new Color(1, 1, 1, 0f));
             pathView.AddComponent<RectMask2D>();
             var pathContent = Rect("PathContent", pathView.transform, 0, 0, pathViewW, 34);
             var pathContentRt = pathContent.GetComponent<RectTransform>();
             pathContentRt.anchorMin = new Vector2(0, 0.5f); pathContentRt.anchorMax = new Vector2(0, 0.5f);
             pathContentRt.pivot = new Vector2(0, 0.5f); pathContentRt.anchoredPosition = Vector2.zero;
-            var pathLabel = Txt(pathContent.transform, t2, 23, InkSoft, 0, 0, pathViewW, 34, TextAnchor.MiddleLeft);
+            var pathLabel = Txt(pathContent.transform, route + initSuffix, 23, InkSoft, 0, 0, pathViewW, 34, TextAnchor.MiddleLeft, false);
             pathLabel.horizontalOverflow = HorizontalWrapMode.Overflow;
             pathLabel.verticalOverflow = VerticalWrapMode.Overflow;
             pathLabel.raycastTarget = false;
+            pathLabels[i] = pathLabel;
+            pathContentRts[i] = pathContentRt;
             float pathW = Mathf.Max(pathViewW, Mathf.Ceil(pathLabel.preferredWidth) + 12f);
             pathLabel.rectTransform.sizeDelta = new Vector2(pathW, 34);
             pathContentRt.sizeDelta = new Vector2(pathW, 34);
@@ -1879,35 +2213,48 @@ public partial class DemoBootstrap : MonoBehaviour
                 pathScroll.viewport = pathView.GetComponent<RectTransform>();
                 pathScroll.content = pathContentRt;
                 var passClick = pathView.AddComponent<ConnectRowPathClick>();
-                passClick.onClick = () => ShowConnectPopup(from, snapshot, cost, k);
+                passClick.onClick = () => SelectConnectRow(k, true);
                 passClick.parentScroll = scroll;
                 passClick.selfScroll = pathScroll;
             }
-            if (i == selected) Txt(row.transform, "✓", 34, Gold, 800, 26, 48, 44, TextAnchor.MiddleCenter);
-            var btn = row.AddComponent<Button>(); btn.targetGraphic = row.GetComponent<Image>();
-            btn.onClick.AddListener(() => ShowConnectPopup(from, snapshot, cost, k));
+            var checkTxt = Txt(row.transform, "✓", 34, Gold, 800, 26, 48, 44, TextAnchor.MiddleCenter);
+            checkMarks[i] = checkTxt.gameObject;
+            checkMarks[i].SetActive(i == curSelected);
+            var btn = row.AddComponent<Button>(); btn.targetGraphic = rowImgs[i];
+            btn.onClick.AddListener(() => SelectConnectRow(k, true));
         }
-        if (opts.Count > 5) scroll.verticalNormalizedPosition = 1f - Mathf.Clamp01((float)selected / (opts.Count - 5));
+        if (needVScroll) scroll.verticalNormalizedPosition = 1f - Mathf.Clamp01((float)curSelected / (opts.Count - 5));
         var ok = Btn(p.transform, "Ok", "确 认", 28, 24, 22, 422, 84, Vermilion, () => {
-            if (sel.isNew) CommitNewLine(snapshot, cost);
-            else CommitExtend(sel.line, sel.path, snapshot, cost);
+            var chosen = opts[curSelected];
+            if (chosen.isNew) CommitNewLine(snapshot, cost);
+            else CommitExtend(chosen.line, chosen.path, snapshot, cost);
         });
         TInk(ok, Color.white);
         var no = Btn(p.transform, "No", "取 消", 28, 474, 22, 422, 84, new Color(0.92f,0.89f,0.83f), () => { ClosePanel(); CancelDraft(); });
         TInk(no, Ink);
     }
-    sealed class ConnectRowPathClick : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, IDragHandler, IEndDragHandler
+    sealed class ConnectRowPathClick : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IBeginDragHandler, IDragHandler, IEndDragHandler
     {
         public Action onClick;
         public ScrollRect parentScroll, selfScroll;
-        bool routeToParent;
-        public void OnPointerClick(PointerEventData e) { if (!e.dragging) onClick?.Invoke(); }
+        bool routeToParent, dragged;
+        Vector2 downPos;
+        public void OnPointerDown(PointerEventData e) { downPos = e.position; dragged = false; }
+        public void OnPointerUp(PointerEventData e)
+        {
+            if (!dragged && Vector2.Distance(e.position, downPos) <= 18f) onClick?.Invoke();
+        }
         public void OnBeginDrag(PointerEventData e)
         {
+            if (Vector2.Distance(e.position, downPos) > 18f) dragged = true;
             routeToParent = parentScroll && Mathf.Abs(e.delta.y) > Mathf.Abs(e.delta.x);
             if (routeToParent) { if (selfScroll) selfScroll.enabled = false; parentScroll.OnBeginDrag(e); }
         }
-        public void OnDrag(PointerEventData e) { if (routeToParent && parentScroll) parentScroll.OnDrag(e); }
+        public void OnDrag(PointerEventData e)
+        {
+            if (Vector2.Distance(e.position, downPos) > 18f) dragged = true;
+            if (routeToParent && parentScroll) parentScroll.OnDrag(e);
+        }
         public void OnEndDrag(PointerEventData e)
         {
             if (routeToParent && parentScroll) parentScroll.OnEndDrag(e);
@@ -1962,7 +2309,8 @@ public partial class DemoBootstrap : MonoBehaviour
                 int la = l.st[k], lb = l.st[k + 1];
                 string sr = SegmentRegion(la, lb);
                 if (string.IsNullOrEmpty(sr)) continue;
-                int regCode = sr == "月之亮面" ? 1 : sr == "月背" ? 2 : 3;
+                var regSpec = GetRegionSpec(sr);
+                int regCode = regSpec != null ? regSpec.order + 1 : 9;
                 int lo = Mathf.Min(la, lb), hi = Mathf.Max(la, lb);
                 long key = ((long)regCode << 40) | ((long)lo << 20) | (uint)hi;
                 if (!sharedSegMap.TryGetValue(key, out var list)) sharedSegMap[key] = list = new List<int>();
@@ -1974,7 +2322,8 @@ public partial class DemoBootstrap : MonoBehaviour
         Vector2 ComputeCachedOffset(int lineId, int a, int b, string sr)
         {
             if (string.IsNullOrEmpty(sr)) return Vector2.zero;
-            int regCode = sr == "月之亮面" ? 1 : sr == "月背" ? 2 : 3;
+            var regSpec = GetRegionSpec(sr);
+            int regCode = regSpec != null ? regSpec.order + 1 : 9;
             int lo = Mathf.Min(a, b), hi = Mathf.Max(a, b);
             long key = ((long)regCode << 40) | ((long)lo << 20) | (uint)hi;
             if (!sharedSegMap.TryGetValue(key, out var list) || list.Count <= 1) return Vector2.zero;
@@ -2041,30 +2390,18 @@ public partial class DemoBootstrap : MonoBehaviour
     GameObject CreateTrainVisual(Line line, int carIndex)
     {
         int skin = GetLineSkin(line);
-        Color trim = skin >= 0 ? LineSkinTrimColors[skin] : Color.Lerp(line.color, Color.white, 0.40f);
-        // 星际列车车厢（硬朗修长造型，规避肉感胶囊）
-        var t = Rect($"Train{line.id}_{carIndex}", trainLayer, 0, 0, 34, 14);
+        Color trim = skin >= 0 ? LineSkinTrimColors[skin] : Color.Lerp(line.color, Color.white, 0.55f);
+        // 俯视角流线型小星舰（舰首朝 +X 方向）
+        var t = Rect($"Train{line.id}_{carIndex}", trainLayer, 0, 0, 38, 28);
         t.GetComponent<RectTransform>().pivot = new Vector2(0.5f, 0.5f);
         t.transform.localScale = Vector3.one * overlayZoom;
-        var chassis = Img(t, new Color(0.18f, 0.16f, 0.13f, 0.95f), spriteWhite); chassis.raycastTarget = false;
-        var body = Rect("Body", t.transform, 1, 1, 32, 12);
-        var bimg = Img(body, line.color, spriteWhite); bimg.raycastTarget = false;
-        if (skin >= 0)
-        {
-            Color stripeColor = SkinCategory(skin) == 3 ? new Color(1f, 0.88f, 0.45f, 0.95f) : trim;
-            Img(Rect("StripeL", body.transform, 1, 0.8f, 25, 1.8f), stripeColor, spriteWhite).raycastTarget = false;
-            Img(Rect("StripeR", body.transform, 1, 9.4f, 25, 1.8f), stripeColor, spriteWhite).raycastTarget = false;
-        }
-        var roof = Rect("Roof", body.transform, 3, 2, 22, 8);
-        Img(roof, trim, spriteWhite).raycastTarget = false;
-        var ac = Rect("AC", roof.transform, 8, 1, 8, 6);
-        Img(ac, new Color(0.22f, 0.20f, 0.18f, 0.85f), spriteWhite).raycastTarget = false;
-        var cab = Rect("Cab", body.transform, 27, 1, 3.5f, 10);
-        Img(cab, new Color(0.20f, 0.40f, 0.55f, 0.95f), spriteWhite).raycastTarget = false;
-        var lightL = Rect("LightL", body.transform, 30.5f, 1.5f, 1.5f, 2.5f);
-        Img(lightL, new Color(1f, 0.95f, 0.45f, 1f), spriteWhite).raycastTarget = false;
-        var lightR = Rect("LightR", body.transform, 30.5f, 8f, 1.5f, 2.5f);
-        Img(lightR, new Color(1f, 0.95f, 0.45f, 1f), spriteWhite).raycastTarget = false;
+        var hull = Img(t, line.color, spriteStarship); hull.raycastTarget = false;
+        var wingTrim = Img(Rect("WingTrim", t.transform, 4, 4, 28, 20), trim, spriteStarship);
+        wingTrim.raycastTarget = false;
+        var cockpit = Img(Rect("Cockpit", t.transform, 19, 10, 10, 8), new Color(0.75f, 0.94f, 1f, 0.95f), spriteCircle);
+        cockpit.raycastTarget = false;
+        var thruster = Img(Rect("Thruster", t.transform, 0, 10, 7, 8), new Color(0.45f, 0.92f, 1f, 0.95f), spriteCircle);
+        thruster.raycastTarget = false;
         return t;
     }
 
@@ -2248,11 +2585,11 @@ public partial class DemoBootstrap : MonoBehaviour
     void FocusMapOnStation(int idx)
     {
         if (idx < 0 || idx >= stations.Count || !mapRect) return;
-        string targetReg = stations[idx].region;
+        string targetReg = stations[idx].ServesRegion(currentRegion) ? currentRegion : stations[idx].region;
         if (!string.IsNullOrEmpty(targetReg) && targetReg != currentRegion && RegionUnlocked(targetReg))
             SwitchRegion(targetReg);
         if (!mapWheelZoom) mapWheelZoom = mapRect.GetComponent<MapWheelZoom>();
-        float minFocused = currentRegion == "火星" ? 2.1f : 1.45f;
+        float minFocused = IsMarsRegion(currentRegion) ? 2.1f : 1.45f;
         float maxZ = mapWheelZoom != null && mapWheelZoom.maxZoom != null ? mapWheelZoom.maxZoom() : 2.5f;
         float scale = Mathf.Clamp(Mathf.Max(mapRect.localScale.x, minFocused), 1f, maxZ);
         mapRect.localScale = Vector3.one * scale;
@@ -2278,20 +2615,21 @@ public partial class DemoBootstrap : MonoBehaviour
         zoomRects.Add(new ZoomRect(rt, width));
         return go;
     }
-    bool StationInRegion(int i, string region) { return stations[i].region == region || (stations[i].portal && (stations[i].portalTo == region || stations[i].portalTo2 == region)); }
+    bool StationInRegion(int i, string region) { return i >= 0 && i < stations.Count && stations[i].ServesRegion(region); }
     string SegmentRegion(int a, int b)
     {
-        if (StationInRegion(a, "月之亮面") && StationInRegion(b, "月之亮面")) return "月之亮面";
-        if (StationInRegion(a, "月背") && StationInRegion(b, "月背")) return "月背";
-        if (StationInRegion(a, "火星") && StationInRegion(b, "火星")) return "火星";
+        if (StationInRegion(a, currentRegion) && StationInRegion(b, currentRegion)) return currentRegion;
+        for (int i = 0; i < RegionOrder.Length; i++)
+        {
+            string reg = RegionOrder[i];
+            if (StationInRegion(a, reg) && StationInRegion(b, reg)) return reg;
+        }
         return null;
     }
     Vector2 PosInRegion(int i, string region)
     {
-        var s = stations[i]; bool other = s.portal && s.portalTo == region;
-        bool third = s.portal && s.portalTo2 == region;
-        return new Vector2(MAP_X + (third ? s.thirdX : other ? s.otherX : s.x)*MAP_W,
-            MAP_Y + (third ? s.thirdY : other ? s.otherY : s.y)*MAP_H);
+        Vector2 p = stations[i].GetNormalizedPos(region);
+        return new Vector2(MAP_X + p.x * MAP_W, MAP_Y + p.y * MAP_H);
     }
     Vector2 Pos(int i) { return PosInRegion(i, currentRegion); }
 
@@ -2315,6 +2653,7 @@ public partial class DemoBootstrap : MonoBehaviour
         TickClock(dt);
         TickStationTraffic(dt);
         TickStory();
+        TickNarrativeBubbles();
         TickResearch(dt);
         TickProgressiveForecasts();
         TickFloaters(dt);
@@ -2359,11 +2698,13 @@ public partial class DemoBootstrap : MonoBehaviour
             TickDragEdgeAutoPan(dt);
 
             Vector2 local; RectTransformUtility.ScreenPointToLocalPointInRectangle(mapRect, Input.mousePosition, null, out local);
-            float snapR = (currentRegion == "火星" || currentRegion == "月背") ? 44f / Mathf.Max(1f, mapRect.localScale.x) : 44f;
+            float snapR = 48f / Mathf.Max(0.45f, mapRect.localScale.x);
             int near = NearestStationAny(local, snapR);
             bool backtracked = HandleDraftRevisit(near);
             int hov = near >= 0 && !draft.Contains(near) && !IsLoop(draft) ? near : -1;
-            Vector2 end = backtracked ? Pos(dragFrom) : (hov >= 0 ? Pos(hov) : local);
+            if (!backtracked && near >= 0 && near != dragFrom && IsLoop(draft))
+                ShowConnectHint("环线已闭合，松手确认开通（移回上一站可撤销闭合）");
+            Vector2 end = backtracked ? Pos(dragFrom) : (hov >= 0 ? Pos(hov) : (IsLoop(draft) && near == draft[0] ? Pos(draft[0]) : local));
             var p1 = Pos(dragFrom); var d = end - p1;
             previewImg.rectTransform.anchoredPosition = p1;
             previewImg.rectTransform.sizeDelta = new Vector2(Mathf.Max(1, d.magnitude), 14.5f * overlayZoom);
@@ -2468,7 +2809,7 @@ public partial class DemoBootstrap : MonoBehaviour
         }
     }
 
-    // 只吸附当前真正显示出来的站点；吸附半径按级别给，小点不该有大门户的吸附范围
+    // 只吸附当前真正显示出来的港点；吸附半径按级别给，小点不该有大门户的吸附范围
     bool IsStationShown(int i)
     {
         if (i >= 0 && i < stationVisible.Length) return stationVisible[i];
@@ -2496,7 +2837,9 @@ public partial class DemoBootstrap : MonoBehaviour
         int best = -1; float bd = float.MaxValue;
         for (int i = 0; i < stations.Count; i++)
         {
-            if (!StationInRegion(i, currentRegion) || !IsStationShown(i)) continue;
+            if (!StationInRegion(i, currentRegion)) continue;
+            bool isLoopOrigin = draft.Count >= 3 && i == draft[0];
+            if (!IsStationShown(i) && !isLoopOrigin) continue;
             float d = Vector2.Distance(p, Pos(i));
             if (d < SnapRadius(i, radius) && d < bd) { bd = d; best = i; }
         }
@@ -2531,7 +2874,10 @@ public partial class DemoBootstrap : MonoBehaviour
     }
     bool HandleDraftRevisit(int near)
     {
-        if (near < 0 || near == dragFrom || !draft.Contains(near)) return false;
+        if (near < 0 || !draft.Contains(near)) return false;
+        // 已成环时停留在起点不再把整条草稿清空，避免滑过/多停1帧导致环线蒸发
+        if (IsLoop(draft) && near == draft[0]) return false;
+        if (near == dragFrom) return false;
         if (near == draft[0] && draft.Count >= 3 && !IsLoop(draft))
         {
             float loopNeed = DraftPairNeedScore(dragFrom, near);
@@ -2654,7 +3000,7 @@ public partial class DemoBootstrap : MonoBehaviour
             bool loop = IsLoop(line.st);
             float period = loop ? 1f : 2f;
             lv.t = Mathf.Repeat(lv.t, period);
-            // 飘字只反馈已连续入账的票款，不再重复改变余额。
+            // 飘字只反馈已连续入账的星票款，不再重复改变余额。
             if (traffic != null) lv.credit += TrafficRevenue(line, traffic) * dt / 60f;
 
             int segCount = lv.cachedSegs.Count;
@@ -2918,7 +3264,8 @@ public partial class DemoBootstrap : MonoBehaviour
         }
         else
         {
-            ClosePanel(true);
+            bool preserveDraft = effectiveKey.StartsWith("connect_opts_");
+            if (activePanel != null || scrim != null || panelShadow != null) ClosePanel(true, preserveDraft);
             scrim = Rect(isPopup ? "Scrim" : "BubbleDismiss", root, 0, 0, RootW, RootH);
             var srt = scrim.GetComponent<RectTransform>();
             srt.anchorMin = Vector2.zero; srt.anchorMax = Vector2.one;
@@ -2963,13 +3310,14 @@ public partial class DemoBootstrap : MonoBehaviour
         return activePanel;
     }
 
-    void ClosePanel() { ClosePanel(false); }
+    void ClosePanel() { ClosePanel(false, false); }
 
-    void ClosePanel(bool force)
+    void ClosePanel(bool force, bool preserveDraft = false)
     {
         CaptureScrollPositions();
         if (!force && Time.frameCount <= panelOpenedFrame) return;
         StopBubbleAnim();
+        StopConnectGainEstimate();
         if (!force && activePanel) { PlayCloseSfx(); suppressNextBtnClickSfx = false; }
         if (activePanel) Destroy(activePanel);
         if (scrim) Destroy(scrim);
@@ -2979,7 +3327,7 @@ public partial class DemoBootstrap : MonoBehaviour
         panelOpenedFrame = -1;
         panelForecastRefresh = null;
         ClearStationOdArcs();
-        if (!dragging && draft.Count > 0) CancelDraft();
+        if (!preserveDraft && !dragging && draft.Count > 0) CancelDraft();
         var onClosed = panelClosed; panelClosed = null;
         onClosed?.Invoke();
     }
@@ -2989,7 +3337,7 @@ public partial class DemoBootstrap : MonoBehaviour
     // ---------- scenery ----------
     void CheckSceneryOnLine(List<int> changedPath)
     {
-        // 解锁以绑定车站是否被任一线路连通为准；解锁后不会因拆线撤销。
+        // 解锁以绑定星港是否被任一线路连通为准；解锁后不会因拆线撤销。
         bool changed = false;
         foreach (var sc in sceneries)
         {
@@ -3027,7 +3375,7 @@ public partial class DemoBootstrap : MonoBehaviour
         RecalcIncome(); RefreshHUD(); RefreshPendingBadge();
         PlayCoinSfx(); TriggerHaptic(18);
         SpawnConfettiBurst(new Vector2(RootW * 0.5f, RootH * 0.52f), Sakura, Gold, 14);
-        QueueStory("first_scenery", "窗外的第一处风景", "列车靠站，车窗外的风景被旅客拍成了明信片。\n你忽然发现，大家乘车去的不只是下一站，也是自己期待已久的地方。");
+        QueueStory("first_scenery", "窗外的第一处风景", "星车编队靠站，车窗外的风景被旅客拍成了明信片。\n你忽然发现，大家乘车去的不只是下一站，也是自己期待已久的地方。");
         EndUndo();
         return true;
     }
@@ -3038,13 +3386,35 @@ public partial class DemoBootstrap : MonoBehaviour
         if (toastGo) Destroy(toastGo);
         GetSafeMarginsInRoot(out float safeL, out float safeR, out _, out _);
         float safeW = Mathf.Max(320f, RootW - safeL - safeR);
+        float maxToastW = safeW * 0.75f;
+        float prefW = 0f;
+        if (font != null && !string.IsNullOrEmpty(msg))
+        {
+            var tg = new TextGenerator();
+            var ts = new TextGenerationSettings
+            {
+                font = font,
+                fontSize = ScaledFontSize(24),
+                color = Color.white,
+                scaleFactor = 1,
+                lineSpacing = 1,
+                richText = true,
+                horizontalOverflow = HorizontalWrapMode.Overflow,
+                verticalOverflow = VerticalWrapMode.Overflow
+            };
+            prefW = tg.GetPreferredWidth(DisplayPlaceAliases(msg), ts);
+        }
+        float toastW = Mathf.Clamp(prefW + 52f, 240f, maxToastW);
+        float textW = Mathf.Max(160f, toastW - 36f);
+        float textH = Mathf.Max(48f, MeasureTextHeight(msg, 24, textW) + 8f);
+        float toastH = Mathf.Max(64f, textH + 16f);
         float barY = topBarGo ? topBarGo.GetComponent<RectTransform>().anchoredPosition.y : (RootH - 310f);
-        float toastY = barY - (zoomNotice && zoomNotice.activeSelf ? 102f : 38f);
-        toastGo = Rect("Toast", root, safeL + (safeW - 620f) * 0.5f, toastY, 620, 68);
+        float toastY = barY - (zoomNotice && zoomNotice.activeSelf ? 102f : 38f) - (toastH - 68f);
+        toastGo = Rect("Toast", root, safeL + (safeW - toastW) * 0.5f, toastY, toastW, toastH);
         var toastCanvas = toastGo.AddComponent<Canvas>(); toastCanvas.overrideSorting = true; toastCanvas.sortingOrder = 200;
         Rounded(toastGo, new Color(0.17f,0.15f,0.13f,0.88f)); SoftShadow(toastGo);
         toastGo.GetComponent<Image>().raycastTarget = false;
-        toastTxt = Txt(toastGo.transform, msg, 24, new Color(1,0.97f,0.9f), 16, 8, 588, 52, TextAnchor.MiddleCenter);
+        toastTxt = Txt(toastGo.transform, msg, 24, new Color(1,0.97f,0.9f), 18f, 8f, textW, textH, TextAnchor.MiddleCenter);
         toastTimer = 2.2f;
     }
     void ShowForecastDelayToast()
@@ -3160,16 +3530,16 @@ public partial class DemoBootstrap : MonoBehaviour
         TInk(btn1, Color.white);
         AttachAdBadge(card1.transform, 622f, 88f);
 
-        // 功能 2：一键为高拥堵线路增班（不调度机车）（AD）
+        // 功能 2：一键为高拥堵线路增班（不调度飞车）（AD）
         var card2 = Rect("BoostHotLineCard", p.transform, 28f, 58f, 704f, 124f);
         Rounded(card2, Paper2);
         Txt(card2.transform, "一键高拥堵线路增班", 26, Ink, 20f, 66f, 430f, 40f, TextAnchor.MiddleLeft);
-        string sub2 = hotLines.Count > 0 ? $"当前 {hotLines.Count} 条高拥堵线路有空闲配车可增班" : "暂无可增班的高拥堵线路（不调度机车）";
+        string sub2 = hotLines.Count > 0 ? $"当前 {hotLines.Count} 条高拥堵线路有空闲配车可增班" : "暂无可增班的高拥堵线路（不调度飞车）";
         Txt(card2.transform, sub2, 20, InkSoft, 20f, 18f, 450f, 36f, TextAnchor.MiddleLeft);
         var btn2 = Btn(card2.transform, "BtnBoostHot", hotLines.Count > 0 ? "立即增班" : "暂无目标", 23, 494f, 24f, 190f, 76f,
             hotLines.Count > 0 ? Indigo : new Color(0.75f, 0.72f, 0.68f), () =>
             {
-                if (hotLines.Count == 0) { Toast("暂无可增班的高拥堵线路（不调度机车）"); return; }
+                if (hotLines.Count == 0) { Toast("暂无可增班的高拥堵线路（不调度飞车）"); return; }
                 ClosePanel(true);
                 RequestTapTapRewardedAd("quick_boost_congested_lines", "一键高拥堵线路增班", () =>
                 {
@@ -3214,20 +3584,109 @@ public partial class DemoBootstrap : MonoBehaviour
         return im;
     }
     void Rounded(GameObject go, Color c) { var im = Img(go, c, spriteRound); im.type = Image.Type.Sliced; }
-    Text Txt(Transform p, string s, int size, Color c, float x, float y, float w, float h, TextAnchor a)
+    static bool IsNoLineStartPunct(char c)
+    {
+        return c == '，' || c == '。' || c == '！' || c == '？' || c == '；' || c == '：' || c == '、'
+            || c == '”' || c == '’' || c == '》' || c == '）' || c == '】' || c == '…' || c == '～' || c == '·'
+            || c == ',' || c == '.' || c == '!' || c == '?' || c == ';' || c == ':' || c == ')' || c == ']' || c == '"';
+    }
+
+    string FormatTypographyText(string raw, int size, float width, out int adjustedScaledSize, bool allowSingleLineShrink = true)
+    {
+        int scaled = ScaledFontSize(size);
+        adjustedScaledSize = scaled;
+        string text = DisplayPlaceAliases(raw);
+        if (string.IsNullOrEmpty(text) || font == null || width < 48f) return text;
+        if (text.IndexOf('<') >= 0) return text; // 富文本标签不强行插换行
+
+        var gen = new TextGenerator();
+        var settings = new TextGenerationSettings
+        {
+            font = font,
+            fontSize = scaled,
+            color = Color.white,
+            scaleFactor = 1,
+            lineSpacing = 1,
+            richText = false,
+            generationExtents = new Vector2(width, 0),
+            horizontalOverflow = HorizontalWrapMode.Wrap,
+            verticalOverflow = VerticalWrapMode.Overflow
+        };
+
+        // 规则 2：能不换行就不换行（仅微幅溢出时适当降 1~3px 字号收敛为单行）
+        if (allowSingleLineShrink && text.IndexOf('\n') < 0)
+        {
+            float prefW = gen.GetPreferredWidth(text, settings);
+            if (prefW > width && prefW <= width * 1.18f)
+            {
+                int minScaled = Mathf.Max(14, Mathf.RoundToInt(scaled * 0.80f));
+                for (int fs = scaled - 1; fs >= minScaled; fs--)
+                {
+                    settings.fontSize = fs;
+                    if (gen.GetPreferredWidth(text, settings) <= width)
+                    {
+                        adjustedScaledSize = fs;
+                        return text;
+                    }
+                }
+                settings.fontSize = scaled;
+            }
+        }
+
+        // 规则 1：行首不要是标点符号（中文避头排版）
+        for (int pass = 0; pass < 16; pass++)
+        {
+            gen.Populate(text, settings);
+            var linesInfo = gen.lines;
+            if (linesInfo == null || linesInfo.Count <= 1) break;
+
+            int fixLineStart = -1;
+            for (int li = 1; li < linesInfo.Count; li++)
+            {
+                int startIdx = linesInfo[li].startCharIdx;
+                if (startIdx > 0 && startIdx < text.Length && IsNoLineStartPunct(text[startIdx]))
+                {
+                    fixLineStart = startIdx;
+                    break;
+                }
+            }
+            if (fixLineStart < 0) break;
+
+            int breakPos = fixLineStart - 1;
+            while (breakPos > 0 && IsNoLineStartPunct(text[breakPos])) breakPos--;
+            if (breakPos <= 0 || text[breakPos - 1] == '\n') break;
+            text = text.Substring(0, breakPos) + "\n" + text.Substring(breakPos).TrimStart(' ');
+        }
+        return text;
+    }
+
+    Text Txt(Transform p, string s, int size, Color c, float x, float y, float w, float h, TextAnchor a, bool formatTypography = true)
     {
         var go = Rect("T", p, x, y, w, h);
-        var t = go.AddComponent<Text>(); t.font = font; t.fontSize = ScaledFontSize(size); t.color = c; t.text = DisplayPlaceAliases(s);
+        var t = go.AddComponent<Text>(); t.font = font;
+        if (formatTypography)
+        {
+            bool allowShrink = h >= 20f && !string.IsNullOrEmpty(s);
+            t.text = FormatTypographyText(s, size, w, out int adjSize, allowShrink);
+            t.fontSize = adjSize;
+        }
+        else
+        {
+            t.text = DisplayPlaceAliases(s);
+            t.fontSize = ScaledFontSize(size);
+        }
+        t.color = c;
         t.alignment = a; t.horizontalOverflow = HorizontalWrapMode.Wrap; t.verticalOverflow = VerticalWrapMode.Overflow;
         t.raycastTarget = false;
         return t;
     }
     float MeasureTextHeight(string value, int size, float width)
     {
-        var settings = new TextGenerationSettings { font = font, fontSize = ScaledFontSize(size), color = Color.white,
+        string formatted = FormatTypographyText(value, size, width, out int adjSize, true);
+        var settings = new TextGenerationSettings { font = font, fontSize = adjSize, color = Color.white,
             scaleFactor = 1, lineSpacing = 1, richText = true, generationExtents = new Vector2(width, 0),
             horizontalOverflow = HorizontalWrapMode.Wrap, verticalOverflow = VerticalWrapMode.Overflow };
-        return Mathf.Ceil(new TextGenerator().GetPreferredHeight(DisplayPlaceAliases(value), settings));
+        return Mathf.Ceil(new TextGenerator().GetPreferredHeight(formatted, settings));
     }
     void FitSingleLine(Text text, int size)
     {
@@ -3290,18 +3749,20 @@ public partial class DemoBootstrap : MonoBehaviour
     }
     void TextShadow(Text text, Color color)
     {
-        var shadow = text.gameObject.AddComponent<Shadow>(); shadow.effectColor = color; shadow.enabled = qualityTier > 0;
+        var shadow = text.gameObject.AddComponent<Shadow>(); shadow.effectColor = color; shadow.effectDistance = new Vector2(1.2f, -1.2f); shadow.enabled = qualityTier > 0;
         managedShadows.Add(shadow);
     }
     void Label(RectTransform p, string s, int size, float x, float y, Color c, float w)
     {
         var t = Txt(p, s, size, c, MAP_X + x*MAP_W - w/2, MAP_Y + y*MAP_H, w, 40, TextAnchor.MiddleCenter);
-        TextShadow(t, new Color(1,1,1,0.7f));
+        t.font = stationFont;
+        TextShadow(t, new Color(0f,0f,0f,0.62f));
     }
     void PortalLabel(RectTransform p, float x, float y, string s)
     {
-        var t = Txt(p, s, 22, Vermilion, MAP_X + x*MAP_W - 110, MAP_Y + y*MAP_H, 220, 32, TextAnchor.MiddleCenter);
-        TextShadow(t, new Color(1,1,1,0.85f));
+        var t = Txt(p, s, 22, new Color(1.00f,0.92f,0.62f,1.00f), MAP_X + x*MAP_W - 110, MAP_Y + y*MAP_H, 220, 32, TextAnchor.MiddleCenter);
+        t.font = stationFont;
+        TextShadow(t, new Color(0f,0f,0f,0.62f));
     }
 
     // ---------- sprites / texture ----------
@@ -3343,6 +3804,32 @@ public partial class DemoBootstrap : MonoBehaviour
         }
         t.SetPixels(px); t.Apply(false, true);
         return Sprite.Create(t, new Rect(0, 0, s, s), new Vector2(0.5f, 0.5f), 100f);
+    }
+    Sprite MakeStarshipSprite()
+    {
+        int w = 64, h = 48;
+        var t = new Texture2D(w, h, TextureFormat.RGBA32, false);
+        t.wrapMode = TextureWrapMode.Clamp; t.filterMode = FilterMode.Bilinear;
+        var px = new Color[w * h];
+        // 俯视角流线型三角翼星舰（舰首朝右 +X）
+        for (int y = 0; y < h; y++)
+        {
+            float ny = Mathf.Abs((y - (h - 1) * 0.5f) / (h * 0.5f)); // 0=中轴, 1=上下边缘
+            for (int x = 0; x < w; x++)
+            {
+                float nx = x / (float)(w - 1); // 0=尾部, 1=舰首
+                float halfSpan;
+                if (nx < 0.14f) halfSpan = Mathf.Lerp(0.45f, 0.92f, nx / 0.14f);
+                else if (nx < 0.38f) halfSpan = Mathf.Lerp(0.92f, 0.52f, (nx - 0.14f) / 0.24f);
+                else halfSpan = Mathf.Lerp(0.52f, 0.04f, (nx - 0.38f) / 0.62f);
+                // 尾部推进器凹槽
+                if (nx < 0.10f && ny < 0.28f) halfSpan = -1f;
+                float a = halfSpan > 0f ? Mathf.Clamp01((halfSpan - ny) * 14f) : 0f;
+                px[y * w + x] = new Color(1f, 1f, 1f, a);
+            }
+        }
+        t.SetPixels(px); t.Apply(false, true);
+        return Sprite.Create(t, new Rect(0, 0, w, h), new Vector2(0.5f, 0.5f), 100f);
     }
     Sprite MakeRing(int s, float th)
     {
@@ -3455,9 +3942,9 @@ public partial class DemoBootstrap : MonoBehaviour
             cardBg = new Color(0.992f, 0.982f, 0.955f, 0.96f), headerBg = new Color(0.952f, 0.922f, 0.870f),
             ink = new Color(0.184f, 0.165f, 0.149f), inkSoft = new Color(0.42f, 0.39f, 0.35f),
             indigo = new Color(0.231f, 0.353f, 0.549f), matcha = new Color(0.435f, 0.627f, 0.353f),
-            sea = new Color(0.663f, 0.788f, 0.808f), mapTint = Color.white,
-            fade = new Color(0.985f, 0.97f, 0.93f, 0.90f),
-            backdropTop = new Color(0.74f, 0.86f, 0.87f, 1f), backdropBottom = new Color(0.52f, 0.70f, 0.77f, 1f)
+            sea = new Color(0.16f, 0.19f, 0.25f), mapTint = new Color(0.84f, 0.87f, 0.91f, 1f),
+            fade = new Color(0.16f, 0.19f, 0.25f, 0.90f),
+            backdropTop = new Color(0.14f, 0.17f, 0.23f, 1f), backdropBottom = new Color(0.09f, 0.11f, 0.16f, 1f)
         },
         new ThemeSpec {
             name = "工程蓝图", shortName = "蓝图", subtitle = "基建晒图 · 普鲁士蓝制图网格，硬核规划控最爱",
@@ -3555,9 +4042,9 @@ public partial class DemoBootstrap : MonoBehaviour
             var pi = paperBgGo.GetComponent<Image>();
             if (pi) pi.color = spec.sea;
         }
-        if (hkMapRaw) hkMapRaw.color = spec.mapTint;
-        if (macauMapRaw) macauMapRaw.color = spec.mapTint;
-        if (guangdongMapRaw) guangdongMapRaw.color = spec.mapTint;
+        foreach (var raw in regionMapRaws.Values)
+            if (raw) raw.color = spec.mapTint;
+        if (planetBackdropRaw) planetBackdropRaw.color = spec.mapTint;
         if (topFadeImg) topFadeImg.color = new Color(spec.fade.r, spec.fade.g, spec.fade.b, 0.92f);
         if (botFadeImg) botFadeImg.color = new Color(spec.fade.r, spec.fade.g, spec.fade.b, 0.85f);
         if (mapEdgeFeathers != null)
@@ -3572,12 +4059,11 @@ public partial class DemoBootstrap : MonoBehaviour
     }
     void RefreshMapThemeLabels()
     {
-        bool neon = IsNeonThemeActive();
-        Color lblColor = neon ? new Color(0.95f, 0.98f, 1.00f, 0.98f) : new Color(0.16f, 0.14f, 0.11f, 0.96f);
-        Color lblShadow = neon ? new Color(0.03f, 0.04f, 0.16f, 0.94f) : new Color(0.99f, 0.98f, 0.94f, 0.95f);
-        Color dstColor = neon ? new Color(1.00f, 0.62f, 0.86f, 0.96f) : new Color(0.38f, 0.35f, 0.31f, 0.90f);
-        Color dstShadow = neon ? new Color(0.03f, 0.04f, 0.16f, 0.94f) : new Color(1f, 0.99f, 0.96f, 0.95f);
-        Color leaderColor = neon ? new Color(0.45f, 0.88f, 1.00f, 0.45f) : new Color(0.15f, 0.14f, 0.13f, 0.32f);
+        Color lblColor = Color.white;
+        Color lblShadow = new Color(0f, 0f, 0f, 0.55f);
+        Color dstColor = new Color(1.00f, 0.92f, 0.62f, 1.00f);
+        Color dstShadow = new Color(0f, 0f, 0f, 0.55f);
+        Color leaderColor = new Color(1f, 1f, 1f, 0.40f);
         foreach (var kv in stationLabels)
         {
             if (!kv.Value) continue;
@@ -3715,11 +4201,11 @@ public partial class DemoBootstrap : MonoBehaviour
     {
         switch (skin)
         {
-            case 0: case 1: case 6: return 0; // 观光专列
+            case 0: case 1: case 6: return 0; // 观光专航
             case 2: case 4: case 8: return 1; // 干线急行
-            case 3: case 9: case 10: return 2; // 轻轨节能
+            case 3: case 9: case 10: return 2; // 星轨节能
             case 5: case 7: case 14: return 3; // 星夜守候
-            case 11: case 12: case 13: return 4; // 重载编组
+            case 11: case 12: case 13: return 4; // 重载编队
             default: return -1;
         }
     }
@@ -3727,11 +4213,11 @@ public partial class DemoBootstrap : MonoBehaviour
     {
         switch (SkinCategory(skin))
         {
-            case 0: return "观光专列";
+            case 0: return "观光专航";
             case 1: return "干线急行";
-            case 2: return "轻轨节能";
+            case 2: return "星轨节能";
             case 3: return "星夜守候";
-            case 4: return "重载编组";
+            case 4: return "重载编队";
             default: return "标准涂装";
         }
     }
@@ -3739,7 +4225,7 @@ public partial class DemoBootstrap : MonoBehaviour
     {
         switch (SkinCategory(skin))
         {
-            case 0: return "票款收入 +6%";
+            case 0: return "星票款收入 +6%";
             case 1: return "速度 +8% · 轨维 +4%";
             case 2: return "轨道维护 -12%";
             case 3: return "机维 -10% · 夜间再降 10%";
@@ -3754,17 +4240,17 @@ public partial class DemoBootstrap : MonoBehaviour
     const int BondDailyPayment = 280;
     const int BondEarlyPayPerDay = 265;
 
-    static readonly string[] CompanySealChars = { "轮", "海", "山", "茗", "星", "金", "御", "龙" };
-    static readonly string[] CompanySealNames = { "星轨初心", "静海潮声", "南溟峻岳", "星港茗香", "深空星轨", "鎏金枢纽", "太阳系御玺", "鎏金龙印" };
+    static readonly string[] CompanySealChars = { "星", "月", "火", "宙", "航", "轨", "穹", "辰" };
+    static readonly string[] CompanySealNames = { "星轨初心", "静海潮声", "奥林匹斯峰", "月背静默", "深空星轨", "鎏金星门", "太阳系星徽", "星穹印记" };
     static readonly string[] CompanyPolicyNames = { "均衡发展", "惠民扩容", "精益运维", "文旅专线" };
     static readonly string[] CompanyPolicyDescs =
     {
         "稳步扩网，全网收支无额外增减",
-        "客流 +12% · 开站费 -15% · 票款 -5%",
-        "车/轨维护费 -12% · 全队车速 +10%",
-        "名胜客流 +35% · 名胜线票款 +10% · 享景点日红利"
+        "客流 +12% · 开港费 -15% · 星票款 -5%",
+        "舰/轨维护费 -12% · 全队航速 +10%",
+        "名胜客流 +35% · 名胜线星票款 +10% · 享景点日红利"
     };
-    static readonly string[] StationFacilityNames = { "未开发空地", "站厅便利店", "站前商业街", "枢纽都会广场" };
+    static readonly string[] StationFacilityNames = { "未开发空地", "星港补给站", "星港前商业街", "枢纽星城广场" };
     static readonly int[] StationFacilityCosts = { 3000, 24000, 160000, 0 };
     static readonly int[] StationFacilityRents = { 0, 180, 1200, 6500 };
     static readonly float[] StationFacilityDemandMults = { 1f, 1.25f, 1.75f, 2.60f };
@@ -3782,37 +4268,37 @@ public partial class DemoBootstrap : MonoBehaviour
         return HasPartner(1) ? 1f + (mult - 1f) * 1.15f : mult;
     }
 
-    static readonly string[] PartnerNames = { "陈志豪", "阿珍姐", "基建强叔", "林博士", "沈小姐", "何先生", "霍老督办" };
-    static readonly string[] PartnerTitles = { "海湾精算师", "星港商业总监", "工程老总工", "曲速调度总监", "跨境招商官", "深空资本推手", "特聘传奇顾问" };
+    static readonly string[] PartnerNames = { "陆远帆", "艾琳娜", "马库斯", "林微博士", "苏珊娜", "塔克顾问", "霍华德总监" };
+    static readonly string[] PartnerTitles = { "轨道精算师", "星港商业顾问", "深空总工程师", "曲速调度官", "星域贸易官", "联合体资本官", "特聘首席顾问" };
     static readonly string[] PartnerPros =
     {
-        "车辆与轨道维护费 -12%",
-        "站前商业租金 +25%，名胜站客流 +12%",
+        "星舰与轨道维护费 -12%",
+        "星港前商业租金 +25%，名胜站客流 +12%",
         "建线造价 -14%，拆线退款率升至 72%",
-        "全队车速 +12%，线路票款收益 +8%",
+        "全队航速 +12%，线路星票款收益 +8%",
         "全网客流需求 +12%",
-        "债券额度与中标赏金 +15%，开站费 -10%",
-        "客流+10% · 车速+8% · 建线-10% · 维保-10%"
+        "债券额度与中标赏金 +15%，开港费 -10%",
+        "客流+10% · 航速+8% · 建线-10% · 维保-10%"
     };
     static readonly string[] PartnerCons =
     {
-        "新开车站费用 +10%",
-        "全队车辆维护费 +6%",
-        "列车平均速度 -5%",
-        "全队车辆维护费 +10%",
+        "新开星港费用 +10%",
+        "全队星舰维护费 +6%",
+        "星车编队平均速度 -5%",
+        "全队星舰维护费 +10%",
         "全网轨道维护费 +8%",
-        "常规票款收益 -4%",
+        "常规星票款收益 -4%",
         "无负面特质（仅限特聘第 4 席）"
     };
 
-    static readonly string[] EconomyCycleNames = { "常态运营周", "海港商展客流季", "三域文旅嘉年华", "台风梅雨维护周", "基建低息窗口周" };
+    static readonly string[] EconomyCycleNames = { "太阳风平稳期", "氦-3 交割热潮", "地月冲日窗口期", "火星大尘暴季", "星环筑港窗口" };
     static readonly string[] EconomyCycleDescs =
     {
         "全网客流、票价与基建造价处于基准水平",
-        "商贸高峰：全网客流 +16%，票款收益 +8%",
-        "景区大热：名胜站客流 +24%，名胜线票款 +10%",
-        "防汛承压：轨道维护 +15%、客流 -6%，每日补贴 +¥600",
-        "窗口期优惠：开站、铺轨与站前商业造价一律 -15%"
+        "商贸高峰：全网客流 +16%，星票款收益 +8%",
+        "景区大热：名胜站客流 +24%，名胜线星票款 +10%",
+        "尘暴防御：轨道维护 +15%、客流 -6%，每日补贴 +¥600",
+        "窗口期优惠：开港、铺轨与星港前商业造价一律 -15%"
     };
 
     bool IsSealUnlocked(int sealIndex)
@@ -3836,7 +4322,7 @@ public partial class DemoBootstrap : MonoBehaviour
         }
         switch (sealIndex)
         {
-            case 2: return "连通 8 座车站解锁";
+            case 2: return "连通 8 座星港解锁";
             case 3: return "打卡 3 处名胜解锁";
             case 4: return "完成 3 项科技解锁";
             case 5: return "预计日利润达 ¥400 解锁";
@@ -3849,28 +4335,28 @@ public partial class DemoBootstrap : MonoBehaviour
         int connected = DailyConnectedCount();
         int found = FoundCount();
         if (connected >= 128 && found >= 12 && income >= 200000f) return "全星系星轨与深空总署";
-        if (connected >= 114 && income >= 100000f) return "东半球轨道枢密院";
-        if (connected >= 98 && income >= 50000f) return "欧亚大陆桥控股";
+        if (connected >= 114 && income >= 100000f) return "深空轨道最高理事会";
+        if (connected >= 98 && income >= 50000f) return "太阳系跨星域控股";
         if (connected >= 80 && income >= 25000f) return "内太阳系星航局";
-        if (connected >= 62 && found >= 8 && income >= 12000f) return "东亚路网财团";
-        if (connected >= 44 && found >= 6 && income >= 5000f) return "南溟干线联合体";
-        if (connected >= 28 && found >= 4 && income >= 2000f) return "行星际轨道总社";
-        if (connected >= 16 && income >= 600f) return "地月航运社";
-        if (connected >= 8 || lines.Count >= 3) return "城市干线局";
-        return "初创轻轨社";
+        if (connected >= 62 && found >= 8 && income >= 12000f) return "地火航运理事会";
+        if (connected >= 44 && found >= 6 && income >= 5000f) return "火星先驱财团";
+        if (connected >= 28 && found >= 4 && income >= 2000f) return "行星际轨道联合体";
+        if (connected >= 16 && income >= 600f) return "地月航运公司";
+        if (connected >= 8 || lines.Count >= 3) return "星域干线局";
+        return "初创星轨社";
     }
     string NextCompanyRankHint()
     {
         int connected = DailyConnectedCount();
         int found = FoundCount();
-        if (connected < 8 && lines.Count < 3) return "下阶「城市干线局」：连通 8 站或开通 3 条线路";
-        if (connected < 16 || income < 600f) return "下阶「地月航运社」：连通 16 站且日利润 ¥600（解锁第 3 董事席）";
-        if (connected < 28 || found < 4 || income < 2000f) return "下阶「行星际轨道总社」：28 站 · 4 名胜 · 日利润 ¥2,000";
-        if (connected < 44 || found < 6 || income < 5000f) return "下阶「南溟干线联合体」：44 站 · 6 名胜 · 日利润 ¥5,000";
-        if (connected < 62 || found < 8 || income < 12000f) return "下阶「东亚路网财团」：62 站 · 8 名胜 · 日利润 ¥1.2万";
+        if (connected < 8 && lines.Count < 3) return "下阶「星域干线局」：连通 8 站或开通 3 条线路";
+        if (connected < 16 || income < 600f) return "下阶「地月航运公司」：连通 16 站且日利润 ¥600（解锁第 3 理事席）";
+        if (connected < 28 || found < 4 || income < 2000f) return "下阶「行星际轨道联合体」：28 站 · 4 名胜 · 日利润 ¥2,000";
+        if (connected < 44 || found < 6 || income < 5000f) return "下阶「火星先驱财团」：44 站 · 6 名胜 · 日利润 ¥5,000";
+        if (connected < 62 || found < 8 || income < 12000f) return "下阶「地火航运理事会」：62 站 · 8 名胜 · 日利润 ¥1.2万";
         if (connected < 80 || income < 25000f) return "下阶「内太阳系星航局」：80 站 · 日利润 ¥2.5万";
-        if (connected < 98 || income < 50000f) return "下阶「欧亚大陆桥控股」：98 站 · 日利润 ¥5万";
-        if (connected < 114 || income < 100000f) return "下阶「东半球轨道枢密院」：114 站 · 日利润 ¥10万";
+        if (connected < 98 || income < 50000f) return "下阶「太阳系跨星域控股」：98 站 · 日利润 ¥5万";
+        if (connected < 114 || income < 100000f) return "下阶「深空轨道最高理事会」：114 站 · 日利润 ¥10万";
         if (connected < 128 || found < 12 || income < 200000f) return "终阶「全星系星轨与深空总署」：128 站 · 12 名胜 · 日利润 ¥20万";
         return "已加冕「全星系星轨与深空总署」最高荣誉";
     }
@@ -4059,7 +4545,7 @@ public partial class DemoBootstrap : MonoBehaviour
         int pick = (economyCycle + 1 + ((day + DailyConnectedCount()) % (EconomyCycleNames.Length - 1))) % EconomyCycleNames.Length;
         nextEconomyCycle = pick == economyCycle ? (economyCycle + 1) % EconomyCycleNames.Length : pick;
         EnsureCompanyInitialized();
-        Toast("《深空星风周报》本周进入：" + EconomyCycleNames[economyCycle]);
+        QueueWeeklyCycleBubble(economyCycle);
     }
 
     MunicipalContract RollContract(int slotIdx)
@@ -4123,8 +4609,8 @@ public partial class DemoBootstrap : MonoBehaviour
         switch (c.type)
         {
             case 0: return "市政连通扩网工程";
-            case 1: return "站前商业繁华开发";
-            case 2: return "海湾干线盈利冲刺";
+            case 1: return "星港前商业繁华开发";
+            case 2: return "星湾干线盈利冲刺";
             default: return "文旅名胜接驳专线";
         }
     }
@@ -4135,8 +4621,8 @@ public partial class DemoBootstrap : MonoBehaviour
         int cur = ContractCurrentValue(c);
         switch (c.type)
         {
-            case 0: return "较接标新增连通 " + c.targetValue + " 座车站（" + Mathf.Min(cur, c.targetValue) + "/" + c.targetValue + "）";
-            case 1: return "全网累计建成 " + c.targetValue + " 处站前商业（" + Mathf.Min(cur, c.targetValue) + "/" + c.targetValue + "）";
+            case 0: return "较接标新增连通 " + c.targetValue + " 座星港（" + Mathf.Min(cur, c.targetValue) + "/" + c.targetValue + "）";
+            case 1: return "全网累计建成 " + c.targetValue + " 处星港前商业（" + Mathf.Min(cur, c.targetValue) + "/" + c.targetValue + "）";
             case 2: return "全网预计日利润达 ¥" + c.targetValue + "（当前 ¥" + cur + "）";
             default: return "名胜打卡累计达 " + c.targetValue + " 处（" + Mathf.Min(cur, c.targetValue) + "/" + c.targetValue + "）";
         }
@@ -4157,14 +4643,14 @@ public partial class DemoBootstrap : MonoBehaviour
         int profitBonus = Mathf.Clamp(Mathf.RoundToInt(Mathf.Max(0f, income) * 0.4f), 0, 8000);
         if (bondDaysLeft == 0 && !loanOutstanding && income >= 300f)
         {
-            medalName = "零负债稳健总社";
+            medalName = "零负债稳健集团";
             reason = "零坏账高现金流，财务结构稳健";
             grantCoins = 1600 + conn * 50 + profitBonus; grantDiamonds = 6;
         }
         else if (dev >= 4)
         {
             medalName = "星域地产金印";
-            reason = "站前商业已达 " + dev + " 处，客流与物业双轮驱动";
+            reason = "星港前商业已达 " + dev + " 处，客流与物业双轮驱动";
             grantCoins = 1500 + dev * 350 + profitBonus; grantDiamonds = 8;
         }
         else if (found >= 5)
@@ -4176,7 +4662,7 @@ public partial class DemoBootstrap : MonoBehaviour
         else
         {
             medalName = "深空基建先锋局";
-            reason = "全网持续扩张，已连通 " + conn + " 座车站";
+            reason = "全网持续扩张，已连通 " + conn + " 座星港";
             grantCoins = 1200 + conn * 55 + profitBonus; grantDiamonds = 6;
         }
         grantCoins = Mathf.RoundToInt(grantCoins * CoTechAwardMult());

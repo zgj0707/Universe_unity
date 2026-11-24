@@ -14,6 +14,7 @@ public partial class DemoBootstrap
     {
         public string label, region, externalProgress; public double coinsBefore, coinsDelta; public float diamondsBefore, rpBefore, diamondsDelta, rpDelta;
         public int nextId, speed, storyStage; public bool macau, guangdong, loanOutstanding, tutorialSkipped;
+        public List<string> unlockedRegions = new List<string>();
         public List<UndoLine> lines = new List<UndoLine>();
         public int companyPolicy, bondDaysLeft, lastPolicyDay, bondPrincipal, bondDailyDue, bondsRepaid;
         public bool bondSubsidized;
@@ -52,7 +53,7 @@ public partial class DemoBootstrap
     void BeginUndo(string label)
     {
         var state = new UndoState { label=label, region=currentRegion, coinsBefore=coins, diamondsBefore=diamonds, rpBefore=rp, nextId=nextLineId,
-            macau=macauUnlocked, guangdong=guangdongUnlocked, loanOutstanding=loanOutstanding, ownedSkins=new List<int>(ownedLineSkins), speed=timeSpeed,
+            macau=macauUnlocked, guangdong=guangdongUnlocked, loanOutstanding=loanOutstanding, unlockedRegions=new List<string>(unlockedRegions), ownedSkins=new List<int>(ownedLineSkins), speed=timeSpeed,
             storyStage=storyStage, tutorialSkipped=tutorialSkipped,
             levels=new int[stations.Count], built=new bool[stations.Count], closed=new bool[stations.Count], customNames=new string[stations.Count],
             companyPolicy=companyPolicy, bondDaysLeft=bondDaysLeft, lastPolicyDay=lastPolicyDay, bondPrincipal=bondPrincipal, bondDailyDue=bondDailyDue, bondsRepaid=bondsRepaid, bondSubsidized=bondSubsidized, boardPartners=new List<int>(boardPartners),
@@ -135,6 +136,9 @@ public partial class DemoBootstrap
         frozenTraffic.Clear(); foreach (var item in state.frozen) frozenTraffic[item.Key] = item.Value.Copy();
         researchVehicles.Clear(); foreach (var item in state.vehicles) { item.vehicle.lineId=item.lineId; researchVehicles.Add(item.vehicle); }
         macauUnlocked=state.macau; guangdongUnlocked=state.guangdong; loanOutstanding=state.loanOutstanding;
+        unlockedRegions.Clear();
+        if (state.unlockedRegions != null && state.unlockedRegions.Count > 0) unlockedRegions.UnionWith(state.unlockedRegions);
+        else { unlockedRegions.Add("月之亮面"); if (macauUnlocked) unlockedRegions.Add("月背"); if (guangdongUnlocked) unlockedRegions.Add("火星·西半球"); }
         ownedLineSkins.Clear(); foreach (int skin in state.ownedSkins) ownedLineSkins.Add(skin);
         ownedThemes.Clear(); foreach (int theme in state.ownedThemes) ownedThemes.Add(theme);
         ApplyTheme(state.theme, false);

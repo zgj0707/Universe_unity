@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// 地铁图背景底纹绘制器：渐变底色 + 可开关的均匀工程网格。
+/// 城市星轨图背景底纹绘制器：渐变底色 + 可开关的均匀工程网格。
 /// </summary>
 [RequireComponent(typeof(CanvasRenderer))]
 public class MetroBackdropGridGraphic : MaskableGraphic
@@ -68,7 +68,7 @@ public class MetroBackdropGridGraphic : MaskableGraphic
 }
 
 /// <summary>
-/// 地铁图全量线路矢量绘制器：单 DrawCall 批量绘制外描边与彩色线网。
+/// 城市星轨图全量线路矢量绘制器：单 DrawCall 批量绘制外描边与彩色线网。
 /// </summary>
 [RequireComponent(typeof(CanvasRenderer))]
 public class MetroMapGraphic : MaskableGraphic
