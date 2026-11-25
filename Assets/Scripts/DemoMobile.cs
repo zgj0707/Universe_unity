@@ -298,7 +298,7 @@ public partial class DemoBootstrap
             FitSingleLine(lbl, 23);
         }
 
-        AddDropdownOption(0, "随机播放 · 全馆藏轮播（11 首）", bgmPlayMode == 0, () => SetBgmPlayMode(0));
+        AddDropdownOption(0, $"随机播放 · 全馆藏轮播（{BgmCatalog.Length} 首）", bgmPlayMode == 0, () => SetBgmPlayMode(0));
         AddDropdownOption(1, "跟随区域 · 随月面 / 月背 / 火星切换", bgmPlayMode == 2, () => SetBgmPlayMode(2));
         for (int i = 0; i < BgmCatalog.Length; i++)
         {
