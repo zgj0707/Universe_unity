@@ -289,8 +289,8 @@ public static class UniverseVisualAudit
     static void SetRegionUnlockedAndSwitch(DemoBootstrap boot, string region)
     {
         var flags = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public;
-        var f1 = typeof(DemoBootstrap).GetField("macauUnlocked", flags);
-        var f2 = typeof(DemoBootstrap).GetField("guangdongUnlocked", flags);
+        var f1 = typeof(DemoBootstrap).GetField("moonFarUnlocked", flags);
+        var f2 = typeof(DemoBootstrap).GetField("marsWestUnlocked", flags);
         if (f1 != null) f1.SetValue(boot, true);
         if (f2 != null) f2.SetValue(boot, true);
         Invoke(Boot, "SwitchRegion", region);

@@ -48,7 +48,7 @@ public partial class DemoBootstrap
         var home = Btn(pageRoot.transform, "PHome", "主页", 24, 134, 0, 104, 94, CardBg, GoHome);
         TInk(home, Ink); SoftShadow(home.gameObject);
         var heading = Txt(pageRoot.transform, title, 44, Ink, 0, 0, 600, 60, TextAnchor.MiddleLeft);
-        heading.resizeTextForBestFit = true; heading.resizeTextMinSize = 24; heading.resizeTextMaxSize = ScaledFontSize(44);
+        heading.resizeTextForBestFit = true; heading.resizeTextMinSize = 24; heading.resizeTextMaxSize = ScaledFontSize(44); heading.horizontalOverflow = HorizontalWrapMode.Overflow; heading.verticalOverflow = VerticalWrapMode.Truncate;
         RectTransform helpRect = null;
         if (!string.IsNullOrEmpty(help))
         {
@@ -70,7 +70,6 @@ public partial class DemoBootstrap
             PlayPageOpenSfx();
             AnimatePageEnter(pageRoot);
         }
-        SyncRegionalMusic(false);
         return pageContent;
     }
 
@@ -146,10 +145,9 @@ public partial class DemoBootstrap
         var b = pageBack; pageBack = null;
         ClosePage(false);
         if (b != null) b();
-        if (pageRoot == null && sceneryViewer == null) SyncRegionalMusic(false);
     }
     void ClosePage() => ClosePage(true);
-    void ClosePage(bool syncAudio)
+    void ClosePage(bool trimResources)
     {
         refreshHistoryTree = null; incrementalHistoryPage = null;
         pageForecastRefresh = null;
@@ -158,13 +156,12 @@ public partial class DemoBootstrap
         bool hadHeavyPage = pageRoot != null && (activePageKey == "fleet_shop" || activePageKey == "company" || activePageKey == "scenery" || activePageKey == "line_info" || activePageKey == "tech");
         if (pageRoot) Destroy(pageRoot);
         pageRoot = null; pageContentRect = null; activePageKey = "";
-        if (hadHeavyPage && syncAudio) RequestResourceTrim(false);
+        if (hadHeavyPage && trimResources) RequestResourceTrim(false);
         if (pageRoot == null && sceneryViewer == null)
         {
             MarkRingsDirty();
             trainsDirty = true;
         }
-        if (syncAudio) SyncRegionalMusic(false);
     }
     void GoHome()
     {
@@ -243,25 +240,16 @@ public partial class DemoBootstrap
                 : (available ? Color.white : new Color(0.76f, 0.74f, 0.70f, 0.56f));
         }
 
-        // 居中星际铭牌大标题（优先艺术字遮罩，缺省时用高对比大标题）
+        // 居中星际铭牌大标题（优先全彩透明艺术铭牌，缺省时用高对比大标题）
         var titleTex = !string.IsNullOrEmpty(spec.titleMaskResource) ? Resources.Load<Texture2D>(spec.titleMaskResource) : null;
-        float titleW = 660f, titleH = 228f, titleX = (artW - titleW) * 0.5f, titleY = (artH - titleH) * 0.5f + 22f;
+        float titleW = 940f, titleH = 282f, titleX = (artW - titleW) * 0.5f, titleY = (artH - titleH) * 0.5f;
         if (titleTex)
         {
-            Color inkCol = neon ? spec.neonInk : (available ? spec.dayInk : Color.Lerp(spec.dayInk, InkSoft, 0.45f));
-            Color haloCol = neon ? new Color(0.02f, 0.03f, 0.09f, 0.94f) : new Color(0.996f, 0.986f, 0.955f, 0.92f);
-            float[] ox = { -2.5f, 2.5f, 0f, 0f };
-            float[] oy = { 0f, 0f, -2.5f, 2.5f };
-            for (int k = 0; k < 4; k++)
-            {
-                var halo = Rect("TitleHalo_" + k, artClip.transform, titleX + ox[k], titleY + oy[k], titleW, titleH).AddComponent<RawImage>();
-                halo.texture = titleTex; halo.raycastTarget = false;
-                halo.color = haloCol;
-            }
-
             var glyph = Rect("TitleCalligraphy", artClip.transform, titleX, titleY, titleW, titleH).AddComponent<RawImage>();
             glyph.texture = titleTex; glyph.raycastTarget = false;
-            glyph.color = available ? inkCol : new Color(inkCol.r, inkCol.g, inkCol.b, 0.65f);
+            glyph.color = available
+                ? (neon ? new Color(0.90f, 0.96f, 1f, 0.96f) : Color.white)
+                : new Color(1f, 1f, 1f, 0.68f);
         }
         else
         {
@@ -437,7 +425,7 @@ public partial class DemoBootstrap
         bool basic = techDone.Contains("dispatch_basic"), peak = techDone.Contains("dispatch_peak");
         int opRows = peak ? 4 : 1;
 
-        float summaryH = 304f;
+        float summaryH = 344f;
         float skinH = 84f;
         float fleetHeaderH = 92f;
         float fleetBodyH = lineScreenFleetExpanded
@@ -460,8 +448,11 @@ public partial class DemoBootstrap
             : " · 峰段负荷 " + Mathf.RoundToInt(peakRatio * 100f) + "%";
         var fleetMeta = Txt(summaryCard.transform, "配属 " + line.trains + "/8 列 · 平均速度 " + Mathf.RoundToInt(FleetTrait(line, 2) * 100) + "% · " + FormatLineKm(line.st) + loadTag, 24, Ink, 24, summaryH - 58f, width - 48f, 40f, TextAnchor.MiddleLeft);
         FitSingleLine(fleetMeta, 24);
-        Txt(summaryCard.transform, "沿线", 22, InkSoft, 24, summaryH - 102f, 120f, 32f, TextAnchor.MiddleLeft);
-        Txt(summaryCard.transform, UniquePathText(line.st), 23, Ink, 24, 18f, width - 48f, summaryH - 126f, TextAnchor.UpperLeft);
+        var forecast = ForecastFor(line);
+        var costMeta = Txt(summaryCard.transform, $"维护成本 -¥{Mathf.RoundToInt(forecast.vehicle + forecast.track)}（星舰 ¥{Mathf.RoundToInt(forecast.vehicle)} · 航线 ¥{Mathf.RoundToInt(forecast.track)}） · 税收成本 -¥{Mathf.RoundToInt(forecast.tax)}", 22, InkSoft, 24, summaryH - 100f, width - 48f, 34f, TextAnchor.MiddleLeft);
+        FitSingleLine(costMeta, 22);
+        Txt(summaryCard.transform, "沿线", 22, InkSoft, 24, summaryH - 142f, 120f, 32f, TextAnchor.MiddleLeft);
+        Txt(summaryCard.transform, UniquePathText(line.st), 23, Ink, 24, 18f, width - 48f, summaryH - 166f, TextAnchor.UpperLeft);
         y -= summaryH + 18f;
 
         // 2. 航线涂装入口
@@ -881,6 +872,17 @@ public partial class DemoBootstrap
     }
     int shopLocoBatchCount = 1;
     static readonly int[] ShopLocoBatchOptions = { 1, 5, 10 };
+    readonly HashSet<int> garageExpandedModels = new HashSet<int>();
+    sealed class GarageModelGroup
+    {
+        public int model;
+        public List<ResearchVehicle> items;
+        public RectTransform cardRect;
+        public Text toggleLabel;
+        public bool expanded;
+        public float subBlockHeight;
+        public readonly List<RectTransform> subRects = new List<RectTransform>();
+    }
     void BuildFleetCollection(Transform page, int tab)
     {
         BuildFleetFilters(page, tab);
@@ -913,6 +915,212 @@ public partial class DemoBootstrap
                 TInk(bBtn, sel ? Color.white : Ink);
             }
         }
+
+        if (tab == 1)
+        {
+            // 按型号聚合成有序分组（保持首次出现顺序）；默认全部收起，仅手动展开的型号显示逐艘子卡。
+            var grouped = new Dictionary<int, List<ResearchVehicle>>();
+            var modelOrder = new List<int>();
+            foreach (var item in visibleItems)
+            {
+                int model = item.node;
+                if (!grouped.TryGetValue(model, out var bucket))
+                {
+                    bucket = new List<ResearchVehicle>();
+                    grouped.Add(model, bucket);
+                    modelOrder.Add(model);
+                }
+                bucket.Add(item);
+            }
+            float requiredHeight = 0f;
+            foreach (int model in modelOrder)
+            {
+                requiredHeight += 218f; // 主卡 198 + 间距 20
+                if (garageExpandedModels.Contains(model)) requiredHeight += grouped[model].Count * 120f + 8f;
+            }
+            float garageViewHeight = (PgH - 354f) - 172f;
+            var garageContent = FleetScroll(page, 172, PgH - 354, Mathf.Max(1f, requiredHeight), inset, scrollKey: FleetCollectionScrollKey(tab));
+            float gHeight = garageContent.sizeDelta.y;
+            float gCardWidth = garageContent.sizeDelta.x, gArtWidth = 270f;
+            float gTextX = 304f, gActionWidth = 234f;
+            float gActionX = gCardWidth - gActionWidth - 28f, gInfoWidth = gActionX - gTextX - 12f;
+            if (visibleItems.Count == 0)
+            {
+                Txt(garageContent, "暂无符合条件的星舰\n解锁科技后可获得星舰", 29, InkSoft, 40, gHeight - 240, gCardWidth - 80, 150, TextAnchor.MiddleCenter);
+                return;
+            }
+            RectTransform CreateGarageSubCard(int modelId, int idxInModel, ResearchVehicle item, float subTopPos, float subWidth)
+            {
+                var assigned = lines.Find(l => l.id == item.lineId);
+                if (assigned == null) item.lineId = 0;
+                var sub = Rect("GarageVehicle" + modelId + "_" + idxInModel, garageContent, 24f, subTopPos - 108f, subWidth, 108f);
+                Rounded(sub, Paper2);
+                var itemCaptured = item;
+                int refundCoins = Mathf.Max(80, Mathf.RoundToInt(LocoPrice(modelId) * 0.55f));
+                var label = Txt(sub.transform, $"#{idxInModel + 1} · " + (assigned == null ? "舰坞待命" : "已配置至 " + assigned.name),
+                    22, Ink, 20, 34, subWidth - (assigned == null ? 292f : 182f), 40, TextAnchor.MiddleLeft);
+                FitSingleLine(label, 22);
+                if (assigned == null)
+                {
+                    var assignBtn = Btn(sub.transform, "Action", "配置航线", 21, subWidth - 140f, 18, 124f, 72f, new Color(0.92f, 0.89f, 0.83f), () => ChooseResearchVehicleLine(itemCaptured));
+                    TInk(assignBtn, Ink); if (!assignBtn.GetComponent<FleetPressFeedback>()) assignBtn.gameObject.AddComponent<FleetPressFeedback>();
+                    var retireBtn = Btn(sub.transform, "Retire", "功勋退役 +¥" + refundCoins, 18, subWidth - 274f, 18, 124f, 72f, Color.Lerp(CardBg, Gold, 0.24f), () => PromptRetireVehicle(itemCaptured));
+                    TInk(retireBtn, new Color(0.50f, 0.32f, 0.10f)); if (!retireBtn.GetComponent<FleetPressFeedback>()) retireBtn.gameObject.AddComponent<FleetPressFeedback>();
+                }
+                else
+                {
+                    var changeBtn = Btn(sub.transform, "Action", "更换航线", 22, subWidth - 166f, 18, 150f, 72f, new Color(0.92f, 0.89f, 0.83f), () => ChooseResearchVehicleLine(itemCaptured));
+                    TInk(changeBtn, Ink); if (!changeBtn.GetComponent<FleetPressFeedback>()) changeBtn.gameObject.AddComponent<FleetPressFeedback>();
+                }
+                return sub.GetComponent<RectTransform>();
+            }
+            void ShiftGarageRectY(RectTransform rt, float dy)
+            {
+                if (rt == null || Mathf.Approximately(dy, 0f)) return;
+                // 若入场动画尚未结束，先立即收尾并销毁组件，防止 Update 将位置拉回旧坐标。
+                var entrance = rt.GetComponent<FleetCardEntrance>();
+                if (entrance != null)
+                {
+                    var cg = rt.GetComponent<CanvasGroup>();
+                    if (cg != null) cg.alpha = 1f;
+                    Destroy(entrance);
+                }
+                var p = rt.anchoredPosition;
+                p.y += dy;
+                rt.anchoredPosition = p;
+            }
+            var groupEntries = new List<GarageModelGroup>(modelOrder.Count);
+            void ToggleGarageGroupInPlace(int groupIdx)
+            {
+                if (groupIdx < 0 || groupIdx >= groupEntries.Count) return;
+                var entry = groupEntries[groupIdx];
+                bool nowExpanded = !entry.expanded;
+                entry.expanded = nowExpanded;
+                if (nowExpanded) garageExpandedModels.Add(entry.model);
+                else garageExpandedModels.Remove(entry.model);
+
+                float deltaGroup = nowExpanded ? entry.subBlockHeight : -entry.subBlockHeight;
+                requiredHeight += deltaGroup;
+                float oldH = garageContent.sizeDelta.y;
+                float newH = Mathf.Max(garageViewHeight, requiredHeight);
+                float deltaH = newH - oldH;
+                if (!Mathf.Approximately(deltaH, 0f))
+                    garageContent.sizeDelta = new Vector2(garageContent.sizeDelta.x, newH);
+
+                for (int j = 0; j < groupEntries.Count; j++)
+                {
+                    float dy = j <= groupIdx ? deltaH : (deltaH - deltaGroup);
+                    if (Mathf.Approximately(dy, 0f)) continue;
+                    ShiftGarageRectY(groupEntries[j].cardRect, dy);
+                    for (int s = 0; s < groupEntries[j].subRects.Count; s++)
+                        ShiftGarageRectY(groupEntries[j].subRects[s], dy);
+                }
+
+                if (nowExpanded)
+                {
+                    float subTop = entry.cardRect.anchoredPosition.y - 8f;
+                    float subWidth = gCardWidth - 24f;
+                    for (int k = 0; k < entry.items.Count; k++)
+                    {
+                        entry.subRects.Add(CreateGarageSubCard(entry.model, k, entry.items[k], subTop, subWidth));
+                        subTop -= 120f;
+                    }
+                }
+                else
+                {
+                    for (int k = 0; k < entry.subRects.Count; k++)
+                        if (entry.subRects[k] != null) Destroy(entry.subRects[k].gameObject);
+                    entry.subRects.Clear();
+                }
+
+                if (entry.toggleLabel != null)
+                    entry.toggleLabel.text = nowExpanded ? "▴ 收起" : "▾ 展开";
+
+                float maxScroll = Mathf.Max(0f, newH - garageViewHeight);
+                var cPos = garageContent.anchoredPosition;
+                if (cPos.y > maxScroll)
+                    garageContent.anchoredPosition = new Vector2(cPos.x, maxScroll);
+            }
+
+            float top = gHeight - 10f;
+            for (int gi = 0; gi < modelOrder.Count; gi++)
+            {
+                int model = modelOrder[gi];
+                var gItems = grouped[model];
+                bool expanded = garageExpandedModels.Contains(model);
+                int assignedCount = 0;
+                foreach (var it in gItems)
+                {
+                    var line = lines.Find(l => l.id == it.lineId);
+                    if (line == null) it.lineId = 0; else assignedCount++;
+                }
+                int idleCount = gItems.Count - assignedCount;
+
+                var card = Rect("GarageModel" + model, garageContent, 0, top - 198f, gCardWidth, 198f);
+                Rounded(card, CardBg); SoftShadow(card);
+                StampFineRuleFrame(card.transform, gCardWidth, 198f, 6f, new Color(InkSoft.r, InkSoft.g, InkSoft.b, 0.14f));
+                var cardButton = card.AddComponent<Button>(); cardButton.targetGraphic = card.GetComponent<Image>();
+                cardButton.onClick.AddListener(() => OpenVehicleDetails(model));
+                var art = Rect("TrainArt", card.transform, 16, 35, gArtWidth, 116).AddComponent<RawImage>();
+                art.texture = Resources.Load<Texture2D>("Research/Train/" + LocoArt[model]); art.raycastTarget = false;
+                if (art.texture)
+                {
+                    float ratio = (float)art.texture.width / art.texture.height;
+                    float aw = Mathf.Min(gArtWidth, 116 * ratio), ah = aw / ratio;
+                    art.rectTransform.sizeDelta = new Vector2(aw, ah);
+                    art.rectTransform.anchoredPosition = new Vector2(16 + (gArtWidth - aw) / 2, 35 + (116 - ah) / 2);
+                    art.color = Color.white;
+                }
+                else
+                {
+                    // 已删除 Research/Train/ 资源：隐藏空 RawImage，回退为纯色星舰徽记，避免空贴图与空引用。
+                    art.gameObject.SetActive(false);
+                    var fallback = Rect("TrainArtFallback", card.transform, 16, 35, gArtWidth, 116);
+                    var fb = Img(fallback, new Color(0.36f, 0.46f, 0.66f, 0.55f), spriteCircle);
+                    fb.raycastTarget = false;
+                    Txt(fallback.transform, LocoNames[model], 20, Color.white, 0f, 0f, gArtWidth, 116, TextAnchor.MiddleCenter).raycastTarget = false;
+                }
+                var name = Txt(card.transform, LocoNames[model], 31, Ink, gTextX, 138, gInfoWidth, 44, TextAnchor.MiddleLeft);
+                FitSingleLine(name, 31);
+                var stats = Txt(card.transform, LocoYears[model] + " · " + FormatLocoRealStats(model), 22, InkSoft, gTextX, 94, gInfoWidth, 36, TextAnchor.MiddleLeft);
+                FitSingleLine(stats, 22);
+                var summaryLbl = Txt(card.transform, $"共 {gItems.Count} 艘 · 已配置 {assignedCount} 艘 · 待命 {idleCount} 艘", 22, InkSoft, gTextX, 48, gInfoWidth, 32, TextAnchor.MiddleLeft);
+                FitSingleLine(summaryLbl, 22);
+                int capturedGroupIdx = gi;
+                var toggle = Btn(card.transform, "Expand", expanded ? "▴ 收起" : "▾ 展开", 23,
+                    gActionX, 54, gActionWidth, 90, new Color(0.92f, 0.89f, 0.83f), () => ToggleGarageGroupInPlace(capturedGroupIdx));
+                TInk(toggle, Ink);
+                if (!toggle.GetComponent<FleetPressFeedback>()) toggle.gameObject.AddComponent<FleetPressFeedback>();
+                { var entry = card.AddComponent<FleetCardEntrance>(); entry.delay = Mathf.Min(gi, 6) * 0.032f; }
+
+                var groupEntry = new GarageModelGroup
+                {
+                    model = model,
+                    items = gItems,
+                    cardRect = card.GetComponent<RectTransform>(),
+                    toggleLabel = toggle.GetComponentInChildren<Text>(),
+                    expanded = expanded,
+                    subBlockHeight = gItems.Count * 120f + 8f
+                };
+                groupEntries.Add(groupEntry);
+
+                float nextTop = top - 198f;
+                if (expanded)
+                {
+                    float subTop = nextTop - 8f;
+                    float subWidth = gCardWidth - 24f;
+                    for (int k = 0; k < gItems.Count; k++)
+                    {
+                        groupEntry.subRects.Add(CreateGarageSubCard(model, k, gItems[k], subTop, subWidth));
+                        subTop -= 120f;
+                    }
+                    nextTop = subTop;
+                }
+                top = nextTop - 20f;
+            }
+            return;
+        }
+
         var content = FleetScroll(page, 172, PgH - 354, Mathf.Max(1, count) * 218f + 20, inset, scrollKey: FleetCollectionScrollKey(tab));
         float height = content.sizeDelta.y;
         float cardWidth = content.sizeDelta.x, artWidth = tab == 2 ? 210f : 270f;
@@ -932,6 +1140,7 @@ public partial class DemoBootstrap
             if (item != null && assigned == null) item.lineId = 0;
             var card = Rect("Vehicle" + i, content, 0, height - 208 - i * 218, cardWidth, 198);
             Rounded(card, CardBg); SoftShadow(card);
+            StampFineRuleFrame(card.transform, cardWidth, 198f, 6f, new Color(InkSoft.r, InkSoft.g, InkSoft.b, 0.14f));
             var cardButton = card.AddComponent<Button>(); cardButton.targetGraphic = card.GetComponent<Image>();
             cardButton.onClick.AddListener(() => OpenVehicleDetails(index));
             var art = Rect("TrainArt", card.transform, 16, 35, artWidth, 116).AddComponent<RawImage>();
@@ -953,9 +1162,9 @@ public partial class DemoBootstrap
                 fb.raycastTarget = false;
                 Txt(fallback.transform, LocoNames[index], 20, Color.white, 0f, 0f, artWidth, 116, TextAnchor.MiddleCenter).raycastTarget = false;
             }
-            var name = Txt(card.transform, LocoNames[index], 31, Ink, textX, 138, infoWidth, 44, TextAnchor.MiddleLeft); name.resizeTextForBestFit = true; name.resizeTextMinSize = 20; name.resizeTextMaxSize = ScaledFontSize(31);
+            var name = Txt(card.transform, LocoNames[index], 31, Ink, textX, 138, infoWidth, 44, TextAnchor.MiddleLeft); name.resizeTextForBestFit = true; name.resizeTextMinSize = 20; name.resizeTextMaxSize = ScaledFontSize(31); name.horizontalOverflow = HorizontalWrapMode.Overflow; name.verticalOverflow = VerticalWrapMode.Truncate;
             var stats = Txt(card.transform, LocoYears[index] + " · " + FormatLocoRealStats(index), 22, InkSoft, textX, 94, infoWidth, 36, TextAnchor.MiddleLeft);
-            stats.resizeTextForBestFit = true; stats.resizeTextMinSize = 16; stats.resizeTextMaxSize = ScaledFontSize(22);
+            stats.resizeTextForBestFit = true; stats.resizeTextMinSize = 16; stats.resizeTextMaxSize = ScaledFontSize(22); stats.horizontalOverflow = HorizontalWrapMode.Overflow; stats.verticalOverflow = VerticalWrapMode.Truncate;
             int locoEra = LocoEra(index);
             bool eraClosed = tab == 2 && !unlocked && !IsTechEraUnlocked(locoEra);
             string state = tab == 1 ? (assigned == null ? "未配置" : "已配置至 " + assigned.name)
@@ -1243,6 +1452,7 @@ public partial class DemoBootstrap
     void OpenLineFleet(Line line, Action returnAction = null, int slot = -1, int amount = 0)
     {
         if (line == null || !lines.Contains(line)) { OpenLinesScreen(); return; }
+        SyncLineFleet(line);
         ConfigureLineFleetContext(line, returnAction, slot, amount);
         var page = OpenPage("调配飞车", "本线星舰与舰坞闲舰统一调配；新舰请前往星舰商店购买。", "FleetArt/garage_watercolor", "line_fleet");
         pageBack = ReturnFromLineFleet;
@@ -2647,6 +2857,7 @@ public partial class DemoBootstrap
             Txt(btn.transform, CompanySealNames[idx] + (selected ? " ✓" : ""), 24, unlocked ? Ink : InkSoft, 8f, 62f, 196f, 38f, TextAnchor.MiddleCenter).raycastTarget = false;
             var sealSub = Txt(btn.transform, unlocked ? (selected ? "当前徽章" : "点击选用") : SealUnlockHint(idx), 21, unlocked ? (selected ? sealColor : Matcha) : (isVip ? new Color(0.76f, 0.50f, 0.16f) : InkSoft), 8f, 12f, 196f, 44f, TextAnchor.MiddleCenter);
             sealSub.resizeTextForBestFit = true; sealSub.resizeTextMinSize = 16; sealSub.resizeTextMaxSize = ScaledFontSize(21); sealSub.raycastTarget = false;
+            sealSub.horizontalOverflow = HorizontalWrapMode.Overflow; sealSub.verticalOverflow = VerticalWrapMode.Truncate;
         }
         string activeInscription = GetCompanySealInscription(companySeal);
         if (!string.IsNullOrEmpty(activeInscription))
@@ -2789,5 +3000,122 @@ public partial class DemoBootstrap
             }
             { var entry = card.AddComponent<FleetCardEntrance>(); entry.delay = Mathf.Min(visible - 1, 5) * 0.025f; }
         }
+    }
+
+    void OpenDiamondExchangePopup()
+    {
+        var popup = OpenPopup("星钻补给 · 兑换中心", 760, 880, "diamond_exchange");
+        int gems = Mathf.FloorToInt(diamonds);
+        float pw = 880f, pad = 36f, cw = pw - pad * 2f;
+
+        // 顶部当前资产汇总条
+        var wallet = Rect("WalletCard", popup.transform, pad, 536f, cw, 92f);
+        Rounded(wallet, Paper2);
+        var walletLbl = Txt(wallet.transform,
+            $"当前星钻 {gems}  ·  科研点 {Mathf.FloorToInt(rp)} RP  ·  资金 ¥{FormatCoins(coins)}",
+            28, Ink, 24f, 14f, cw - 48f, 64f, TextAnchor.MiddleCenter);
+        FitSingleLine(walletLbl, 28);
+
+        void TryExchangeRp(int amount)
+        {
+            int curGems = Mathf.FloorToInt(diamonds);
+            if (amount <= 0 || curGems < amount)
+            {
+                PlayErrorSfx();
+                Toast(amount <= 0 ? "当前暂无可兑换的星钻" : $"星钻不足（需要 {amount}，当前 {curGems}）");
+                return;
+            }
+            BeginUndo("星钻购买科研点");
+            diamonds -= amount;
+            rp += amount;
+            RecalcIncome(); EndUndo(); RefreshHUD();
+            PlayCoinSfx();
+            Toast($"已消耗 {amount} 星钻，获得 {amount} RP");
+            OpenDiamondExchangePopup();
+        }
+
+        void TryExchangeCoins(int diamondCost)
+        {
+            int curGems = Mathf.FloorToInt(diamonds);
+            if (diamondCost <= 0 || curGems < diamondCost)
+            {
+                PlayErrorSfx();
+                Toast(diamondCost <= 0 ? "当前暂无可兑换的星钻" : $"星钻不足（需要 {diamondCost}，当前 {curGems}）");
+                return;
+            }
+            float gain = diamondCost * 10000f;
+            BeginUndo("星钻兑换资金");
+            diamonds -= diamondCost;
+            coins += gain;
+            RecalcIncome(); EndUndo(); RefreshHUD();
+            PlayCoinSfx();
+            Toast($"已消耗 {diamondCost} 星钻，兑换资金 ¥{FormatCoins(gain)}");
+            OpenDiamondExchangePopup();
+        }
+
+        // 区块一：1:1 购买 RP 科研点
+        var rpCard = Rect("RpExchangeCard", popup.transform, pad, 316f, cw, 198f);
+        Rounded(rpCard, CardBg);
+        var rpTitle = Txt(rpCard.transform, "科研点补给（1 星钻 = 1 RP）", 28, Indigo, 24f, 134f, cw - 48f, 44f, TextAnchor.MiddleLeft);
+        FitSingleLine(rpTitle, 28);
+        var rpSub = Txt(rpCard.transform, "直接注入星舰与公司治理研发，加速解锁跨时代科技。", 22, InkSoft, 24f, 98f, cw - 48f, 34f, TextAnchor.MiddleLeft);
+        FitSingleLine(rpSub, 22);
+
+        int[] rpAmounts = { 10, 50, 100, Mathf.Max(1, gems) };
+        string[] rpLabels = { "+10 RP\n10 钻", "+50 RP\n50 钻", "+100 RP\n100 钻", gems > 0 ? $"全部兑换\n{gems} 钻" : "全部兑换\n0 钻" };
+        float bw = (cw - 48f - 36f) * 0.25f;
+        for (int i = 0; i < 4; i++)
+        {
+            int amt = rpAmounts[i];
+            bool enough = gems >= amt && gems > 0;
+            var btn = Btn(rpCard.transform, "BuyRp_" + i, rpLabels[i], 21, 24f + i * (bw + 12f), 16f, bw, 74f,
+                enough ? Indigo : new Color(0.76f, 0.74f, 0.70f, 0.85f), () => TryExchangeRp(amt));
+            TInk(btn, Color.white);
+        }
+
+        // 区块二：1:10000 兑换资金
+        var coinCard = Rect("CoinExchangeCard", popup.transform, pad, 98f, cw, 198f);
+        Rounded(coinCard, CardBg);
+        var coinTitle = Txt(coinCard.transform, "星航资金兑换（1 星钻 = ¥10,000）", 28, new Color(0.56f, 0.36f, 0.08f), 24f, 134f, cw - 48f, 44f, TextAnchor.MiddleLeft);
+        FitSingleLine(coinTitle, 28);
+        var coinSub = Txt(coinCard.transform, "补充航线铺设、购置星舰与扩建枢纽星港的现金流。", 22, InkSoft, 24f, 98f, cw - 48f, 34f, TextAnchor.MiddleLeft);
+        FitSingleLine(coinSub, 22);
+
+        int[] coinCosts = { 1, 5, 10, 50 };
+        string[] coinLabels = { "+¥1万\n1 钻", "+¥5万\n5 钻", "+¥10万\n10 钻", "+¥50万\n50 钻" };
+        for (int i = 0; i < 4; i++)
+        {
+            int cost = coinCosts[i];
+            bool enough = gems >= cost;
+            var btn = Btn(coinCard.transform, "BuyCoins_" + i, coinLabels[i], 21, 24f + i * (bw + 12f), 16f, bw, 74f,
+                enough ? Gold : new Color(0.76f, 0.74f, 0.70f, 0.85f), () => TryExchangeCoins(cost));
+            TInk(btn, enough ? new Color(0.24f, 0.16f, 0.04f) : Color.white);
+        }
+
+        // 底部来源提示
+        var tip = Txt(popup.transform, "星钻来源：名胜打卡（+20）、科技飞车里程碑（+50/+60）、每日任务及公司标书", 21, InkSoft, pad, 34f, cw, 40f, TextAnchor.MiddleCenter);
+        FitSingleLine(tip, 21);
+    }
+
+    void NotifyOrOfferDiamondSupply(string fallbackToast, bool forRp, float shortfall)
+    {
+        int gems = Mathf.FloorToInt(diamonds);
+        if (gems <= 0 || shortfall <= 0f)
+        {
+            Toast(fallbackToast);
+            return;
+        }
+        int needGems = forRp ? Mathf.CeilToInt(shortfall) : Mathf.CeilToInt(shortfall / 10000f);
+        var pop = OpenPopup(forRp ? "科研点不足 · 星钻补给" : "资金不足 · 星钻补给", 350, 740, "diamond_shortfall");
+        string gapStr = forRp ? (Mathf.CeilToInt(shortfall) + " RP") : ("¥" + FormatShortfall(shortfall));
+        string hint = $"还差 {gapStr}。\n当前拥有 {gems} 颗星钻（需约 {needGems} 颗），可立即前往兑换补给！";
+        Txt(pop.transform, hint, 25, InkSoft, 34f, 128f, 672f, 118f, TextAnchor.MiddleLeft);
+        var cancel = Btn(pop.transform, "CancelSupply", "暂不兑换", 24, 34f, 30f, 220f, 76f, Paper2, () => ClosePanel(true));
+        TInk(cancel, Ink);
+        var go = Btn(pop.transform, "OpenSupply", "打开星钻兑换 ▸", 24, 274f, 30f, 432f, 76f, forRp ? Indigo : Gold, () => {
+            ClosePanel(false);
+            OpenDiamondExchangePopup();
+        });
+        TInk(go, forRp ? Color.white : new Color(0.24f, 0.16f, 0.04f));
     }
 }

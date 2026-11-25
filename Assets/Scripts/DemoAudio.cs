@@ -13,12 +13,46 @@ public partial class DemoBootstrap
     const string PrefHapticOn = "haptic_enabled";
     const string PrefBgmOn = "bgm_enabled";
     const string PrefBgmMode = "bgm_mode";
+    const string PrefBgmTrack = "bgm_track_index";
     const string ClassicBgmResource = "Audio/Between_the_Bow_and_Breath";
+
+    public readonly struct BgmTrackInfo
+    {
+        public readonly string resPath;
+        public readonly string clipName;
+        public readonly string cnTitle;
+        public readonly string cnLyric;
+
+        public BgmTrackInfo(string resPath, string clipName, string cnTitle, string cnLyric)
+        {
+            this.resPath = resPath;
+            this.clipName = clipName;
+            this.cnTitle = cnTitle;
+            this.cnLyric = cnLyric;
+        }
+    }
+
+    static readonly BgmTrackInfo[] BgmCatalog =
+    {
+        new BgmTrackInfo("Audio/Between_the_Bow_and_Breath", "Between_the_Bow_and_Breath", "《弓弦与呼吸之间》（经典长曲）", "琴弓轻落，弦音随呼吸起伏，记录每一段缓慢而温柔的星海时光。"),
+        new BgmTrackInfo("Audio/bgm_moon_near", "bgm_moon_near", "《月之亮面茶室晨曦》", "晨光漫过亮面穹顶，茶烟袅袅，笔尖在手帐上写下第一条月面航线。"),
+        new BgmTrackInfo("Audio/bgm_moon_far", "bgm_moon_far", "《月背石板微风》", "银色月辉落满古老石板，微风掠过静默环山，星辰在远方悄然守望。"),
+        new BgmTrackInfo("Audio/bgm_mars", "bgm_mars", "《火星红砂星海》", "红色沙丘绵延向天际，铁轨穿过风沙与星海，载着开拓者的期盼前行。"),
+        new BgmTrackInfo("Audio/bgm_morning_light_moon", "bgm_morning_light_moon", "《月面晨光》", "微光苏醒在环形山巅，柔和琴键唤醒沉睡的星港与早班列车。"),
+        new BgmTrackInfo("Audio/bgm_silver_courtyard", "bgm_silver_courtyard", "《银庭独步》", "独自漫步于银白静谧的庭院，只听见心底回响的宇宙低语。"),
+        new BgmTrackInfo("Audio/bgm_martian_sunset", "bgm_martian_sunset", "《火星铁道落日》", "暮色将红砂染成琥珀，远航列车沿着落日余晖缓缓驶向下一座港湾。"),
+        new BgmTrackInfo("Audio/bgm_celestial_voyage", "bgm_celestial_voyage", "《星汉漫歌》", "跨越星汉与陨石带，漫天繁星为每一段旅途轻轻唱和。"),
+        new BgmTrackInfo("Audio/bgm_archive_memories", "bgm_archive_memories", "《记忆档案馆》", "一页页泛黄的营运手记与车票，珍藏着岁月与相遇的温度。"),
+        new BgmTrackInfo("Audio/bgm_felt_woodwinds", "bgm_felt_woodwinds", "《毡音木管协奏》", "温暖毡音钢琴与清澈木管交织，像午后茶室里最安宁的一场重逢。"),
+        new BgmTrackInfo("Audio/bgm_midnight_orbital", "bgm_midnight_orbital", "《夜轨星茫》", "午夜轨道列车穿行在无垠星茫之中，窗外灯火点亮深邃夜空。")
+    };
 
     AudioSource musicB;
     readonly Dictionary<string, AudioClip> regionalBgmCache = new Dictionary<string, AudioClip>();
     readonly Dictionary<string, float> bgmSavedPositions = new Dictionary<string, float>();
     string activeBgmTrackKey = "";
+    string currentRandomBgmRes = "";
+    bool bgmPausedByToggle;
     float bgmFadeProgress = 1f;
     float bgmCrossfadeDuration = 1.4f;
 
@@ -26,7 +60,8 @@ public partial class DemoBootstrap
     float sfxVolume = 0.72f;
     bool sfxEnabled = true;
     bool hapticEnabled = true;
-    int bgmPlayMode = 0; // 0: 地图区域曲 + 内页经典长曲, 1: 始终经典长曲, 2: 始终区域曲
+    int bgmPlayMode = 0; // 0: 随机播放, 1: 指定单曲循环, 2: 跟随区域切换
+    int selectedBgmTrackIndex = 0;
     int settingsTab = 0;
     bool suppressNextBtnClickSfx;
 
@@ -42,22 +77,63 @@ public partial class DemoBootstrap
         return "Audio/bgm_moon_near";
     }
 
-    static string RegionShortBgmTitle(string region)
+    static int FindBgmCatalogIndexByClipName(string clipName)
     {
-        if (region == "月背") return HasCustomBgm("月背") ? "《月背石板微风》" : "《Between the Bow and Breath》";
-        if (IsMarsRegion(region)) return HasCustomBgm(region) ? "《火星红砂星海》" : "《Between the Bow and Breath》";
-        return HasCustomBgm("月之亮面") ? "《月之亮面茶室晨曦》" : "《Between the Bow and Breath》";
+        for (int i = 0; i < BgmCatalog.Length; i++)
+        {
+            if (BgmCatalog[i].clipName == clipName) return i;
+        }
+        return 0;
     }
 
-    bool IsInnerMusicActive() => pageRoot != null || sceneryViewer != null;
+    static string RegionShortBgmTitle(string region)
+    {
+        if (region == "月背") return HasCustomBgm("月背") ? "《月背石板微风》" : BgmCatalog[0].cnTitle;
+        if (IsMarsRegion(region)) return HasCustomBgm(region) ? "《火星红砂星海》" : BgmCatalog[0].cnTitle;
+        return HasCustomBgm("月之亮面") ? "《月之亮面茶室晨曦》" : BgmCatalog[0].cnTitle;
+    }
 
-    bool ShouldPlayClassicBgm()
-        => bgmPlayMode == 1 || (bgmPlayMode == 0 && IsInnerMusicActive());
+    static string BgmTitleByResourceName(string clipName)
+        => BgmCatalog[FindBgmCatalogIndexByClipName(clipName)].cnTitle;
+
+    static string BgmLyricByResourceName(string clipName)
+        => BgmCatalog[FindBgmCatalogIndexByClipName(clipName)].cnLyric;
+
+    string CurrentBgmClipName()
+    {
+        if (music && music.clip) return music.clip.name;
+        if (bgmPlayMode == 1)
+            return BgmCatalog[Mathf.Clamp(selectedBgmTrackIndex, 0, BgmCatalog.Length - 1)].clipName;
+        if (bgmPlayMode == 0 && !string.IsNullOrEmpty(currentRandomBgmRes))
+        {
+            for (int i = 0; i < BgmCatalog.Length; i++)
+                if (BgmCatalog[i].resPath == currentRandomBgmRes) return BgmCatalog[i].clipName;
+        }
+        if (bgmPlayMode == 2)
+        {
+            if (currentRegion == "月背") return "bgm_moon_far";
+            if (IsMarsRegion(currentRegion)) return "bgm_mars";
+            return "bgm_moon_near";
+        }
+        return BgmCatalog[0].clipName;
+    }
 
     string CurrentBgmDisplayTitle()
     {
-        if (ShouldPlayClassicBgm()) return "《Between the Bow and Breath》（经典长曲）";
+        if (bgmPlayMode == 1)
+            return BgmCatalog[Mathf.Clamp(selectedBgmTrackIndex, 0, BgmCatalog.Length - 1)].cnTitle;
+        if (bgmPlayMode == 0)
+            return BgmTitleByResourceName(CurrentBgmClipName());
         return RegionShortBgmTitle(currentRegion);
+    }
+
+    string CurrentBgmChineseLyric() => BgmLyricByResourceName(CurrentBgmClipName());
+
+    string CurrentBgmDropdownLabel()
+    {
+        if (bgmPlayMode == 0) return "随机播放 · 全馆藏轮播";
+        if (bgmPlayMode == 2) return "跟随区域 · 随月面/火星切换";
+        return "单曲循环 · " + BgmCatalog[Mathf.Clamp(selectedBgmTrackIndex, 0, BgmCatalog.Length - 1)].cnTitle;
     }
 
     static bool HasCustomBgm(string region)
@@ -76,6 +152,7 @@ public partial class DemoBootstrap
         sfxEnabled = PlayerPrefs.GetInt(PrefSfxOn, 1) != 0;
         hapticEnabled = PlayerPrefs.GetInt(PrefHapticOn, 1) != 0;
         bgmPlayMode = Mathf.Clamp(PlayerPrefs.GetInt(PrefBgmMode, 0), 0, 2);
+        selectedBgmTrackIndex = Mathf.Clamp(PlayerPrefs.GetInt(PrefBgmTrack, 0), 0, BgmCatalog.Length - 1);
         if (PlayerPrefs.HasKey(PrefBgmOn))
             musicEnabled = PlayerPrefs.GetInt(PrefBgmOn, 1) != 0;
     }
@@ -87,6 +164,7 @@ public partial class DemoBootstrap
         PlayerPrefs.SetInt(PrefSfxOn, sfxEnabled ? 1 : 0);
         PlayerPrefs.SetInt(PrefHapticOn, hapticEnabled ? 1 : 0);
         PlayerPrefs.SetInt(PrefBgmMode, bgmPlayMode);
+        PlayerPrefs.SetInt(PrefBgmTrack, selectedBgmTrackIndex);
         PlayerPrefs.SetInt(PrefBgmOn, musicEnabled ? 1 : 0);
         PlayerPrefs.Save();
     }
@@ -102,14 +180,52 @@ public partial class DemoBootstrap
         return clip;
     }
 
+    string PickNextRandomBgmResource(string excludeRes)
+    {
+        var candidates = new List<string>(BgmCatalog.Length);
+        var loadedClips = new HashSet<AudioClip>();
+        for (int i = 0; i < BgmCatalog.Length; i++)
+        {
+            string res = BgmCatalog[i].resPath;
+            var clip = Resources.Load<AudioClip>(res);
+            if (!clip || loadedClips.Contains(clip)) continue;
+            loadedClips.Add(clip);
+            regionalBgmCache[res] = clip;
+            if (res != excludeRes) candidates.Add(res);
+        }
+        if (candidates.Count > 0)
+            return candidates[UnityEngine.Random.Range(0, candidates.Count)];
+        return !string.IsNullOrEmpty(excludeRes) && regionalBgmCache.ContainsKey(excludeRes)
+            ? excludeRes
+            : ClassicBgmResource;
+    }
+
     AudioClip ResolveTargetBgm(out string targetKey)
     {
-        bool useClassic = ShouldPlayClassicBgm();
-        string resPath = useClassic ? ClassicBgmResource : RegionBgmResource(currentRegion);
+        string resPath;
+        if (bgmPlayMode == 0)
+        {
+            if (string.IsNullOrEmpty(currentRandomBgmRes))
+                currentRandomBgmRes = PickNextRandomBgmResource("");
+            resPath = currentRandomBgmRes;
+        }
+        else if (bgmPlayMode == 1)
+        {
+            int idx = Mathf.Clamp(selectedBgmTrackIndex, 0, BgmCatalog.Length - 1);
+            resPath = BgmCatalog[idx].resPath;
+        }
+        else
+        {
+            resPath = RegionBgmResource(currentRegion);
+        }
         AudioClip clip = LoadBgmClip(resPath);
         if (!clip) { targetKey = ""; return null; }
-        bool isClassicClip = clip.name == "Between_the_Bow_and_Breath";
-        targetKey = isClassicClip ? "classic" : (clip.name + "_" + currentRegion);
+        if (bgmPlayMode == 0)
+        {
+            targetKey = "random_" + clip.name;
+            return clip;
+        }
+        targetKey = bgmPlayMode == 1 ? ("track_" + clip.name) : (clip.name + "_" + currentRegion);
         return clip;
     }
 
@@ -144,10 +260,16 @@ public partial class DemoBootstrap
         if (!music) return;
         if (!musicEnabled || bgmVolume <= 0.001f)
         {
+            bgmPausedByToggle = true;
             if (music.isPlaying) music.Pause();
             if (musicB && musicB.isPlaying) musicB.Pause();
             return;
         }
+
+        bgmPausedByToggle = false;
+        bool isRandomMode = bgmPlayMode == 0;
+        music.loop = !isRandomMode;
+        if (musicB) musicB.loop = !isRandomMode;
 
         AudioClip target = ResolveTargetBgm(out string targetKey);
         if (!target) return;
@@ -161,10 +283,10 @@ public partial class DemoBootstrap
             return;
         }
 
-        if (music.clip && !string.IsNullOrEmpty(activeBgmTrackKey))
+        if (music.clip && !string.IsNullOrEmpty(activeBgmTrackKey) && !activeBgmTrackKey.StartsWith("random_"))
             bgmSavedPositions[activeBgmTrackKey] = music.time;
 
-        float resumePos = bgmSavedPositions.TryGetValue(targetKey, out float savedTime) && savedTime < target.length - 0.5f
+        float resumePos = !isRandomMode && bgmSavedPositions.TryGetValue(targetKey, out float savedTime) && savedTime < target.length - 0.5f
             ? Mathf.Max(0f, savedTime)
             : 0f;
 
@@ -180,7 +302,7 @@ public partial class DemoBootstrap
             return;
         }
 
-        // 双音轨平滑交叉淡化（并延续旧曲目播放进度）
+        // 双音轨平滑交叉淡化（非随机模式延续曲目进度）
         musicB.clip = music.clip;
         musicB.time = music.time < (musicB.clip ? musicB.clip.length : 0f) ? music.time : 0f;
         musicB.volume = music.volume;
@@ -197,8 +319,9 @@ public partial class DemoBootstrap
     void TickAudioCrossfade(float dt)
     {
         if (!music) return;
-        if (!musicEnabled)
+        if (!musicEnabled || bgmVolume <= 0.001f)
         {
+            bgmPausedByToggle = true;
             if (music.isPlaying) music.Pause();
             if (musicB && musicB.isPlaying) musicB.Pause();
             return;
@@ -219,6 +342,22 @@ public partial class DemoBootstrap
         {
             music.volume = bgmVolume;
         }
+        else if (bgmPlayMode == 0 && !bgmPausedByToggle && music.clip != null && Application.isFocused)
+        {
+            // 随机播放模式下当前曲目播完，自动切到下一首不同曲目
+            string nextRes = PickNextRandomBgmResource(currentRandomBgmRes);
+            if (nextRes == currentRandomBgmRes)
+            {
+                music.time = 0f;
+                music.volume = bgmVolume;
+                music.Play();
+            }
+            else
+            {
+                currentRandomBgmRes = nextRes;
+                SyncRegionalMusic(false);
+            }
+        }
     }
 
     void SetBgmEnabled(bool enabled)
@@ -228,9 +367,14 @@ public partial class DemoBootstrap
         SyncRegionalMusic(true);
     }
 
-    void SetBgmPlayMode(int mode)
+    void SetBgmPlayMode(int mode, int trackIndex = -1)
     {
-        bgmPlayMode = Mathf.Clamp(mode, 0, 2);
+        int clamped = Mathf.Clamp(mode, 0, 2);
+        if (clamped == 0)
+            currentRandomBgmRes = PickNextRandomBgmResource(currentRandomBgmRes);
+        else if (clamped == 1 && trackIndex >= 0)
+            selectedBgmTrackIndex = Mathf.Clamp(trackIndex, 0, BgmCatalog.Length - 1);
+        bgmPlayMode = clamped;
         SaveAudioPreferences();
         SyncRegionalMusic(false);
     }

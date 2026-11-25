@@ -85,7 +85,7 @@ public partial class DemoBootstrap
                 return storyStage >= 3 || DailyConnectedCount() >= 6 || day >= 4;
             case GameFeature.CompanyFinanceAndBoard:
             case GameFeature.Leaderboard:
-                return storyStage >= 4 || macauUnlocked || DailyConnectedCount() >= 9 || companyTechDone.Count >= 2;
+                return storyStage >= 4 || moonFarUnlocked || DailyConnectedCount() >= 9 || companyTechDone.Count >= 2;
             default:
                 return true;
         }
@@ -113,7 +113,7 @@ public partial class DemoBootstrap
     void SyncStoryProgression(bool allowTriggerPopups)
     {
         // 兼容既有/高级测试存档（例如第 79 天存档）：自动平滑解禁对应章节与所有功能，不再强行弹老旧新手教学
-        if (!tutorialSkipped && (day >= 5 || lines.Count >= 3 || macauUnlocked || guangdongUnlocked || techDone.Count >= 4))
+        if (!tutorialSkipped && (day >= 5 || lines.Count >= 3 || moonFarUnlocked || marsWestUnlocked || techDone.Count >= 4))
         {
             storyStage = 5;
             tutorialSkipped = true;
@@ -138,7 +138,7 @@ public partial class DemoBootstrap
         if (storyStage < 1 && (lines.Count >= 1 || conn >= 2)) nextTargetStage = 1;
         if (nextTargetStage >= 1 && storyStage < 2 && (conn >= 4 || techDone.Count >= 1)) nextTargetStage = 2;
         if (nextTargetStage >= 2 && storyStage < 3 && (conn >= 6 || day >= 4)) nextTargetStage = 3;
-        if (nextTargetStage >= 3 && storyStage < 4 && (macauUnlocked || conn >= 9 || companyTechDone.Count >= 2)) nextTargetStage = 4;
+        if (nextTargetStage >= 3 && storyStage < 4 && (moonFarUnlocked || conn >= 9 || companyTechDone.Count >= 2)) nextTargetStage = 4;
 
         if (!allowTriggerPopups)
         {

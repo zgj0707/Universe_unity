@@ -79,12 +79,12 @@ public partial class DemoBootstrap
     }
     [Serializable] sealed class SavedStation { public string key, customName; public int level, trafficEvent; public bool built, closed; public float riderBonus; public int facLevel; }
     [Serializable] sealed class SavedScenery { public string key; public bool found, unlocked; }
-    [Serializable] sealed class SavedLine { public int id, trains, todayRevenue; public int skin = -1; public bool baseRemoved; public string name; public Color color; public List<string> stations; public int[] dispatch; public float fare, todayGross, todayMaintenance, todayTrack; public List<int> recent; }
+    [Serializable] sealed class SavedLine { public int id, trains, todayRevenue; public int skin = -1; public bool baseRemoved; public string name; public Color color; public List<string> stations; public List<SegmentWaypoints> segWaypoints; public int[] dispatch; public float fare, todayGross, todayMaintenance, todayTrack; public List<int> recent; }
     [Serializable] sealed class SavedVehicle { public int node, lineId; }
     [Serializable] sealed class SavedFrozenLine { public int lineId; public float[] revenue, demand, served, peak; public bool[] valid; }
     [Serializable] sealed class SaveData {
         public int version=1, day, speed, nextId, dailyBaseline, theme; public double coins; public float diamonds, rp, clock, researchClock;
-        public bool macau, guangdong, loan, music; public string region;
+        public bool moonFar, marsWest, loan, music; public string region;
         public List<SavedStation> stations = new List<SavedStation>(); public List<SavedScenery> scenery = new List<SavedScenery>();
         public List<SavedLine> lines = new List<SavedLine>(); public List<SavedVehicle> vehicles = new List<SavedVehicle>();
         public List<string> tech = new List<string>(), story = new List<string>(); public List<int> skins = new List<int>();
@@ -188,12 +188,37 @@ public partial class DemoBootstrap
         foreach (var record in data.lines) {
             if(record == null || record.stations == null || record.stations.Count < 2 || record.dispatch == null || record.dispatch.Length != 4 || !ids.Add(record.id)) continue;
             var line = new Line { id=record.id, name=record.name, color=record.color, skin=record.skin, trains=record.trains, hasBaseTrain=!record.baseRemoved, dispatch=record.dispatch, fare=record.fare, todayRevenue=record.todayRevenue, todayGross=record.todayGross, todayMaintenance=record.todayMaintenance, todayTrack=record.todayTrack, recent=record.recent ?? new List<int>() };
+            if (record.segWaypoints != null) line.segWaypoints = CloneWaypointsList(record.segWaypoints);
             bool valid = true;
             foreach (string key in record.stations) {
                 if(!byKey.TryGetValue(key,out int index)) { valid = false; break; }
                 line.st.Add(index);
             }
-            if (valid && line.st.Count >= 2) restoredLines.Add(line);
+            if (valid && line.st.Count >= 2)
+            {
+                // 清洗历史脏数据中的锐角折返尖刺拐点
+                if (line.segWaypoints != null)
+                {
+                    for (int s = 0; s < line.segWaypoints.Count && s < line.st.Count - 1; s++)
+                    {
+                        var sw = line.segWaypoints[s];
+                        if (sw == null || sw.pts == null || sw.pts.Count == 0) continue;
+                        string reg = SegmentRegion(line.st[s], line.st[s + 1]) ?? currentRegion;
+                        Vector2 a = PosInRegion(line.st[s], reg);
+                        Vector2 b = PosInRegion(line.st[s + 1], reg);
+                        for (int k = sw.pts.Count - 1; k >= 0; k--)
+                        {
+                            Vector2 prev = k > 0 ? sw.pts[k - 1] : a;
+                            Vector2 next = k + 1 < sw.pts.Count ? sw.pts[k + 1] : b;
+                            Vector2 d1 = (sw.pts[k] - prev).normalized;
+                            Vector2 d2 = (next - sw.pts[k]).normalized;
+                            if (Vector2.Dot(d1, d2) < -0.35f || Vector2.Distance(sw.pts[k], prev) < 16f || Vector2.Distance(sw.pts[k], next) < 16f)
+                                sw.pts.RemoveAt(k);
+                        }
+                    }
+                }
+                restoredLines.Add(line);
+            }
         }
         foreach(var record in data.stations) {
             if (record != null && byKey.TryGetValue(record.key, out int sIdx)) {
@@ -227,6 +252,7 @@ public partial class DemoBootstrap
         researchVehicles.Clear(); foreach(var item in data.vehicles)
             if (item != null && item.node >= 0 && item.node < LocoNames.Length)
                 researchVehicles.Add(new ResearchVehicle { node=item.node, lineId=restoredLines.Exists(l => l.id == item.lineId) ? item.lineId : 0 });
+        foreach (var l in restoredLines) SyncLineFleet(l);
         storySeen.Clear(); foreach(var item in data.story) storySeen.Add(item); ownedLineSkins.Clear(); foreach(int item in data.skins) ownedLineSkins.Add(item);
         ownedThemes.Clear(); ownedThemes.Add(0);
         if (data.themes != null) foreach (int item in data.themes) if (item >= 0 && item < Themes.Length) ownedThemes.Add(item);
@@ -241,11 +267,11 @@ public partial class DemoBootstrap
         currentTheme = Mathf.Clamp(data.theme, 0, Themes.Length - 1);
         if (!IsThemeAvailable(currentTheme)) currentTheme = 0;
         coins=data.coins; diamonds=data.diamonds; rp=data.rp; day=Mathf.Max(1,data.day); dayClock=data.clock; researchClock=data.researchClock; timeSpeed=data.speed;
-        nextLineId=data.nextId; dailyStationBaseline=data.dailyBaseline; macauUnlocked=data.macau; guangdongUnlocked=data.guangdong; loanOutstanding=data.loan; musicEnabled=data.music;
+        nextLineId=data.nextId; dailyStationBaseline=data.dailyBaseline; moonFarUnlocked=data.moonFar; marsWestUnlocked=data.marsWest; loanOutstanding=data.loan; musicEnabled=data.music;
         unlockedRegions.Clear();
         unlockedRegions.Add("月之亮面");
-        if (macauUnlocked) unlockedRegions.Add("月背");
-        if (guangdongUnlocked) unlockedRegions.Add("火星·西半球");
+        if (moonFarUnlocked) unlockedRegions.Add("月背");
+        if (marsWestUnlocked) unlockedRegions.Add("火星·西半球");
         if (data.unlockedRegions != null)
             for (int ri = 0; ri < data.unlockedRegions.Count; ri++)
                 SetRegionUnlocked(data.unlockedRegions[ri], true);
@@ -310,7 +336,7 @@ public partial class DemoBootstrap
     }
     SaveData CaptureSaveData()
     {
-        var data=new SaveData { coins=coins, diamonds=diamonds, rp=rp, day=day, clock=dayClock, researchClock=researchClock, speed=timeSpeed, nextId=nextLineId, dailyBaseline=dailyStationBaseline, macau=macauUnlocked, guangdong=guangdongUnlocked, loan=loanOutstanding, music=musicEnabled, region=currentRegion, theme=(previewRestoreTheme >= 0 ? previewRestoreTheme : currentTheme), companyName=companyName, companySeal=companySeal, companyPolicy=companyPolicy, bondDaysLeft=bondDaysLeft, bondPrincipal=bondPrincipal, bondDailyDue=bondDailyDue, bondsRepaid=bondsRepaid, bondSubsidized=bondSubsidized, consultantId=consultantId, consultantDaysLeft=consultantDaysLeft, economyCycle=economyCycle, nextEconomyCycle=nextEconomyCycle, turboDaysLeft=turboDaysLeft, autoDispatchDaysLeft=autoDispatchDaysLeft, lastAwardDay=lastAwardDay, lastPolicyDay=lastPolicyDay, lastAdSubsidyDay=lastAdSubsidyDay, dailyTaskClaimedDay=dailyTaskClaimedDay, storyStage=storyStage, tutorialSkipped=tutorialSkipped, nextTalentId=nextTalentId, lastTalentRefreshDay=lastTalentRefreshDay, lastReadNoticeDay=lastReadNoticeDay, readPatchNoteVersion=readPatchNoteVersion, retiredVehiclesCount=retiredVehiclesCount, lastDisplayedSolarTerm=lastDisplayedSolarTerm, nextContractId=nextContractId, hasYesterdayReport=(hasYesterdayReport && yesterdayReport != null), yesterdayReport=(hasYesterdayReport && yesterdayReport != null ? CopyDailyReport(yesterdayReport) : null) };
+        var data=new SaveData { coins=coins, diamonds=diamonds, rp=rp, day=day, clock=dayClock, researchClock=researchClock, speed=timeSpeed, nextId=nextLineId, dailyBaseline=dailyStationBaseline, moonFar=moonFarUnlocked, marsWest=marsWestUnlocked, loan=loanOutstanding, music=musicEnabled, region=currentRegion, theme=(previewRestoreTheme >= 0 ? previewRestoreTheme : currentTheme), companyName=companyName, companySeal=companySeal, companyPolicy=companyPolicy, bondDaysLeft=bondDaysLeft, bondPrincipal=bondPrincipal, bondDailyDue=bondDailyDue, bondsRepaid=bondsRepaid, bondSubsidized=bondSubsidized, consultantId=consultantId, consultantDaysLeft=consultantDaysLeft, economyCycle=economyCycle, nextEconomyCycle=nextEconomyCycle, turboDaysLeft=turboDaysLeft, autoDispatchDaysLeft=autoDispatchDaysLeft, lastAwardDay=lastAwardDay, lastPolicyDay=lastPolicyDay, lastAdSubsidyDay=lastAdSubsidyDay, dailyTaskClaimedDay=dailyTaskClaimedDay, storyStage=storyStage, tutorialSkipped=tutorialSkipped, nextTalentId=nextTalentId, lastTalentRefreshDay=lastTalentRefreshDay, lastReadNoticeDay=lastReadNoticeDay, readPatchNoteVersion=readPatchNoteVersion, retiredVehiclesCount=retiredVehiclesCount, lastDisplayedSolarTerm=lastDisplayedSolarTerm, nextContractId=nextContractId, hasYesterdayReport=(hasYesterdayReport && yesterdayReport != null), yesterdayReport=(hasYesterdayReport && yesterdayReport != null ? CopyDailyReport(yesterdayReport) : null) };
         foreach (var kv in frozenTraffic)
         {
             if (kv.Key == null || kv.Value == null) continue;
@@ -335,7 +361,7 @@ public partial class DemoBootstrap
         foreach (var t in talentPool) data.talentPool.Add(CopySaveTalent(t));
         foreach(var s in stations) data.stations.Add(new SavedStation { key=StationSaveKey(s), customName=string.IsNullOrEmpty(s.customName) ? "" : s.customName, level=s.level, trafficEvent=s.trafficEvent, built=s.built, closed=s.closed, riderBonus=s.riderBonus, facLevel=s.facLevel });
         foreach(var s in sceneries) data.scenery.Add(new SavedScenery { key=ScenerySaveKey(s), found=s.found, unlocked=s.unlocked });
-        foreach(var l in lines) { var record=new SavedLine { id=l.id, name=l.name, color=l.color, skin=l.skin, trains=l.trains, baseRemoved=!l.hasBaseTrain, dispatch=(int[])l.dispatch.Clone(), fare=l.fare, todayGross=l.todayGross, todayMaintenance=l.todayMaintenance, todayTrack=l.todayTrack, todayRevenue=l.todayRevenue, recent=new List<int>(l.recent), stations=new List<string>() }; foreach(int i in l.st) record.stations.Add(StationSaveKey(stations[i])); data.lines.Add(record); }
+        foreach(var l in lines) { var record=new SavedLine { id=l.id, name=l.name, color=l.color, skin=l.skin, trains=l.trains, baseRemoved=!l.hasBaseTrain, dispatch=(int[])l.dispatch.Clone(), fare=l.fare, todayGross=l.todayGross, todayMaintenance=l.todayMaintenance, todayTrack=l.todayTrack, todayRevenue=l.todayRevenue, recent=new List<int>(l.recent), stations=new List<string>(), segWaypoints=CloneWaypointsList(l.segWaypoints) }; foreach(int i in l.st) record.stations.Add(StationSaveKey(stations[i])); data.lines.Add(record); }
         foreach(var v in researchVehicles) data.vehicles.Add(new SavedVehicle { node=v.node, lineId=v.lineId });
         data.tech.AddRange(techDone); data.story.AddRange(storySeen); data.skins.AddRange(ownedLineSkins);
         foreach (var ur in unlockedRegions) data.unlockedRegions.Add(ur);

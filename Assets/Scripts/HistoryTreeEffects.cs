@@ -91,6 +91,8 @@ public class HistoryNodeReveal : MonoBehaviour
         if (group) group.alpha = 1f;
         Destroy(this);
     }
+    Image haloImage;
+    readonly List<Image> sparkImages = new List<Image>();
     void Update()
     {
         elapsed += Time.unscaledDeltaTime;
@@ -101,15 +103,19 @@ public class HistoryNodeReveal : MonoBehaviour
         group.alpha = Mathf.Clamp01(t * 7f);
         if (halo)
         {
+            if (!haloImage) haloImage = halo.GetComponent<Image>();
             halo.localScale = Vector3.one * (0.35f + t * 1.25f);
-            var glow = halo.GetComponent<Image>(); var glowColor = glow.color; glowColor.a = 0.85f * (1f - t); glow.color = glowColor;
+            if (haloImage) { var glowColor = haloImage.color; glowColor.a = 0.85f * (1f - t); haloImage.color = glowColor; }
         }
         for (int i = 0; i < sparks.Count; i++)
         {
             if (!sparks[i]) continue;
+            while (sparkImages.Count <= i) sparkImages.Add(null);
+            if (!sparkImages[i]) sparkImages[i] = sparks[i].GetComponent<Image>();
             float angle = i * Mathf.PI * 2f / Mathf.Max(1, sparks.Count);
             sparks[i].anchoredPosition = new Vector2(96 + Mathf.Cos(angle) * t * (130 + (i % 3) * 35), 56 + Mathf.Sin(angle) * t * (130 + (i % 3) * 35));
-            var img = sparks[i].GetComponent<Image>(); var c = img.color; c.a = 1f - t; img.color = c;
+            var img = sparkImages[i];
+            if (img) { var c = img.color; c.a = 1f - t; img.color = c; }
         }
         if (t >= 1)
         {

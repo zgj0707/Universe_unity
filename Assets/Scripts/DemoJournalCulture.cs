@@ -225,10 +225,10 @@ public partial class DemoBootstrap
                 checkEarned = () => RegionConnectedCount("月之亮面") >= 6
             },
             new MemorialTicketSpec {
-                key = "tkt_macau", serial = "NO.2082", title = "静默远征 · 月背深空票",
+                key = "tkt_moon_far", serial = "NO.2082", title = "静默远征 · 月背深空票",
                 routeText = "冯·卡门港 ━━▶ 莫斯科海", stampText = "月背\n静默", regionTag = "月背",
                 motto = "越过月面边界踏入无线电静默区，艾特肯深井灯火长明。",
-                checkEarned = () => macauUnlocked && RegionConnectedCount("月背") >= 2
+                checkEarned = () => moonFarUnlocked && RegionConnectedCount("月背") >= 2
             },
             new MemorialTicketSpec {
                 key = "tkt_gd", serial = "NO.2110", title = "赤砂远航 · 火星跨星域票",
@@ -553,7 +553,7 @@ public partial class DemoBootstrap
             Txt(card.transform, "航行区间：" + spec.routeText, 23, earned ? new Color(0.55f, 0.36f, 0.18f) : InkSoft, 228f, 74f, viewW - 260f, 34f, TextAnchor.MiddleLeft);
             var mottoTxt = Txt(card.transform, earned ? "「" + spec.motto + "」" : "尚待达成对应历程后自动盖戳归档",
                 21, InkSoft, 228f, 20f, viewW - 260f, 46f, TextAnchor.MiddleLeft);
-            mottoTxt.resizeTextForBestFit = true; mottoTxt.resizeTextMinSize = 17; mottoTxt.resizeTextMaxSize = ScaledFontSize(21);
+            mottoTxt.resizeTextForBestFit = true; mottoTxt.resizeTextMinSize = 17; mottoTxt.resizeTextMaxSize = ScaledFontSize(21); mottoTxt.horizontalOverflow = HorizontalWrapMode.Overflow; mottoTxt.verticalOverflow = VerticalWrapMode.Truncate;
             yCursor -= gap;
         }
     }
@@ -706,10 +706,10 @@ public partial class DemoBootstrap
                 20, isCur ? Matcha : InkSoft, 154f, cardH - 68f, cardW - 174f, 36f, TextAnchor.MiddleRight);
 
             var poemTxt = Txt(card.transform, term.poem, 22, Ink, 20f, 94f, cardW - 44f, 40f, TextAnchor.MiddleLeft);
-            poemTxt.resizeTextForBestFit = true; poemTxt.resizeTextMinSize = 18; poemTxt.resizeTextMaxSize = ScaledFontSize(22);
+            poemTxt.resizeTextForBestFit = true; poemTxt.resizeTextMinSize = 18; poemTxt.resizeTextMaxSize = ScaledFontSize(22); poemTxt.horizontalOverflow = HorizontalWrapMode.Overflow; poemTxt.verticalOverflow = VerticalWrapMode.Truncate;
 
             var fxTxt = Txt(card.transform, "物候：" + term.effectHint, 21, isCur ? Vermilion : Indigo, 20f, 44f, cardW - 122f, 44f, TextAnchor.MiddleLeft);
-            fxTxt.resizeTextForBestFit = true; fxTxt.resizeTextMinSize = 17; fxTxt.resizeTextMaxSize = ScaledFontSize(21);
+            fxTxt.resizeTextForBestFit = true; fxTxt.resizeTextMinSize = 17; fxTxt.resizeTextMaxSize = ScaledFontSize(21); fxTxt.horizontalOverflow = HorizontalWrapMode.Overflow; fxTxt.verticalOverflow = VerticalWrapMode.Truncate;
 
             Txt(card.transform, "十二节候第 " + (i + 1) + " 候", 18, InkSoft, 20f, 14f, 240f, 24f, TextAnchor.MiddleLeft);
         }

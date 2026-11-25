@@ -25,14 +25,35 @@ public partial class DemoBootstrap
         foreach (var line in lines)
         {
             if (line.st == null || line.st.Count < 2) continue;
-            for (int i = 0; i < line.st.Count - 1; i++)
+            int segCount = line.st.Count - 1;
+            int spanStart = 0;
+            while (spanStart < segCount)
             {
-                if (SegmentRegion(line.st[i], line.st[i+1]) != currentRegion) continue;
-                float d = DistToSeg(point, Pos(line.st[i]), Pos(line.st[i+1]));
-                if (d > tolerance) continue;
+                string sr = SegmentRegion(line.st[spanStart], line.st[spanStart + 1]);
+                if (string.IsNullOrEmpty(sr) || sr != currentRegion) { spanStart++; continue; }
+                int spanEnd = spanStart;
+                while (spanEnd + 1 < segCount && SegmentRegion(line.st[spanEnd + 1], line.st[spanEnd + 2]) == sr)
+                    spanEnd++;
+
+                // 用整段连续 span 的平滑曲线做命中，而非逐段直线
+                FillRegionSpanPolyline(line, spanStart, spanEnd, currentRegion, scratchPolyline, scratchSubSegIndices);
+                int curSpanStart = spanStart;
+                spanStart = spanEnd + 1;
+                float d = float.MaxValue;
+                int hitSeg = -1;
+                for (int k = 0; k < scratchPolyline.Count - 1; k++)
+                {
+                    float sd = DistToSeg(point, scratchPolyline[k], scratchPolyline[k + 1]);
+                    if (sd < d)
+                    {
+                        d = sd;
+                        hitSeg = k < scratchSubSegIndices.Count ? scratchSubSegIndices[k] : curSpanStart;
+                    }
+                }
+                if (d > tolerance || hitSeg < 0 || hitSeg >= segCount) continue;
                 LineHit h;
                 if (!best.TryGetValue(line.id, out h) || d < h.dist)
-                    best[line.id] = new LineHit { line = line, seg = i, dist = d };
+                    best[line.id] = new LineHit { line = line, seg = hitSeg, dist = d };
             }
         }
         var list = new List<LineHit>(best.Values);
@@ -167,8 +188,7 @@ public partial class DemoBootstrap
     {
         if (line == null || seg < 0 || seg >= line.st.Count - 1) return "";
         int a = line.st[seg], b = line.st[seg + 1];
-        float d = Vector2.Distance(Pos(a), Pos(b));
-        int refund = Mathf.RoundToInt((30f + d * 0.75f) * TrackBuildCostFactor() * DemolishRefundRate());
+        int refund = Mathf.RoundToInt(EvaluateLineSegmentCost(line, seg, TrackBuildCostFactor(), out _) * DemolishRefundRate());
         string tail = line.st.Count <= 2 ? "\n该段拆除后，这条航线会消失。" : "\n拆除后退还 ¥" + refund + "。";
         return StationDisplayName(a, currentRegion) + " ⇄ " + StationDisplayName(b, currentRegion) + tail;
     }
@@ -193,16 +213,24 @@ public partial class DemoBootstrap
             }
         }
         int a = line.st[seg], b = line.st[seg + 1];
-        float d = Vector2.Distance(Pos(a), Pos(b));
-        int refund = Mathf.RoundToInt((30f + d * 0.75f) * TrackBuildCostFactor() * DemolishRefundRate());
+        int refund = Mathf.RoundToInt(EvaluateLineSegmentCost(line, seg, TrackBuildCostFactor(), out _) * DemolishRefundRate());
         BeginUndo("拆除航线段");
+        SyncLineWaypointsCount(line);
         string msg;
 
         if (IsLoop(line.st))
         {
             var opened = new List<int>();
-            for (int i = 0; i < n - 1; i++) opened.Add(line.st[(seg + 1 + i) % (n - 1)]);
+            var openedWp = new List<SegmentWaypoints>();
+            int segCount = n - 1;
+            for (int i = 0; i < segCount; i++) opened.Add(line.st[(seg + 1 + i) % segCount]);
+            for (int i = 0; i < segCount - 1; i++)
+            {
+                int srcIdx = (seg + 1 + i) % segCount;
+                openedWp.Add(new SegmentWaypoints { pts = new List<Vector2>(line.segWaypoints[srcIdx].pts) });
+            }
             line.st = opened;
+            line.segWaypoints = openedWp;
             coins += refund;
             msg = "已拆除一段，环线变为普通航线";
         }
@@ -215,19 +243,23 @@ public partial class DemoBootstrap
         else if (seg == 0)
         {
             line.st.RemoveAt(0);
+            line.segWaypoints.RemoveAt(0);
             coins += refund;
             msg = "已拆除一段：" + StationDisplayName(a, currentRegion) + " ⇄ " + StationDisplayName(b, currentRegion);
         }
         else if (seg == n - 2)
         {
             line.st.RemoveAt(n - 1);
+            line.segWaypoints.RemoveAt(line.segWaypoints.Count - 1);
             coins += refund;
             msg = "已拆除一段：" + StationDisplayName(a, currentRegion) + " ⇄ " + StationDisplayName(b, currentRegion);
         }
         else
         {
             var tail = line.st.GetRange(seg + 1, n - seg - 1);
+            var tailWp = CloneWaypointsList(line.segWaypoints.GetRange(seg + 1, line.segWaypoints.Count - (seg + 1)));
             line.st.RemoveRange(seg + 1, n - seg - 1);
+            line.segWaypoints.RemoveRange(seg, line.segWaypoints.Count - seg);
             coins += refund;
             var nl = new Line {
                 id = nextLineId,
@@ -235,6 +267,8 @@ public partial class DemoBootstrap
                 color = LineColors[(nextLineId - 1) % LineColors.Length]
             };
             nl.st = tail;
+            nl.segWaypoints = tailWp;
+            SyncLineWaypointsCount(nl);
             lines.Add(nl);
             nextLineId++;
             msg = "航线拆分为 " + line.name + " / " + nl.name;
@@ -338,6 +372,8 @@ public partial class DemoBootstrap
         label.resizeTextForBestFit = true;
         label.resizeTextMinSize = 24;
         label.resizeTextMaxSize = ScaledFontSize(44);
+        label.horizontalOverflow = HorizontalWrapMode.Overflow;
+        label.verticalOverflow = VerticalWrapMode.Truncate;
         Txt(parent, "运营详情", 25, InkSoft, 480, h - 77, 200, 50, TextAnchor.MiddleLeft);
 
         var editor = Rect("RenameEditor", parent, 28, h - 88, 740, 76);
@@ -389,9 +425,17 @@ public partial class DemoBootstrap
     bool lineInsertActive;
     Line insertingLine;
     int insertingSegment = -1, insertTarget = -1;
+    int insertEditWpIndex = -1;
+    readonly List<Vector2> insertTempWaypoints = new List<Vector2>(16);
+    bool insertHasGridPoint, insertGridBlocked;
+    Vector2 insertGridPos;
+    LinePolylineGraphic insertPreviewPoly;
     Image insertPreviewA, insertPreviewB;
     GameObject insertBadge;
     Text insertBadgeText;
+    readonly List<GameObject> insertWpHandles = new List<GameObject>();
+    readonly List<Vector2> scratchInsertWps = new List<Vector2>(32);
+    LinePolylineGraphic insertDimmedPoly;
 
     public bool BeginLineInsert(int lineId, int segment, Vector2 screen)
     {
@@ -400,17 +444,73 @@ public partial class DemoBootstrap
         if (line == null || segment < 0 || segment >= line.st.Count - 1 ||
             SegmentRegion(line.st[segment], line.st[segment + 1]) != currentRegion) return false;
         CloseLineBubble();
-        insertingLine = line; insertingSegment = segment; insertTarget = -1; lineInsertActive = true;
-        insertPreviewA = Img(Rect("InsertPreviewA", previewLayer, 0, 0, 1, 10), line.color, spriteRound);
-        insertPreviewB = Img(Rect("InsertPreviewB", previewLayer, 0, 0, 1, 10), line.color, spriteRound);
-        foreach (var image in new[] { insertPreviewA, insertPreviewB }) {
-            image.raycastTarget = false; image.rectTransform.pivot = new Vector2(0, 0.5f);
+        insertingLine = line; insertingSegment = segment; insertTarget = -1;
+        insertHasGridPoint = false; insertGridBlocked = false;
+        insertTempWaypoints.Clear();
+        if (line.segWaypoints != null && segment < line.segWaypoints.Count && line.segWaypoints[segment] != null && line.segWaypoints[segment].pts != null)
+            insertTempWaypoints.AddRange(line.segWaypoints[segment].pts);
+
+        insertEditWpIndex = -1;
+        if (RectTransformUtility.ScreenPointToLocalPointInRectangle(mapRect, screen, null, out var startLocal))
+        {
+            float wpPickR = 36f / Mathf.Max(0.45f, mapRect.localScale.x);
+            float bestWpDist = wpPickR;
+            for (int k = 0; k < insertTempWaypoints.Count; k++)
+            {
+                float d = Vector2.Distance(startLocal, insertTempWaypoints[k]);
+                if (d < bestWpDist) { bestWpDist = d; insertEditWpIndex = k; }
+            }
+            if (insertEditWpIndex < 0)
+            {
+                // 未按在现有拐点上，判断按在哪两个控制点之间并插入新拐点占位
+                scratchControlPts.Clear();
+                scratchControlPts.Add(Pos(line.st[segment]));
+                for (int k = 0; k < insertTempWaypoints.Count; k++) scratchControlPts.Add(insertTempWaypoints[k]);
+                scratchControlPts.Add(Pos(line.st[segment + 1]));
+                int bestSub = 0;
+                float bestSegDist = float.MaxValue;
+                for (int k = 0; k < scratchControlPts.Count - 1; k++)
+                {
+                    float sd = DistToSeg(startLocal, scratchControlPts[k], scratchControlPts[k + 1]);
+                    if (sd < bestSegDist) { bestSegDist = sd; bestSub = k; }
+                }
+                insertEditWpIndex = Mathf.Clamp(bestSub, 0, insertTempWaypoints.Count);
+                insertTempWaypoints.Insert(insertEditWpIndex, TerrainField.SnapToGrid(startLocal, currentRegion));
+            }
         }
-        insertBadge = Rect("InsertCostBadge", root, 0, 0, 330, 62);
+        else
+        {
+            insertEditWpIndex = insertTempWaypoints.Count;
+            insertTempWaypoints.Add(Pos(line.st[segment]));
+        }
+
+        lineInsertActive = true;
+        // 预览时淡化原线所在区域整段（同一 span 的控制点段共用一个 poly），避免新旧线重叠难辨
+        insertDimmedPoly = null;
+        if (lineVisuals != null && lineVisuals.TryGetValue(line.id, out var lvInsert) && lvInsert != null)
+        {
+            for (int i = 0; i < lvInsert.segments.Count; i++)
+            {
+                var segv = lvInsert.segments[i];
+                if (segv.logicSegIndex == segment && segv.poly != null)
+                {
+                    insertDimmedPoly = segv.poly;
+                    insertDimmedPoly.bodyColor.a = 0.22f;
+                    insertDimmedPoly.SetVerticesDirty();
+                    break;
+                }
+            }
+        }
+        SetDotGridHighlight(true);
+        var polyGo = Rect("InsertPreviewPoly", previewLayer, 0, 0, W, H);
+        insertPreviewPoly = polyGo.AddComponent<LinePolylineGraphic>();
+        insertPreviewPoly.raycastTarget = false;
+        insertBadge = Rect("InsertCostBadge", root, 0, 0, 380, 62);
         Rounded(insertBadge, new Color(1f, 0.98f, 0.92f, 0.96f));
         insertBadge.GetComponent<Image>().raycastTarget = false;
-        insertBadgeText = Txt(insertBadge.transform, "拖至新星港", 23, Ink, 12, 5, 306, 52, TextAnchor.MiddleCenter);
+        insertBadgeText = Txt(insertBadge.transform, "拖至新星港或点阵拐点", 22, Ink, 12, 5, 356, 52, TextAnchor.MiddleCenter);
         Haptic.Vibrate(22); PlayTone(false); UpdateLineInsert(screen);
+        RefreshInsertWaypointHandles();
         return true;
     }
     bool CanInsertStation(Line line, int segment, int target)
@@ -426,18 +526,50 @@ public partial class DemoBootstrap
     {
         int a = line.st[segment], b = line.st[segment + 1];
         float f = TrackBuildCostFactor();
-        int before = Mathf.RoundToInt((30f + Vector2.Distance(Pos(a), Pos(b)) * 0.75f) * f);
-        int after = Mathf.RoundToInt((30f + Vector2.Distance(Pos(a), Pos(target)) * 0.75f) * f)
-            + Mathf.RoundToInt((30f + Vector2.Distance(Pos(target), Pos(b)) * 0.75f) * f);
+        int before = EvaluateLineSegmentCost(line, segment, f, out _);
+        int after = EvaluateStationPairCost(a, target, f, out _) + EvaluateStationPairCost(target, b, f, out _);
         return Mathf.Max(0, after - before) + StationOpeningCost(target);
     }
-    void SetInsertPreview(Image image, Vector2 a, Vector2 b)
+    void EvaluateSegmentWaypointPreview(Line line, int segment, IReadOnlyList<Vector2> candidateWps, out int beforePct, out int afterPct, out bool blocked)
     {
-        if (!image) return;
-        Vector2 delta = b - a; var rt = image.rectTransform;
-        rt.anchoredPosition = a; rt.sizeDelta = new Vector2(Mathf.Max(1f, delta.magnitude), 10f * overlayZoom);
-        rt.localRotation = Quaternion.Euler(0, 0, Mathf.Atan2(delta.y, delta.x) * Mathf.Rad2Deg);
+        int a = line.st[segment], b = line.st[segment + 1];
+        float f = TrackBuildCostFactor();
+        EvaluateLineSegmentCost(line, segment, f, out var beforeTr);
+        beforePct = Mathf.RoundToInt(beforeTr.penaltyRatio * 100f);
+        scratchControlPts.Clear();
+        scratchControlPts.Add(Pos(a));
+        if (candidateWps != null)
+            for (int i = 0; i < candidateWps.Count; i++) scratchControlPts.Add(candidateWps[i]);
+        scratchControlPts.Add(Pos(b));
+        TerrainField.SampleCatmullRomPolyline(scratchControlPts, false, scratchPolyline);
+        TerrainField.EvaluatePolyline(currentRegion, scratchPolyline, out var afterTr);
+        afterPct = Mathf.RoundToInt(afterTr.penaltyRatio * 100f);
+        blocked = afterTr.blocked;
     }
+
+    static void CleanupRedundantWaypoints(List<Vector2> wps, Vector2 startPos, Vector2 endPos)
+    {
+        // 第一轮：移除与前后点距离过近的拐点
+        for (int i = wps.Count - 1; i >= 0; i--)
+        {
+            Vector2 prev = i > 0 ? wps[i - 1] : startPos;
+            Vector2 next = i + 1 < wps.Count ? wps[i + 1] : endPos;
+            if (Vector2.Distance(wps[i], prev) < 18f || Vector2.Distance(wps[i], next) < 18f)
+                wps.RemoveAt(i);
+        }
+        // 第二轮：移除几乎拖直的拐点（进/出方向 dot > 0.990，夹角 > 172°）
+        for (int i = wps.Count - 1; i >= 0; i--)
+        {
+            Vector2 prev = i > 0 ? wps[i - 1] : startPos;
+            Vector2 next = i + 1 < wps.Count ? wps[i + 1] : endPos;
+            Vector2 inDir = (wps[i] - prev).normalized;
+            Vector2 outDir = (next - wps[i]).normalized;
+            if (inDir.sqrMagnitude < 0.0001f || outDir.sqrMagnitude < 0.0001f) continue;
+            if (Vector2.Dot(inDir, outDir) > 0.990f)
+                wps.RemoveAt(i);
+        }
+    }
+
     public void UpdateLineInsert(Vector2 screen)
     {
         if (!lineInsertActive || insertingLine == null || !lines.Contains(insertingLine) ||
@@ -446,39 +578,183 @@ public partial class DemoBootstrap
         float snap = 44f / Mathf.Max(1f, mapRect.localScale.x);
         int near = NearestStationAny(local, snap);
         insertTarget = CanInsertStation(insertingLine, insertingSegment, near) ? near : -1;
-        Vector2 point = insertTarget >= 0 ? Pos(insertTarget) : local;
-        SetInsertPreview(insertPreviewA, Pos(insertingLine.st[insertingSegment]), point);
-        SetInsertPreview(insertPreviewB, point, Pos(insertingLine.st[insertingSegment + 1]));
-        if (insertBadgeText) insertBadgeText.text = insertTarget >= 0
-            ? "插入造价 ¥" + InsertStationCost(insertingLine, insertingSegment, insertTarget) : "拖至可插入的新星港";
+
+        Vector2 pa = Pos(insertingLine.st[insertingSegment]);
+        Vector2 pb = Pos(insertingLine.st[insertingSegment + 1]);
+        Color previewCol = insertingLine.color;
+        if (insertTarget >= 0)
+        {
+            insertHasGridPoint = false;
+            insertGridBlocked = false;
+            Vector2 point = Pos(insertTarget);
+            SplitWaypointsForInsertedStation(insertingLine, insertingSegment, pa, pb, point, out var leftWps, out var rightWps);
+
+            // 该段替换为 pa -> leftWps -> point -> rightWps -> pb，其余段保留原拐点
+            scratchInsertWps.Clear();
+            for (int i = 0; i < leftWps.Count; i++) scratchInsertWps.Add(leftWps[i]);
+            scratchInsertWps.Add(point);
+            for (int i = 0; i < rightWps.Count; i++) scratchInsertWps.Add(rightWps[i]);
+
+            // 与整线一致：找出插入段所在 currentRegion 的连续 [spanStart, spanEnd]，
+            // 展开整线控制点并用 spanIsLoop 做连续平滑预览（替换段走上面拼好的链）
+            int segCount = insertingLine.st.Count - 1;
+            int spanStart = insertingSegment;
+            while (spanStart > 0 && SegmentRegion(insertingLine.st[spanStart - 1], insertingLine.st[spanStart]) == currentRegion) spanStart--;
+            int spanEnd = insertingSegment;
+            while (spanEnd + 1 < segCount && SegmentRegion(insertingLine.st[spanEnd + 1], insertingLine.st[spanEnd + 2]) == currentRegion) spanEnd++;
+            FillRegionSpanPolyline(insertingLine, spanStart, spanEnd, currentRegion, scratchPolyline, scratchSubSegIndices, insertingSegment, scratchInsertWps);
+
+            if (insertBadgeText) insertBadgeText.text = "插入造价 ¥" + InsertStationCost(insertingLine, insertingSegment, insertTarget);
+        }
+        else
+        {
+            insertHasGridPoint = true;
+            insertGridPos = TerrainField.SnapToGrid(local, currentRegion);
+            if (insertEditWpIndex >= 0 && insertEditWpIndex < insertTempWaypoints.Count)
+                insertTempWaypoints[insertEditWpIndex] = insertGridPos;
+
+            if ((Input.GetMouseButtonDown(1) || Input.GetKeyDown(KeyCode.Space)) && insertTempWaypoints.Count < 16)
+            {
+                int nextIdx = Mathf.Clamp(insertEditWpIndex + 1, 0, insertTempWaypoints.Count);
+                insertTempWaypoints.Insert(nextIdx, insertGridPos);
+                insertEditWpIndex = nextIdx;
+                TriggerHaptic(8); PlaySnapSfx();
+            }
+            else if (Input.GetKeyDown(KeyCode.Backspace) && insertTempWaypoints.Count > 0)
+            {
+                int rmIdx = Mathf.Clamp(insertEditWpIndex, 0, insertTempWaypoints.Count - 1);
+                insertTempWaypoints.RemoveAt(rmIdx);
+                insertEditWpIndex = Mathf.Clamp(rmIdx - 1, -1, insertTempWaypoints.Count - 1);
+                TriggerHaptic(6);
+            }
+
+            EvaluateSegmentWaypointPreview(insertingLine, insertingSegment, insertTempWaypoints, out int beforePct, out int afterPct, out insertGridBlocked);
+
+            // 用整条线做连续平滑预览
+            int segCount = insertingLine.st.Count - 1;
+            int spanStart = insertingSegment;
+            while (spanStart > 0 && SegmentRegion(insertingLine.st[spanStart - 1], insertingLine.st[spanStart]) == currentRegion) spanStart--;
+            int spanEnd = insertingSegment;
+            while (spanEnd + 1 < segCount && SegmentRegion(insertingLine.st[spanEnd + 1], insertingLine.st[spanEnd + 2]) == currentRegion) spanEnd++;
+            FillRegionSpanPolyline(insertingLine, spanStart, spanEnd, currentRegion, scratchPolyline, scratchSubSegIndices, insertingSegment, insertTempWaypoints);
+
+            if (insertGridBlocked) previewCol = new Color(0.96f, 0.24f, 0.22f, 0.95f);
+            if (insertBadgeText)
+            {
+                if (insertGridBlocked)
+                    insertBadgeText.text = "禁建天堑 · 请拖至安全点阵";
+                else if (afterPct != beforePct)
+                    insertBadgeText.text = $"地形惩罚 +{afterPct}%（原 +{beforePct}%）· {insertTempWaypoints.Count}拐点";
+                else
+                    insertBadgeText.text = $"地形惩罚 +{afterPct}% · {insertTempWaypoints.Count}拐点 (右键加点)";
+            }
+        }
+        if (insertPreviewPoly)
+            insertPreviewPoly.SetPolyline(scratchPolyline, Vector2.zero, previewCol, new Color(1f, 1f, 1f, 0.55f), 11f * overlayZoom, 2.5f * overlayZoom);
+        RefreshInsertWaypointHandles();
+
         if (insertBadge && RectTransformUtility.ScreenPointToLocalPointInRectangle(root, screen, null, out var badgePoint)) {
             var rect = insertBadge.GetComponent<RectTransform>();
             badgePoint -= root.rect.min;
-            rect.anchoredPosition = new Vector2(Mathf.Clamp(badgePoint.x - 165f, 12f, W - 342f), Mathf.Clamp(badgePoint.y + 55f, 190f, H - 290f));
+            rect.anchoredPosition = new Vector2(Mathf.Clamp(badgePoint.x - 190f, 12f, W - 392f), Mathf.Clamp(badgePoint.y + 55f, 190f, H - 290f));
         }
+        RefreshInsertWaypointHandles();
     }
     public void EndLineInsert(Vector2 screen)
     {
         if (!lineInsertActive) return;
         UpdateLineInsert(screen);
         var line = insertingLine; int segment = insertingSegment, target = insertTarget;
+        bool useGrid = insertHasGridPoint, gridBlocked = insertGridBlocked;
+        var committedWps = new List<Vector2>(insertTempWaypoints);
         CancelLineInsert();
-        if (!CanInsertStation(line, segment, target)) { Toast("请拖到本区域内未经过的普通星港"); return; }
-        int cost = InsertStationCost(line, segment, target);
-        string details = line.name + " · " + StationDisplayName(target, currentRegion) + "\n造价 ¥" + cost + "（含必要开港费用）";
-        float detailsHeight = Mathf.Clamp(MeasureTextHeight(details, 25, 620) + 8, 54, H - 410);
-        var p = OpenPopup("插入途经港", detailsHeight + 200, 680);
-        ScrollableText(p.transform, details, 25, InkSoft, 28, 102, 620, detailsHeight);
-        var confirm = Btn(p.transform, "ConfirmInsert", "确认 ¥" + cost, 25, 28, 20, 300, 66, Matcha, () => CommitLineInsertion(line, segment, target)); TInk(confirm, Color.white);
-        var cancel = Btn(p.transform, "CancelInsert", "取消", 25, 350, 20, 300, 66, Paper2, ClosePanel); TInk(cancel, Ink);
+        if (CanInsertStation(line, segment, target))
+        {
+            int cost = InsertStationCost(line, segment, target);
+            string details = line.name + " · " + StationDisplayName(target, currentRegion) + "\n造价 ¥" + cost + "（含必要开港费用）";
+            float detailsHeight = Mathf.Clamp(MeasureTextHeight(details, 25, 620) + 8, 54, H - 410);
+            var p = OpenPopup("插入途经港", detailsHeight + 200, 680);
+            ScrollableText(p.transform, details, 25, InkSoft, 28, 102, 620, detailsHeight);
+            var confirm = Btn(p.transform, "ConfirmInsert", "确认 ¥" + cost, 25, 28, 20, 300, 66, Matcha, () => CommitLineInsertion(line, segment, target)); TInk(confirm, Color.white);
+            var cancel = Btn(p.transform, "CancelInsert", "取消", 25, 350, 20, 300, 66, Paper2, ClosePanel); TInk(cancel, Ink);
+            return;
+        }
+        if (useGrid && line != null && lines.Contains(line) && segment >= 0 && segment < line.st.Count - 1)
+        {
+            if (gridBlocked) { Toast("路径穿越裂谷/绝壁禁建区，未修改"); return; }
+            CleanupRedundantWaypoints(committedWps, Pos(line.st[segment]), Pos(line.st[segment + 1]));
+            EvaluateSegmentWaypointPreview(line, segment, committedWps, out _, out int afterPct, out bool finalBlocked);
+            if (finalBlocked) { Toast("路径穿越裂谷/绝壁禁建区，未修改"); return; }
+            BeginUndo("调整点阵拐点");
+            SyncLineWaypointsCount(line);
+            line.segWaypoints[segment].pts.Clear();
+            line.segWaypoints[segment].pts.AddRange(committedWps);
+            CreateLineVisuals(); RecalcIncome(); RefreshHUD();
+            EndUndo();
+            Toast($"已平滑整线（{committedWps.Count}拐点）· 当前段地形惩罚 +{afterPct}%");
+            return;
+        }
+        Toast("请拖到本区域内星港或安全点阵格点");
     }
+    void SplitWaypointsForInsertedStation(
+        Line line, int segment, Vector2 pa, Vector2 pb, Vector2 targetPos,
+        out List<Vector2> leftWps, out List<Vector2> rightWps)
+    {
+        leftWps = new List<Vector2>();
+        rightWps = new List<Vector2>();
+        var oldPts = (line != null && line.segWaypoints != null && segment >= 0 && segment < line.segWaypoints.Count && line.segWaypoints[segment] != null)
+            ? line.segWaypoints[segment].pts
+            : null;
+
+        if (oldPts != null && oldPts.Count > 0)
+        {
+            // 计算插入站点离原控制点链哪一段最近，将原拐点保留拆分给前后两段
+            var chain = new List<Vector2>(oldPts.Count + 2) { pa };
+            chain.AddRange(oldPts);
+            chain.Add(pb);
+            int splitSub = 0;
+            float bestD = float.MaxValue;
+            for (int k = 0; k < chain.Count - 1; k++)
+            {
+                float d = DistToSeg(targetPos, chain[k], chain[k + 1]);
+                if (d < bestD) { bestD = d; splitSub = k; }
+            }
+            for (int k = 0; k < oldPts.Count; k++)
+            {
+                if (Vector2.Distance(oldPts[k], targetPos) < 12f) continue;
+                if (k < splitSub) leftWps.Add(oldPts[k]);
+                else rightWps.Add(oldPts[k]);
+            }
+        }
+
+        if (autoRouteEnabled)
+        {
+            if (leftWps.Count == 0 && TerrainField.IsSegmentBlocked(currentRegion, pa, targetPos))
+                TerrainField.FindShortestGridWaypoints(currentRegion, pa, targetPos, leftWps);
+            if (rightWps.Count == 0 && TerrainField.IsSegmentBlocked(currentRegion, targetPos, pb))
+                TerrainField.FindShortestGridWaypoints(currentRegion, targetPos, pb, rightWps);
+        }
+    }
+
     void CommitLineInsertion(Line line, int segment, int target)
     {
         if (!CanInsertStation(line, segment, target)) { ClosePanel(true); Toast("航线或星港已变化，请重新操作"); return; }
         int cost = InsertStationCost(line, segment, target);
         if (coins < cost) { Toast("金币不足：还差 ¥" + FormatShortfall(cost - coins)); return; }
         BeginUndo("插入途经站"); ClosePanel(true);
-        coins -= cost; line.st.Insert(segment + 1, target); BuildStationsOnPath(new List<int> { target }); stations[target].closed = false;
+        SyncLineWaypointsCount(line);
+        Vector2 pa = Pos(line.st[segment]);
+        Vector2 pb = Pos(line.st[segment + 1]);
+        Vector2 pt = Pos(target);
+        SplitWaypointsForInsertedStation(line, segment, pa, pb, pt, out var leftWps, out var rightWps);
+        coins -= cost; line.st.Insert(segment + 1, target);
+        if (segment >= 0 && segment < line.segWaypoints.Count)
+        {
+            line.segWaypoints[segment].pts.Clear();
+            line.segWaypoints[segment].pts.AddRange(leftWps);
+            line.segWaypoints.Insert(segment + 1, new SegmentWaypoints { pts = rightWps });
+        }
+        BuildStationsOnPath(new List<int> { target }); stations[target].closed = false;
         CreateLineVisuals(); RefreshStationDots(); RecalcIncome(); RefreshHUD(); CheckSceneryOnLine(new List<int> { target });
         EndUndo(); Toast("已插入 " + StationDisplayName(target, currentRegion));
     }
@@ -506,9 +782,9 @@ public partial class DemoBootstrap
     {
         float refund = DemolishRefundRate();
         float f = TrackBuildCostFactor();
-        int first = Mathf.RoundToInt((30f + Vector2.Distance(Pos(previous), Pos(station)) * 0.75f) * f * refund);
-        int second = Mathf.RoundToInt((30f + Vector2.Distance(Pos(station), Pos(next)) * 0.75f) * f * refund);
-        int replacement = Mathf.RoundToInt((30f + Vector2.Distance(Pos(previous), Pos(next)) * 0.75f) * f);
+        int first = Mathf.RoundToInt(EvaluateStationPairCost(previous, station, f, out _) * refund);
+        int second = Mathf.RoundToInt(EvaluateStationPairCost(station, next, f, out _) * refund);
+        int replacement = EvaluateStationPairCost(previous, next, f, out _);
         return replacement - first - second;
     }
     void OpenRemoveStationLines(int station, int page)
@@ -557,16 +833,82 @@ public partial class DemoBootstrap
         }
         int cost = WaystationChangeCost(previous, station, next);
         if (cost > coins) { Toast("金币不足：还差 ¥" + FormatShortfall(cost - coins)); return; }
-        BeginUndo("移除途经港"); coins -= cost; line.st = path;
+        BeginUndo("移除途经港");
+        SyncLineWaypointsCount(line);
+        bool wasLoop = IsLoop(line.st);
+        int oldCount = line.st.Count - (wasLoop ? 1 : 0);
+        int idx = line.st.IndexOf(station);
+        if (idx >= 0 && idx < oldCount)
+        {
+            if (wasLoop && idx == 0)
+            {
+                if (line.segWaypoints.Count > 0) line.segWaypoints.RemoveAt(0);
+                if (line.segWaypoints.Count > 0) line.segWaypoints[line.segWaypoints.Count - 1].pts.Clear();
+            }
+            else if (idx >= 1 && idx < line.segWaypoints.Count)
+            {
+                line.segWaypoints[idx - 1].pts.Clear();
+                line.segWaypoints.RemoveAt(idx);
+            }
+        }
+        coins -= cost; line.st = path; SyncLineWaypointsCount(line);
+        if (autoRouteEnabled && line.segWaypoints.Count > 0)
+        {
+            int mergedSeg = (wasLoop && idx == 0) ? line.segWaypoints.Count - 1 : idx - 1;
+            if (mergedSeg >= 0 && mergedSeg < line.segWaypoints.Count
+                && TerrainField.IsSegmentBlocked(currentRegion, Pos(previous), Pos(next)))
+            {
+                TerrainField.FindShortestGridWaypoints(currentRegion, Pos(previous), Pos(next), line.segWaypoints[mergedSeg].pts);
+            }
+        }
         CreateLineVisuals(); RefreshStationDots(); RecalcIncome(); RefreshHUD(); EndUndo();
         Toast("已从 " + line.name + " 移除 " + StationDisplayName(station, currentRegion));
     }
+    void RefreshInsertWaypointHandles()
+    {
+        for (int i = 0; i < insertWpHandles.Count; i++)
+            if (insertWpHandles[i]) Destroy(insertWpHandles[i]);
+        insertWpHandles.Clear();
+        if (!lineInsertActive || previewLayer == null || spriteRing == null) return;
+
+        float size = 26f * overlayZoom;
+        Vector2 centeredPivot = new Vector2(0.5f, 0.5f);
+        // 当前拖动的拐点：亮金色并融入线色突出；其余：半透明白圆环
+        Color activeColor = new Color(1f, 0.83f, 0.24f, 1f);
+        if (insertingLine != null) activeColor = Color.Lerp(activeColor, insertingLine.color, 0.30f);
+        activeColor.a = 1f;
+        Color idleColor = new Color(1f, 1f, 1f, 0.55f);
+
+        for (int i = 0; i < insertTempWaypoints.Count; i++)
+        {
+            var go = Rect("InsertWpHandle_" + i, previewLayer, insertTempWaypoints[i].x, insertTempWaypoints[i].y, size, size);
+            go.GetComponent<RectTransform>().pivot = centeredPivot;
+            var img = Img(go, i == insertEditWpIndex ? activeColor : idleColor, spriteRing);
+            img.raycastTarget = false;
+            insertWpHandles.Add(go);
+        }
+    }
+
     void CancelLineInsert()
     {
         lineInsertActive = false; insertingLine = null; insertingSegment = insertTarget = -1;
+        insertEditWpIndex = -1; insertTempWaypoints.Clear();
+        insertHasGridPoint = false; insertGridBlocked = false;
+        SetDotGridHighlight(false);
+        // 恢复预览时被淡化的原线透明度（poly 可能已被 CreateLineVisuals 重建，用隐式 bool 规避悬空引用）
+        if (insertDimmedPoly)
+        {
+            insertDimmedPoly.bodyColor.a = 0.94f;
+            insertDimmedPoly.SetVerticesDirty();
+            insertDimmedPoly = null;
+        }
+        if (insertPreviewPoly) Destroy(insertPreviewPoly.gameObject);
         if (insertPreviewA) Destroy(insertPreviewA.gameObject); if (insertPreviewB) Destroy(insertPreviewB.gameObject);
         if (insertBadge) Destroy(insertBadge);
-        insertPreviewA = insertPreviewB = null; insertBadge = null; insertBadgeText = null;
+        for (int i = 0; i < insertWpHandles.Count; i++)
+            if (insertWpHandles[i]) Destroy(insertWpHandles[i]);
+        insertWpHandles.Clear();
+        insertPreviewPoly = null; insertPreviewA = insertPreviewB = null; insertBadge = null; insertBadgeText = null;
     }
     public void ForwardLinePanStart(PointerEventData e) { if (mapWheelZoom) mapWheelZoom.OnBeginDrag(e); }
     public void ForwardLinePan(PointerEventData e) { if (mapWheelZoom) mapWheelZoom.OnDrag(e); }
@@ -593,16 +935,30 @@ public class LineTapPress : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
         if (!pressing || !boot) return;
         if (Input.touchCount >= 2) { pressing = false; return; }
         elapsed += Time.unscaledDeltaTime;
-        if (elapsed < 0.42f) return;
+        if (elapsed < 0.22f) return;
         pressing = false; inserting = boot.BeginLineInsert(lineId, segment, start); suppressClick = inserting;
     }
     public void OnBeginDrag(PointerEventData e)
     {
         if (inserting) { boot.UpdateLineInsert(e.position); return; }
+        // 14px 内微抖视为手指落点误差，不立即打断长按
+        if (pressing && Vector2.Distance(e.position, start) <= 14f) return;
         pressing = false; suppressClick = true; panning = true;
         if (boot) boot.ForwardLinePanStart(e);
     }
-    public void OnDrag(PointerEventData e) { if (!boot) return; if (inserting) boot.UpdateLineInsert(e.position); else if (panning) boot.ForwardLinePan(e); }
+    public void OnDrag(PointerEventData e)
+    {
+        if (!boot) return;
+        if (inserting) { boot.UpdateLineInsert(e.position); return; }
+        // 微抖被 OnBeginDrag 容忍后，若继续拖出容差则转为平移，避免地图失去响应
+        if (pressing)
+        {
+            if (Vector2.Distance(e.position, start) <= 14f) return;
+            pressing = false; suppressClick = true; panning = true;
+            boot.ForwardLinePanStart(e);
+        }
+        if (panning) boot.ForwardLinePan(e);
+    }
     public void OnPointerUp(PointerEventData e) { pressing = false; if (inserting && boot) { inserting = false; boot.EndLineInsert(e.position); } }
     public void OnEndDrag(PointerEventData e) { if (panning && boot) boot.ForwardLinePanEnd(e); panning = false; }
     public void OnPointerClick(PointerEventData e) { if (!suppressClick && boot) boot.OnLineTap(e.position); suppressClick = false; }

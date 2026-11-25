@@ -171,7 +171,7 @@ public partial class DemoBootstrap
         float safeW = Mathf.Max(640f, RootW - safeL - safeR);
         float bubbleW = Mathf.Min(920f, safeW - 60f);
         bool hasBadge = !string.IsNullOrEmpty(spec.badgeLabel);
-        float textW = bubbleW - 116f;
+        float textW = bubbleW - 56f;
         float textH = Mathf.Max(56f, MeasureTextHeight(spec.text, 24, textW) + 8f);
         float bubbleH = 54f + textH + (hasBadge ? 44f : 18f);
         float bx = safeL + (safeW - bubbleW) * 0.5f;
@@ -187,17 +187,16 @@ public partial class DemoBootstrap
 
         Color accent = spec.priority == NarrativeBubblePriority.P0_Milestone ? Gold
             : spec.priority == NarrativeBubblePriority.P1_WeeklyCycle ? Indigo : Matcha;
-        Img(Rect("AccentBar", go.transform, 0f, 14f, 7f, bubbleH - 28f), accent, spriteRound).raycastTarget = false;
+        StampFineRuleFrame(go.transform, bubbleW, bubbleH, 6f, new Color(accent.r, accent.g, accent.b, 0.22f));
 
-        // 塞勒涅领航员圆徽
-        var avatar = Rect("Avatar", go.transform, 20f, bubbleH - 64f, 44f, 44f);
-        Img(avatar, accent, spriteCircle).raycastTarget = false;
-        Txt(avatar.transform, "塞", 22, Color.white, 0f, 0f, 44f, 44f, TextAnchor.MiddleCenter).raycastTarget = false;
+        string prefix = spec.priority == NarrativeBubblePriority.P0_Milestone ? "〔电台快讯〕 "
+            : spec.priority == NarrativeBubblePriority.P1_WeeklyCycle ? "〔星风周报〕 " : "〔领航提示〕 ";
+        var tagTxt = Txt(go.transform, prefix + spec.speakerTag, 20, accent, 24f, bubbleH - 42f, bubbleW - 148f, 28f, TextAnchor.MiddleLeft);
+        tagTxt.raycastTarget = false;
+        FitSingleLine(tagTxt, 20);
+        Txt(go.transform, "点击跳过", 18, InkSoft, bubbleW - 124f, bubbleH - 42f, 100f, 28f, TextAnchor.MiddleRight).raycastTarget = false;
 
-        Txt(go.transform, spec.speakerTag, 20, accent, 76f, bubbleH - 42f, bubbleW - 180f, 28f, TextAnchor.MiddleLeft).raycastTarget = false;
-        Txt(go.transform, "点击跳过", 18, InkSoft, bubbleW - 124f, bubbleH - 42f, 104f, 28f, TextAnchor.MiddleRight).raycastTarget = false;
-
-        var bodyTxt = Txt(go.transform, spec.text, 24, Ink, 76f, hasBadge ? 48f : 16f, textW, textH, TextAnchor.UpperLeft);
+        var bodyTxt = Txt(go.transform, spec.text, 24, Ink, 24f, hasBadge ? 48f : 16f, textW, textH, TextAnchor.UpperLeft);
         bodyTxt.raycastTarget = false;
 
         // 点击气泡快速跳过
@@ -282,8 +281,7 @@ public partial class DemoBootstrap
         int pick = candidates[UnityEngine.Random.Range(0, candidates.Count)];
         var st = stations[pick];
 
-        // 根据站点状态/时段/设施挑选贴切场景文案
-        string[] pool;
+        // 根据站点状态/时段/设施从海量句库与动态组合池中抽取贴切场景文案
         float hour = (dayClock / Mathf.Max(1f, GameDaySeconds)) * 24f;
         bool isNight = hour >= 20f || hour < 6f;
         bool isCongested = false;
@@ -292,22 +290,16 @@ public partial class DemoBootstrap
             if (l.st != null && l.st.Contains(pick) && LinePeakLoadRatio(l) >= 0.78f) { isCongested = true; break; }
         }
 
-        if (isCongested) pool = MicroCongestedTexts;
-        else if (st.portal) pool = MicroPortalTexts;
-        else if (StationHasScenery(pick)) pool = MicroSceneryTexts;
-        else if (st.facLevel > 0) pool = MicroCommercialTexts;
-        else if (isNight) pool = MicroNightTexts;
-        else pool = MicroSmoothTexts;
-
-        string msg = pool[UnityEngine.Random.Range(0, pool.Length)];
+        string msg = PickPassengerMicroText(st, isCongested, isNight, StationHasScenery(pick), st.facLevel > 0);
         Vector2 pos = Pos(pick);
-        float w = Mathf.Clamp(msg.Length * 19f + 34f, 150f, 340f);
+        float w = Mathf.Clamp(msg.Length * 19f + 38f, 150f, 400f);
         var go = Rect("MicroBubble", floaterLayer, pos.x - w * 0.5f, pos.y + 34f, w, 40f);
-        var bg = Img(go, new Color(0.16f, 0.14f, 0.12f, 0.82f), spriteRound);
+        var bg = Img(go, new Color(0.16f, 0.14f, 0.12f, 0.84f), spriteRound);
         bg.type = Image.Type.Sliced;
         bg.raycastTarget = false;
         var txt = Txt(go.transform, msg, 18, new Color(1f, 0.97f, 0.90f), 10f, 0f, w - 20f, 40f, TextAnchor.MiddleCenter);
         txt.raycastTarget = false;
+        FitSingleLine(txt, 18);
         var cg = go.AddComponent<CanvasGroup>();
         cg.blocksRaycasts = false;
         cg.interactable = false;

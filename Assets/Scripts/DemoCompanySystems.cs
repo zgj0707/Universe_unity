@@ -427,7 +427,6 @@ public partial class DemoBootstrap
     }
 
     bool HasCoTech(string key) => companyTechDone.Contains(key);
-    int CoTechTotalCount() => CoTechEraNodeCount(0) + CoTechEraNodeCount(1);
     bool CanUnlockCoTech(CompanyTechNode node)
     {
         if (node == null || HasCoTech(node.key)) return false;
@@ -810,7 +809,8 @@ public partial class DemoBootstrap
         if (rp < CoTechRpCost(node))
         {
             PlayErrorSfx();
-            Toast("科研点不足：需要 " + CoTechRpCost(node) + " RP（还差 " + Mathf.CeilToInt(CoTechRpCost(node) - rp) + " RP）");
+            float gap = CoTechRpCost(node) - rp;
+            NotifyOrOfferDiamondSupply("科研点不足：需要 " + CoTechRpCost(node) + " RP（还差 " + Mathf.CeilToInt(gap) + " RP）", true, gap);
             return;
         }
 
@@ -827,6 +827,7 @@ public partial class DemoBootstrap
         rp -= CoTechRpCost(node);
         companyTechDone.Add(node.key);
         coTechSessionUnlocked.Add(node.key);
+        lastUnlockedCoTechEra = node.eraGroup;
         coTechJustUnlocked = node.key;
         EnsureCompanyInitialized();
         operatingRates.Clear();
@@ -879,7 +880,7 @@ public partial class DemoBootstrap
             Txt(row.transform, $"{cand.name} · Lv.{cand.level} {TalentRoleNames[cand.role]}", 25, Ink, 114f, 120f, 560f, 38f, TextAnchor.MiddleLeft);
             Txt(row.transform, "✓ " + TalentRoleEffectSummary(cand), 23, Matcha, 114f, 78f, 580f, 36f, TextAnchor.MiddleLeft);
             var flawTxt = Txt(row.transform, "• " + TalentFlawDescs[Mathf.Clamp(cand.flawIndex, 0, TalentFlawDescs.Length - 1)], 20, InkSoft, 114f, 16f, 580f, 56f, TextAnchor.UpperLeft);
-            flawTxt.resizeTextForBestFit = true; flawTxt.resizeTextMinSize = 15; flawTxt.resizeTextMaxSize = ScaledFontSize(20);
+            flawTxt.resizeTextForBestFit = true; flawTxt.resizeTextMinSize = 15; flawTxt.resizeTextMaxSize = ScaledFontSize(20); flawTxt.horizontalOverflow = HorizontalWrapMode.Overflow; flawTxt.verticalOverflow = VerticalWrapMode.Truncate;
 
             int hireCost = TalentHireCost(cand);
             bool full = talents.Count >= TalentRosterCapacity();
@@ -938,8 +939,8 @@ public partial class DemoBootstrap
             var trainBtn = Btn(card.transform, "Train_" + t.id, maxLv ? "Lv.5 圆满" : $"进修 ¥{trC}/{trRp}RP", 22, 20f + bw + 12f, 14f, bw, 66f,
                 maxLv ? Paper2 : Matcha, () => {
                     if (t.level >= 5) { Toast("该人才已修业至最高 Lv.5"); return; }
-                    if (coins < trC) { PlayErrorSfx(); Toast("进修经费不足：需 ¥" + trC); return; }
-                    if (rp < trRp) { PlayErrorSfx(); Toast("科研点不足：需 " + trRp + " RP"); return; }
+                    if (coins < trC) { PlayErrorSfx(); NotifyOrOfferDiamondSupply("进修经费不足：需 ¥" + trC, false, (float)(trC - coins)); return; }
+                    if (rp < trRp) { PlayErrorSfx(); NotifyOrOfferDiamondSupply("科研点不足：需 " + trRp + " RP", true, trRp - rp); return; }
                     coins -= trC; rp -= trRp;
                     GrantTalentXp(t, TalentNextLevelXp(t.level), false);
                     hasForecastSignature = false; operatingRates.Clear(); RecalcIncome();

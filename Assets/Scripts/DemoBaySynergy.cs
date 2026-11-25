@@ -34,13 +34,6 @@ public partial class DemoBootstrap
         return false;
     }
 
-    bool HasPortalServiceInAnyMars(int portalIdx)
-    {
-        for (int i = 0; i < MarsRegions.Length; i++)
-            if (HasPortalServiceInRegion(portalIdx, MarsRegions[i])) return true;
-        return false;
-    }
-
     bool HasMarsBorderService(string regA, string regB, params string[] gateNames)
     {
         for (int i = 0; i < gateNames.Length; i++)

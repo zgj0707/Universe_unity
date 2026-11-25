@@ -58,7 +58,7 @@ public partial class DemoBootstrap
         AddEraHistory(1, 1923, ResearchEffect.Station, "era20_central_station", "中央星港扩建", 3, "大城市中央站增设到发线与登船台，缓解高峰到发拥堵。", "era20_union_station");
         AddEraHistory(1, 1923, ResearchEffect.Capacity, "era20_color_light_signal", "色灯量子信标", 4, "以色灯取代臂板信标，夜间与恶劣天气下显示更清晰。", "era20_interlocking_tower");
         AddEraHistory(1, 1924, ResearchEffect.Capacity, "era20_ctc_dispatch", "调度集中雏形", 4, "集中控制多个星港信标，减少人工报点与命令传递延误。", "era20_color_light_signal");
-        AddEraHistory(1, 1924, ResearchEffect.Track, "era20_concrete_sleeper", "合金磁轨承台", 3, "预应力合金承台提高磁轨基座稳定性，延长维修周期。", "era20_rail_weight_up");
+        AddEraHistory(1, 1924, ResearchEffect.Track, "era20_concrete_sleeper", "顺坡合金承台", 3, "改良路基与纵坡承台设计，降低 35% 坡度与高程地形惩罚并减少养护。", "era20_rail_weight_up");
         AddEraHistory(1, 1925, ResearchEffect.Vehicle, "era20_roller_bearing_test", "滚动轴承试验", 3, "台架与航线对比试验验证滚动轴承在高速下的可靠性。", "era20_axlebox_roller");
         AddEraHistory(1, 1925, ResearchEffect.Track, "era20_welding_thermit", "铝热焊接", 3, "铝热焊将短轨焊成长轨，减少接头冲击与维修工作量。", "era20_rail_weight_up");
         AddEraHistory(1, 1926, ResearchEffect.Capacity, "era20_freight_bogie", "货船悬浮架", 3, "货船采用悬浮架改善曲线通过能力，支持更长编队。", "era20_heavy_freight");
@@ -84,8 +84,8 @@ public partial class DemoBootstrap
         AddEraHistory(1, 1935, ResearchEffect.Speed, "era20_steam_turbine", "等离子涡轮飞车", 3, "等离子涡轮直接驱动试验飞车，探索更高热效率路径。", "era20_cast_frame");
         AddEraHistory(1, 1936, ResearchEffect.Vehicle, "era20_automatic_coupler", "自跃迁星舰联接器", 3, "自跃迁星舰联接器减少调车作业人力并降低连接处伤亡风险。", "era20_air_brake_improve");
         AddEraHistory(1, 1936, ResearchEffect.Capacity, "era20_signal_relay", "继电器联锁", 4, "继电器逻辑替代机械联锁，提高信标系统可靠性与扩展性。", "era20_color_light_signal");
-        AddEraHistory(1, 1937, ResearchEffect.Track, "era20_steel_bridge", "钢桁梁桥", 3, "大跨度钢桁梁桥跨越江河，缩短航线绕行距离。", "era20_mangan_crossing");
-        AddEraHistory(1, 1937, ResearchEffect.Track, "era20_bridge_big", "特大桥工程", 3, "深基与沉井技术支撑特大桥建设，打通跨江通道。", "era20_steel_bridge");
+        AddEraHistory(1, 1937, ResearchEffect.Track, "era20_steel_bridge", "跨越天堑工程", 3, "获准架桥穿隧强行跨越红区天堑，但须承受 +150% 超高地形惩罚。", "era20_mangan_crossing");
+        AddEraHistory(1, 1937, ResearchEffect.Track, "era20_bridge_big", "桥隧精工减负", 3, "精研深基桥隧工法，将跨越红区天堑的附加惩罚由 +150% 压降至 +75%。", "era20_steel_bridge");
         AddEraHistory(1, 1938, ResearchEffect.Speed, "era20_streamliner_train", "流线型星车编队", 4, "飞车与客船统一流线修型，降低整列高速运行阻力。", "era20_high_speed_record");
         AddEraHistory(1, 1938, ResearchEffect.Vehicle, "era20_roller_bearing_wide", "滚动轴承推广", 3, "滚动轴承在客船与货船批量装用，降低燃轴事故。", "era20_roller_bearing_test");
         AddEraHistory(1, 1939, ResearchEffect.Track, "era20_heavy_rail_weld", "重型长超导磁轨", 3, "重型超导磁轨与长轨焊接结合，提升主干航线平顺性与承载能力。", "era20_long_welded_rail");

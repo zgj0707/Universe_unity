@@ -68,6 +68,62 @@ public partial class DemoBootstrap
                 imagePath = "Scenery/moon_apollo";
                 description = "阿波罗环山观测塔矗立于双环撞击盆地边缘，彻底屏蔽了地球无线电干扰，是深空射电天文的圣地。";
                 return true;
+            case "奥林匹斯峰":
+                imagePath = "Scenery/mars_olympus";
+                description = "太阳系已知最高的盾状火山，二十余公里高的熔岩台地刺破稀薄粉红大气，悬崖边缘常挂着晨间冰云。";
+                return true;
+            case "阿尔巴台地":
+                imagePath = "Scenery/mars_alba";
+                description = "绵延上千公里的低平火山高原，平行排列的张裂断层带如同星舰航道天然刻画的坐标网格。";
+                return true;
+            case "陶马西亚原":
+                imagePath = "Scenery/mars_thaumasia";
+                description = "塔尔西斯南缘的古老玄武岩高地，赭红断崖与深邃裂谷记录着火星地壳最剧烈的隆升岁月。";
+                return true;
+            case "坎多尔光柱":
+                imagePath = "Scenery/mars_candor";
+                description = "水手大峡谷最宽阔的幽深支谷，黎明斜阳穿透琥珀色谷底薄雾时，会在岩壁间投下笔直光柱。";
+                return true;
+            case "克律塞纪念":
+                imagePath = "Scenery/mars_chryse";
+                description = "人类早期火星着陆探测的历史纪念区，古洪水冲积平原上保留着古河道与星航纪念穹顶。";
+                return true;
+            case "阿耳古瑞环":
+                imagePath = "Scenery/mars_argyre";
+                description = "南半球巨大的多环撞击盆地，锯齿状冰霜群山环抱紫红盆地，是火星南境最壮阔的银环奇观。";
+                return true;
+            case "诺亚方尖碑":
+                imagePath = "Scenery/mars_noachis";
+                description = "矗立于火星最古老诺亚高地上的星际拓荒方尖碑，见证跨星域轨道正式贯通东西半球。";
+                return true;
+            case "大瑟提斯原":
+                imagePath = "Scenery/mars_syrtis";
+                description = "因深色玄武岩反射率极低而被早期天文学家最先标注的暗斑地盾，黑色熔岩原与沙丘交织成画。";
+                return true;
+            case "赫拉斯深坑":
+                imagePath = "Scenery/mars_hellas";
+                description = "火星最深邃的巨型撞击盆地，底部气压足以让水冰雾霭长久盘桓，晨昏时常泛起玫瑰色薄纱。";
+                return true;
+            case "耶泽罗水岸":
+                imagePath = "Scenery/mars_jezero";
+                description = "远古湖泊三角洲冲积扇遗址，蜿蜒古河道与层状黏土沉积岩诉说着火星曾经碧波荡漾的年代。";
+                return true;
+            case "艾律西昂峰":
+                imagePath = "Scenery/mars_elysium";
+                description = "孤悬于东方广袤红沙平原之上的对称火山锥，高层水冰云带常年缭绕其火山口边缘。";
+                return true;
+            case "乌托邦冰原":
+                imagePath = "Scenery/mars_utopia";
+                description = "北方广阔平原上覆满浅层地下永冻冰脉，多边形龟裂冻土在微弱极地晨光下闪烁银蓝微光。";
+                return true;
+            case "盖尔着陆点":
+                imagePath = "Scenery/mars_gale";
+                description = "夏普山高耸于盖尔陨坑正中，玻璃与黄铜构筑的边疆纪念星港静静守望着古老的层状山脊。";
+                return true;
+            case "古瑟夫陨坑":
+                imagePath = "Scenery/mars_gusev";
+                description = "被古河谷冲破南缘的平坦环形山盆地，赤红风成沙纹与零星残丘铺展成经典的火星拓荒画卷。";
+                return true;
             default:
                 imagePath = null; description = null;
                 return false;
@@ -145,7 +201,6 @@ public partial class DemoBootstrap
         if (sceneryViewer) Destroy(sceneryViewer);
         CloseLineBubble();
         sceneryViewer = new GameObject("SceneryViewer", typeof(RectTransform), typeof(Canvas), typeof(GraphicRaycaster), typeof(SceneryViewerLayout));
-        SyncRegionalMusic(false);
         var viewerCanvas = sceneryViewer.GetComponent<Canvas>();
         viewerCanvas.renderMode = RenderMode.ScreenSpaceOverlay; viewerCanvas.overrideSorting = true; viewerCanvas.sortingOrder = 100;
         var backdrop = Rect("Backdrop", sceneryViewer.transform, 0, 0, 0, 0);
@@ -155,9 +210,16 @@ public partial class DemoBootstrap
         var stage = Rect("Landscape", sceneryViewer.transform, 0, 0, 1920, 1080);
         var stageRt = stage.GetComponent<RectTransform>();
         stageRt.anchorMin = stageRt.anchorMax = new Vector2(0.5f, 0.5f); stageRt.pivot = new Vector2(0.5f, 0.5f); stageRt.anchoredPosition = Vector2.zero;
-        sceneryViewer.GetComponent<SceneryViewerLayout>().stage = stageRt;
+        var layout = sceneryViewer.GetComponent<SceneryViewerLayout>();
+        layout.stage = stageRt;
         var picture = Rect("Picture", stage.transform, 0, 0, 1920, 1080);
+        var pictureRt = picture.GetComponent<RectTransform>();
+        pictureRt.anchorMin = pictureRt.anchorMax = new Vector2(0.5f, 0.5f);
+        pictureRt.pivot = new Vector2(0.5f, 0.5f);
+        pictureRt.anchoredPosition = Vector2.zero;
         var raw = picture.AddComponent<RawImage>(); raw.texture = texture; raw.color = Color.white;
+        layout.picture = pictureRt;
+        layout.rawImage = raw;
         var controls = Rect("Controls", stage.transform, 0, 0, 1920, 1080);
         var reveal = picture.AddComponent<Button>(); reveal.targetGraphic = raw;
         reveal.onClick.AddListener(() => controls.SetActive(true));
@@ -177,12 +239,12 @@ public partial class DemoBootstrap
             notification.GetComponent<Image>().raycastTarget = false;
             Destroy(notification, 3f);
         }
-        var back = Btn(controls.transform, "Back", "←", 40, 24, 958, 94, 94, new Color(0.12f, 0.16f, 0.15f, 0.75f), () => { Destroy(sceneryViewer); sceneryViewer = null; RequestResourceTrim(false); after?.Invoke(); if (pageRoot == null) SyncRegionalMusic(false); });
+        var back = Btn(controls.transform, "Back", "←", 40, 24, 958, 94, 94, new Color(0.12f, 0.16f, 0.15f, 0.75f), () => { Destroy(sceneryViewer); sceneryViewer = null; RequestResourceTrim(false); after?.Invoke(); });
         TInk(back, Color.white);
         var home = Btn(controls.transform, "Home", "主页", 24, 134, 958, 104, 94, new Color(0.12f, 0.16f, 0.15f, 0.75f), GoHome);
         TInk(home, Color.white);
         var heading = Txt(controls.transform, sc.name, 44, Color.white, 254, 975, 800, 60, TextAnchor.MiddleLeft);
-        heading.resizeTextForBestFit = true; heading.resizeTextMinSize = 24; heading.resizeTextMaxSize = ScaledFontSize(44);
+        heading.resizeTextForBestFit = true; heading.resizeTextMinSize = 24; heading.resizeTextMaxSize = ScaledFontSize(44); heading.horizontalOverflow = HorizontalWrapMode.Overflow; heading.verticalOverflow = VerticalWrapMode.Truncate;
         var clear = Btn(controls.transform, "Clear", "清屏", 30, 1690, 44, 180, 70, new Color(0.12f, 0.16f, 0.15f, 0.75f), () => controls.SetActive(false));
         sceneryViewer.GetComponent<SceneryViewerLayout>().clear = clear.GetComponent<RectTransform>();
         TInk(clear, Color.white);
@@ -191,7 +253,8 @@ public partial class DemoBootstrap
 
 public class SceneryViewerLayout : MonoBehaviour
 {
-    public RectTransform stage, clear;
+    public RectTransform stage, clear, picture;
+    public RawImage rawImage;
     int lastWidth = -1, lastHeight = -1;
     void LateUpdate()
     {
@@ -206,5 +269,27 @@ public class SceneryViewerLayout : MonoBehaviour
         stage.localScale = Vector3.one * scale;
         stage.localRotation = Quaternion.Euler(0, 0, portrait ? 90 : 0);
         if (clear) clear.anchoredPosition = new Vector2(portrait ? 1370 : 1690, 44);
+        if (picture && scale > 0.0001f)
+        {
+            // 按屏幕真实宽高铺满全屏（居中裁剪多余边缘，不留黑边也不拉伸变形）。
+            float fullW = width / scale;
+            float fullH = height / scale;
+            picture.sizeDelta = new Vector2(fullW, fullH);
+            if (rawImage && rawImage.texture)
+            {
+                float texAspect = (float)rawImage.texture.width / Mathf.Max(1, rawImage.texture.height);
+                float viewAspect = fullW / Mathf.Max(1f, fullH);
+                if (texAspect > viewAspect)
+                {
+                    float uW = viewAspect / texAspect;
+                    rawImage.uvRect = new Rect((1f - uW) * 0.5f, 0f, uW, 1f);
+                }
+                else
+                {
+                    float uH = texAspect / viewAspect;
+                    rawImage.uvRect = new Rect(0f, (1f - uH) * 0.5f, 1f, uH);
+                }
+            }
+        }
     }
 }

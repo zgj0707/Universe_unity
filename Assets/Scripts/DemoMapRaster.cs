@@ -19,9 +19,9 @@ public partial class DemoBootstrap
             regionMapArts[id] = go;
             go.SetActive(id == currentRegion);
         }
-        hkMapArt = regionMapArts.TryGetValue("月之亮面", out var hk) ? hk : null;
-        macauMapArt = regionMapArts.TryGetValue("月背", out var mc) ? mc : null;
-        guangdongMapArt = regionMapArts.TryGetValue("火星·西半球", out var gd) ? gd : null;
+        moonNearMapArt = regionMapArts.TryGetValue("月之亮面", out var moonNear) ? moonNear : null;
+        moonFarMapArt = regionMapArts.TryGetValue("月背", out var moonFar) ? moonFar : null;
+        marsWestMapArt = regionMapArts.TryGetValue("火星·西半球", out var marsWest) ? marsWest : null;
     }
 
     GameObject BuildSingleRegionMap(Transform parent, RegionSpec spec)
@@ -38,9 +38,23 @@ public partial class DemoBootstrap
         raw.color = Themes[Mathf.Clamp(currentTheme, 0, Themes.Length - 1)].mapTint;
         regionMapRaws[spec.id] = raw;
 
-        if (spec.id == "月之亮面") hkMapRaw = raw;
-        else if (spec.id == "月背") macauMapRaw = raw;
-        else if (spec.id == "火星·西半球") guangdongMapRaw = raw;
+        // 若存在对应区域的离线天堑/陡坡叠加图层，自动挂载（宽幅火星同步适配 mw，默认隐藏，开线/编线时显示）
+        string overlayPath = spec.texResource.Replace("MapArt/", "MapData/") + "_hazard_overlay";
+        var overlayTex = Resources.Load<Texture2D>(overlayPath);
+        if (overlayTex)
+        {
+            var ovGo = Rect("HazardOverlay_" + spec.id, go.transform, spec.canvasOffsetX * W, 0, mw, H);
+            var ovRaw = ovGo.AddComponent<RawImage>();
+            ovRaw.texture = overlayTex;
+            ovRaw.color = new Color(1f, 1f, 1f, 0.82f);
+            ovRaw.raycastTarget = false;
+            ovGo.SetActive(dotGridHighlighted && spec.id == currentRegion);
+            regionHazardOverlays[spec.id] = ovGo;
+        }
+
+        if (spec.id == "月之亮面") moonNearMapRaw = raw;
+        else if (spec.id == "月背") moonFarMapRaw = raw;
+        else if (spec.id == "火星·西半球") marsWestMapRaw = raw;
 
         var rt = go.GetComponent<RectTransform>();
         var labelCol = new Color(1f, 0.96f, 0.80f, 0.88f);

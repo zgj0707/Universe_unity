@@ -215,7 +215,7 @@ public static class MetroLayoutBuilder
                             }
                             if (subSeq.Count >= 2) segments.Add((line, subSeq));
                         }
-                        subSeq.Clear();
+                        subSeq = new List<int>();
                         hasPrevVisible = false;
                     }
                 }

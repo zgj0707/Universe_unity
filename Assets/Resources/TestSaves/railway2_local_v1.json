@@ -10,8 +10,8 @@
     "rp": 633.0,
     "clock": 159.08700561523438,
     "researchClock": 1.0928831100463867,
-    "macau": true,
-    "guangdong": true,
+    "moonFar": true,
+    "marsWest": true,
     "loan": false,
     "music": true,
     "region": "月之亮面",
@@ -2631,7 +2631,7 @@
     "memorialTickets": [
         "tkt_first_line",
         "tkt_hk_6",
-        "tkt_macau",
+        "tkt_moon_far",
         "tkt_gd",
         "tkt_bay",
         "tkt_retire"

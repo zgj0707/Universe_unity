@@ -274,7 +274,7 @@ public partial class DemoBootstrap
     // 单方向单区段的日化运力；不同区段可由不同乘客复用。
     float FleetCapacity(Line line) { return 4000f * RunningTrains(line) * FleetTrait(line, 1, true) * ResearchFactor(ResearchEffect.Capacity) * (SkinCategory(GetLineSkin(line)) == 4 ? 1.08f : 1f) * LineTalentCapMult(line); }
     float LineCapacity(Line line) { return FleetCapacity(line); }
-    int hkEconomicAnchor = -2, macauEconomicAnchor = -2;
+    int moonNearEconomicAnchor = -2, moonFarEconomicAnchor = -2;
     Vector2 EconomicPosition(int index)
     {
         var station = stations[index];
@@ -289,16 +289,16 @@ public partial class DemoBootstrap
             return PosInRegion(index, station.region);
         }
         if (station.region == "月之亮面") {
-            if (hkEconomicAnchor == -2) hkEconomicAnchor = stations.FindIndex(x=>x.name=="奥林匹斯星门");
-            int anchor = hkEconomicAnchor;
+            if (moonNearEconomicAnchor == -2) moonNearEconomicAnchor = stations.FindIndex(x=>x.name=="奥林匹斯星门");
+            int anchor = moonNearEconomicAnchor;
             string marsReg = anchor >= 0 ? stations[anchor].region : "火星·西半球";
             Vector2 origin=anchor>=0 ? PosInRegion(anchor, marsReg) : new Vector2(615,900);
             Vector2 localAnchor=anchor>=0 ? PosInRegion(anchor,"月之亮面") : new Vector2(590,865);
             return origin+(PosInRegion(index,"月之亮面")-localAnchor)*0.4f;
         }
         if (station.region == "月背") {
-            if (macauEconomicAnchor == -2) macauEconomicAnchor = stations.FindIndex(x=>x.name=="阿波罗星门");
-            int anchor = macauEconomicAnchor;
+            if (moonFarEconomicAnchor == -2) moonFarEconomicAnchor = stations.FindIndex(x=>x.name=="阿波罗星门");
+            int anchor = moonFarEconomicAnchor;
             string marsReg = "火星·西半球";
             Vector2 origin=anchor>=0 ? PosInRegion(anchor, marsReg) : new Vector2(540,850);
             Vector2 localAnchor=anchor>=0 ? PosInRegion(anchor,"月背") : new Vector2(540,900);
@@ -944,12 +944,21 @@ public partial class DemoBootstrap
 
     float LinePeakLoadRatio(Line line)
     {
-        if (line == null || traffic == null || traffic.lineSegLoad == null) return 0f;
+        if (line == null || traffic == null || line.st == null) return 0f;
         float peak = 0f;
         for (int i = 0; i < line.st.Count - 1; i++)
         {
             string key = line.id + ":" + Mathf.Min(line.st[i], line.st[i + 1]) + ":" + Mathf.Max(line.st[i], line.st[i + 1]);
-            if (traffic.lineSegLoad.TryGetValue(key, out float load) && load > peak) peak = load;
+            if (traffic.lineSegLoad != null && traffic.lineSegLoad.TryGetValue(key, out float load) && load > peak) peak = load;
+            if (trafficSlots != null)
+            {
+                for (int s = 0; s < trafficSlots.Length; s++)
+                {
+                    var slot = trafficSlots[s];
+                    if (slot == null || slot.lineSegLoad == null) continue;
+                    if (slot.lineSegLoad.TryGetValue(key, out float slotLoad) && slotLoad > peak) peak = slotLoad;
+                }
+            }
         }
         return peak;
     }
@@ -1168,7 +1177,6 @@ public partial class DemoBootstrap
     float StationPassengerFlow(int index) { return traffic == null ? 0 : traffic.served[index]; }
     float StationRequestedFlow(int index) { return traffic == null ? 0 : traffic.demand[index]; }
     float LinePassengerFlow(Line line) { return traffic != null && traffic.lineServed.TryGetValue(line,out float value) ? value : 0f; }
-    float LineRequestedFlow(Line line) { return traffic != null && traffic.lineDemand.TryGetValue(line,out float value) ? value : 0f; }
     float LinePeakSectionDemand(Line line) { return traffic != null && traffic.linePeakDemand.TryGetValue(line,out float value) ? value : 0f; }
     sealed class LineForecastData { public float gross, vehicle, track, tax; public float Profit { get { return gross - vehicle - track - tax; } } }
     readonly Dictionary<Line, LineForecastData> lineForecasts = new Dictionary<Line, LineForecastData>();
@@ -1437,11 +1445,6 @@ public partial class DemoBootstrap
         float longHaul = Mathf.Pow(Mathf.Max(0f, len - 250f), 1.38f) * 0.18f + Mathf.Max(0, stops - 4) * 35f;
         float networkScale = 1f + Mathf.Clamp(lines.Count - 2, 0, 20) * 0.03f;
         return (baseTrack + longHaul) * networkScale * ResearchCostFactor(ResearchEffect.Track) * skinMult * policyMult;
-    }
-    float LineProfitRate(Line line, TrafficResult result)
-    {
-        float beforeTax = TrafficRevenue(line,result) - VehicleMaintenance(line) - TrackMaintenance(line);
-        return beforeTax - Mathf.Max(0f,beforeTax) * 0.1f;
     }
     float TrafficRevenue(Line line, TrafficResult result)
     {

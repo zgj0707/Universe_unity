@@ -47,7 +47,7 @@ public class MapWheelZoom : MonoBehaviour, IScrollHandler, IBeginDragHandler, ID
     {
         float current = map.localScale.x;
         float minZ = minZoom != null ? minZoom() : DefaultMinZoom;
-        next = Mathf.Clamp(next, minZ, maxZoom != null ? maxZoom() : 2.5f);
+        next = Mathf.Clamp(next, minZ, maxZoom != null ? maxZoom() : 6f);
         if (Mathf.Approximately(next, current)) return;
         if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(map, screenPoint, null, out var local)) return;
         if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(viewport, screenPoint, null, out var desired)) return;

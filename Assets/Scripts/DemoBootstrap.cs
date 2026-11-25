@@ -67,6 +67,7 @@ public partial class DemoBootstrap : MonoBehaviour
     [Serializable] public class Scenery { public string name; public float x,y; public bool natural; public bool found, unlocked; public string triggerStation; public string region = "月之亮面"; }
     [Serializable] public class Line {
         public int id; public string name; public Color color; public int skin = -1; public List<int> st = new List<int>();
+        public List<SegmentWaypoints> segWaypoints = new List<SegmentWaypoints>();
         public int trains = 1;
         public bool hasBaseTrain = true;
         public int[] dispatch = { 1, 1, 1, 1 }; public float fare = 1.5f;
@@ -98,9 +99,9 @@ public partial class DemoBootstrap : MonoBehaviour
     string currentRegion = "月之亮面"; Text regionTitle;
     readonly Dictionary<string, GameObject> regionMapArts = new Dictionary<string, GameObject>(StringComparer.Ordinal);
     readonly Dictionary<string, RawImage> regionMapRaws = new Dictionary<string, RawImage>(StringComparer.Ordinal);
-    GameObject hkMapArt, macauMapArt, guangdongMapArt;
-    bool macauUnlocked, guangdongUnlocked;
-    const float MacauIncomeRequired = 600f, GuangdongIncomeRequired = 1200f;
+    GameObject moonNearMapArt, moonFarMapArt, marsWestMapArt;
+    bool moonFarUnlocked, marsWestUnlocked;
+    const float MoonFarIncomeRequired = 600f, MarsWestIncomeRequired = 1200f;
     RectTransform progFill;
     GameObject activePanel, scrim, toastGo, panelShadow, zoomNotice;
     int stationFilter; Text stationFilterText;
@@ -149,7 +150,7 @@ public partial class DemoBootstrap : MonoBehaviour
     Coroutine resourceTrimCo;
     readonly List<int> pulsingRingIndices = new List<int>();
     readonly List<Shadow> managedShadows = new List<Shadow>();
-    RawImage hkMapRaw, macauMapRaw, guangdongMapRaw, topFadeImg, botFadeImg;
+    RawImage moonNearMapRaw, moonFarMapRaw, marsWestMapRaw, topFadeImg, botFadeImg;
     RawImage[] mapEdgeFeathers;
     RectTransform topBarCoinRt, topBarCapRt, topBarDiaRt, topBarGearRt, topBarHelpRt;
     float lastRespW = -1f, lastRespH = -1f;
@@ -193,10 +194,11 @@ public partial class DemoBootstrap : MonoBehaviour
 
     class LineSegmentVisual
     {
-        public int from, to;
+        public int from, to, logicSegIndex;
         public Vector2 basePos, baseOffset;
         public GameObject casing, body, core, hit;
         public Image coreImg;
+        public LinePolylineGraphic poly;
         public Color baseCoreColor;
         public void SetVisible(bool visible)
         {
@@ -530,6 +532,7 @@ public partial class DemoBootstrap : MonoBehaviour
         BuildSceneryViews();
         BuildTopBar();
         BuildZoomNotice();
+        BuildAutoRouteToggle();
         BuildLeftRail();
         BuildStationFilterButton();
         BuildLeftReminderEntries();
@@ -603,9 +606,9 @@ public partial class DemoBootstrap : MonoBehaviour
         var coinRing = Rect("CoinRing", c1.transform, 12, 18, 56, 56); Img(coinRing, new Color(0.25f,0.21f,0.17f,0.88f), spriteStationRing).raycastTarget = false;
         var coinIcon = Rect("Icon", coinRing.transform, 4, 4, 48, 48); Img(coinIcon, Gold, spriteCircle).raycastTarget = false;
         coinTxt = Txt(c1.transform, FormatCoins(coins), 42, Ink, 78, 44, 224, 42, TextAnchor.MiddleLeft);
-        coinTxt.resizeTextForBestFit = true; coinTxt.resizeTextMinSize = 22; coinTxt.resizeTextMaxSize = ScaledFontSize(42, 1.15f); coinTxt.verticalOverflow = VerticalWrapMode.Truncate; coinTxt.raycastTarget = false;
+        coinTxt.resizeTextForBestFit = true; coinTxt.resizeTextMinSize = 22; coinTxt.resizeTextMaxSize = ScaledFontSize(42, 1.15f); coinTxt.horizontalOverflow = HorizontalWrapMode.Overflow; coinTxt.verticalOverflow = VerticalWrapMode.Truncate; coinTxt.raycastTarget = false;
         incomeTxt = Txt(c1.transform, "预计日利润 +240", 24, InkSoft, 78, 8, 232, 34, TextAnchor.MiddleLeft);
-        incomeTxt.resizeTextForBestFit = true; incomeTxt.resizeTextMinSize = 18; incomeTxt.resizeTextMaxSize = ScaledFontSize(25, 1.15f); incomeTxt.verticalOverflow = VerticalWrapMode.Truncate; incomeTxt.raycastTarget = false;
+        incomeTxt.resizeTextForBestFit = true; incomeTxt.resizeTextMinSize = 18; incomeTxt.resizeTextMaxSize = ScaledFontSize(25, 1.15f); incomeTxt.horizontalOverflow = HorizontalWrapMode.Overflow; incomeTxt.verticalOverflow = VerticalWrapMode.Truncate; incomeTxt.raycastTarget = false;
 
         var cap = Rect("Cap", bar.transform, 354, 26, 400, 162); Rounded(cap, CardBg); SoftShadow(cap);
         topBarCapRt = cap.GetComponent<RectTransform>();
@@ -615,7 +618,7 @@ public partial class DemoBootstrap : MonoBehaviour
         var curSpec = GetRegionSpec(currentRegion);
         string regTitle = curSpec != null ? curSpec.spacedTitle : currentRegion;
         var title = Txt(cap.transform, regTitle, 46, Ink, 16, 106, 368, 52, TextAnchor.MiddleCenter);
-        title.resizeTextForBestFit = true; title.resizeTextMinSize = 30; title.resizeTextMaxSize = ScaledFontSize(46, 1.2f);
+        title.resizeTextForBestFit = true; title.resizeTextMinSize = 30; title.resizeTextMaxSize = ScaledFontSize(46, 1.2f); title.horizontalOverflow = HorizontalWrapMode.Overflow; title.verticalOverflow = VerticalWrapMode.Truncate;
         regionTitle = title;
         var regionEntry = cap.AddComponent<Button>(); regionEntry.targetGraphic = cap.GetComponent<Image>();
         regionEntry.onClick.AddListener(OpenRegionScreen);
@@ -625,23 +628,23 @@ public partial class DemoBootstrap : MonoBehaviour
 
         var c3 = Rect("Dia", bar.transform, 780, 46, 244, 92); Rounded(c3, CardBg); SoftShadow(c3);
         topBarDiaRt = c3.GetComponent<RectTransform>();
+        var diaBtn = c3.AddComponent<Button>(); diaBtn.targetGraphic = c3.GetComponent<Image>();
+        diaBtn.onClick.AddListener(OpenDiamondExchangePopup);
         var diaIcon = Rect("Icon", c3.transform, 12, 18, 52, 52); Img(diaIcon, Sakura, spriteDiamond).raycastTarget = false;
         diamondTxt = Txt(c3.transform, "20", 42, Ink, 66, 19, 102, 54, TextAnchor.MiddleCenter);
-        Btn(c3.transform, "DiamondInfo", "?", 32, 172, 14, 62, 64, Matcha, () => Toast("钻石可通过名胜打卡和飞车里程碑获得"));
+        diamondTxt.raycastTarget = false;
+        Btn(c3.transform, "DiamondInfo", "+", 34, 172, 14, 62, 64, Matcha, OpenDiamondExchangePopup);
 
         var gb = Btn(bar.transform, "Gear", "设置", 27, 24, -32, 86, 68, CardBg, OpenAudioSettings);
         topBarGearRt = gb.GetComponent<RectTransform>();
         gb.GetComponentInChildren<Text>().color = Ink;
-        Img(Rect("StampTop", gb.transform, 10, 61, 66, 5), Indigo, spriteRound).raycastTarget = false;
         SoftShadow(gb.gameObject);
         var hb = Btn(bar.transform, "Help", "帮助", 27, 122, -32, 86, 68, CardBg, () => HelpPopup("长按星港拖到下一站即可铺线，拖回起点成环。\n已有线路端点拖出可延线，中间站拖出可建新线；长按线路拖至新站可插站。\n点开图鉴大图即完成名胜打卡；交界港可跨区衔接。\n右上可调运行倍速（1× 下 6 分钟为一游戏日）。"));
         topBarHelpRt = hb.GetComponent<RectTransform>();
         hb.GetComponentInChildren<Text>().color = InkSoft;
-        Img(Rect("StampTop", hb.transform, 10, 61, 66, 5), Matcha, spriteRound).raycastTarget = false;
         SoftShadow(hb.gameObject);
         var mb = Btn(bar.transform, "MetroMap", "线路图", 27, 220, -32, 108, 68, CardBg, OpenMetroMapScreen);
         mb.GetComponentInChildren<Text>().color = Indigo;
-        Img(Rect("StampTop", mb.transform, 10, 61, 88, 5), Vermilion, spriteRound).raycastTarget = false;
         SoftShadow(mb.gameObject);
         lastDisplayedMinute = -1; lastDisplayedDay = -1;
         lastHudCoinsText = ""; lastHudIncomeText = ""; lastHudDiamonds = int.MinValue; lastHudProgress = int.MinValue;
@@ -667,6 +670,7 @@ public partial class DemoBootstrap : MonoBehaviour
         // 宽幅地图拖出中心 1080×1920 矩形后，底层超大透明接收层保证边缘仍可接收滚轮缩放与拖拽事件
         var hitArea = Rect("MapHitArea", mapRect, -2.5f * W, -1.5f * H, 6f * W, 4f * H);
         Img(hitArea, new Color(1, 1, 1, 0));
+        AttachMapLineBridge(hitArea);
         var mapZoom = map.AddComponent<MapWheelZoom>();
         mapWheelZoom = mapZoom;
         mapZoom.map = mapRect; mapZoom.viewport = root;
@@ -700,6 +704,7 @@ public partial class DemoBootstrap : MonoBehaviour
 
         lineLayer = Rect("Lines", mapRect, 0, 0, W, H).GetComponent<RectTransform>();
         AttachSubCanvas(lineLayer.gameObject, true);
+        InitDotGridLayer();
         odArcLayer = Rect("OdArcs", mapRect, 0, 0, W, H).GetComponent<RectTransform>();
         AttachSubCanvas(odArcLayer.gameObject, false);
         previewLayer = Rect("Preview", mapRect, 0, 0, W, H).GetComponent<RectTransform>();
@@ -722,12 +727,12 @@ public partial class DemoBootstrap : MonoBehaviour
         AttachSubCanvas(floaterLayer.gameObject, false);
 
         var terrainCol = new Color(1.00f, 0.96f, 0.80f, 0.88f);
-        Label(hkMapArt.GetComponent<RectTransform>(), "雨  海", 32, MoonNearX(-15.0f), MoonNearY(26.0f), terrainCol, 160);
-        Label(hkMapArt.GetComponent<RectTransform>(), "静  海", 30, MoonNearX(22.0f), MoonNearY(13.0f), terrainCol, 160);
-        Label(hkMapArt.GetComponent<RectTransform>(), "云  海", 28, MoonNearX(-15.0f), MoonNearY(-26.0f), terrainCol, 160);
-        Label(hkMapArt.GetComponent<RectTransform>(), "第谷高地", 25, MoonNearX(-2.0f), MoonNearY(-50.0f), terrainCol, 180);
-        PortalLabel(hkMapArt.GetComponent<RectTransform>(), MoonNearX(27.0f), MoonNearY(23.0f), "→ 塔尔西斯");
-        PortalLabel(hkMapArt.GetComponent<RectTransform>(), MoonNearX(-30.0f), MoonNearY(38.0f), "✦ 月背 / 塔尔西斯");
+        Label(moonNearMapArt.GetComponent<RectTransform>(), "雨  海", 32, MoonNearX(-15.0f), MoonNearY(26.0f), terrainCol, 160);
+        Label(moonNearMapArt.GetComponent<RectTransform>(), "静  海", 30, MoonNearX(22.0f), MoonNearY(13.0f), terrainCol, 160);
+        Label(moonNearMapArt.GetComponent<RectTransform>(), "云  海", 28, MoonNearX(-15.0f), MoonNearY(-26.0f), terrainCol, 160);
+        Label(moonNearMapArt.GetComponent<RectTransform>(), "第谷高地", 25, MoonNearX(-2.0f), MoonNearY(-50.0f), terrainCol, 180);
+        PortalLabel(moonNearMapArt.GetComponent<RectTransform>(), MoonNearX(27.0f), MoonNearY(23.0f), "→ 塔尔西斯");
+        PortalLabel(moonNearMapArt.GetComponent<RectTransform>(), MoonNearX(-30.0f), MoonNearY(38.0f), "✦ 月背 / 塔尔西斯");
 
         // 隐藏顶/底遮罩条，保持全屏星球地形连续感
         Color fadeCol = Themes[Mathf.Clamp(currentTheme, 0, Themes.Length - 1)].fade;
@@ -749,6 +754,7 @@ public partial class DemoBootstrap : MonoBehaviour
         ClearStationOdArcs();
         ClosePage(); CloseLineBubble(); CancelDraft(); ClearFloaters(); currentRegion = destination;
         SetActiveRegionMapArt(currentRegion);
+        SyncTerrainAndGridForRegion(currentRegion);
         SyncRegionMapTextureMemory();
         RequestResourceTrim(false);
         trainsDirty = true;
@@ -872,7 +878,7 @@ public partial class DemoBootstrap : MonoBehaviour
             var label = Txt(go.transform, StationDisplayName(i, currentRegion), superHub ? 26 : s.portal ? 24 : 26, superHub ? new Color(1.00f, 0.94f, 0.72f, 1f) : Color.white, -104, -48, 240, 38, TextAnchor.MiddleCenter);
             label.font = stationFont;
             TextShadow(label, new Color(0f, 0f, 0f, 0.55f));
-            if (s.county) { label.resizeTextForBestFit = true; label.resizeTextMinSize = 17; label.resizeTextMaxSize = 26; label.verticalOverflow = VerticalWrapMode.Truncate; }
+            if (s.county) { label.resizeTextForBestFit = true; label.resizeTextMinSize = 17; label.resizeTextMaxSize = 26; label.horizontalOverflow = HorizontalWrapMode.Overflow; label.verticalOverflow = VerticalWrapMode.Truncate; }
             stationLabels[i] = label;
             var leader = Img(Rect("NameLeader", go.transform, 0, 0, 1, 2), new Color(1f, 1f, 1f, 0.40f), spriteWhite);
             leader.raycastTarget = false; leader.gameObject.SetActive(false); stationLeaders[i] = leader;
@@ -1054,6 +1060,12 @@ public partial class DemoBootstrap : MonoBehaviour
             foreach (var tr in lv.trains) if (tr) tr.transform.localScale = Vector3.one * k;
             foreach (var seg in lv.segments)
             {
+                if (seg.poly)
+                {
+                    seg.poly.SetWidths(9.2f * k, 2.5f * k);
+                    seg.poly.rectTransform.anchoredPosition = seg.baseOffset * k;
+                    continue;
+                }
                 if (seg.baseOffset.sqrMagnitude < 0.0001f) continue;
                 Vector2 p = seg.basePos + seg.baseOffset * k;
                 if (seg.casing) seg.casing.GetComponent<RectTransform>().anchoredPosition = p;
@@ -1224,8 +1236,6 @@ public partial class DemoBootstrap : MonoBehaviour
             var b = Rect("L" + i, root, 0, 1080 - i * 118, 118, 104);
             leftRailGos.Add(b);
             Rounded(b, CardBg); SoftShadow(b);
-            var ribbon = Rect("Ribbon", b.transform, 0, 0, 6, 104);
-            Img(ribbon, accents[i], spriteWhite).raycastTarget = false;
             Txt(b.transform, names[i], 27, Ink, 8, 50, 104, 42, TextAnchor.MiddleCenter);
             var tag = Rect("Tag", b.transform, 14, 12, 90, 30);
             Rounded(tag, new Color(Paper2.r, Paper2.g, Paper2.b, 0.78f));
@@ -1261,15 +1271,13 @@ public partial class DemoBootstrap : MonoBehaviour
         var button = Rect("StationFilter", root, 0, 720, 118, 104);
         stationFilterGo = button;
         Rounded(button, CardBg); SoftShadow(button);
-        var ribbon = Rect("Ribbon", button.transform, 0, 0, 6, 104);
-        Img(ribbon, new Color(InkSoft.r, InkSoft.g, InkSoft.b, 0.90f), spriteWhite).raycastTarget = false;
         Txt(button.transform, "筛选", 27, Ink, 8, 50, 104, 42, TextAnchor.MiddleCenter);
         var tag = Rect("FilterTag", button.transform, 10, 12, 98, 30);
         Rounded(tag, new Color(Paper2.r, Paper2.g, Paper2.b, 0.78f));
         tag.GetComponent<Image>().raycastTarget = false;
         string[] filterShort = { "全部", "星球枢纽", "区域中继" };
         stationFilterText = Txt(tag.transform, filterShort[Mathf.Clamp(stationFilter, 0, 2)], 20, InkSoft, 4, 0, 90, 30, TextAnchor.MiddleCenter);
-        stationFilterText.resizeTextForBestFit = true; stationFilterText.resizeTextMinSize = 15; stationFilterText.resizeTextMaxSize = ScaledFontSize(20);
+        stationFilterText.resizeTextForBestFit = true; stationFilterText.resizeTextMinSize = 15; stationFilterText.resizeTextMaxSize = ScaledFontSize(20); stationFilterText.horizontalOverflow = HorizontalWrapMode.Overflow; stationFilterText.verticalOverflow = VerticalWrapMode.Truncate;
         var control = button.AddComponent<Button>(); control.targetGraphic = button.GetComponent<Image>();
         control.onClick.AddListener(CycleStationFilter);
     }
@@ -1280,14 +1288,13 @@ public partial class DemoBootstrap : MonoBehaviour
         var solarGo = Rect("SolarTermEntry", root, 0, 602, 118, 104);
         solarTermRailGo = solarGo;
         Rounded(solarGo, CardBg); SoftShadow(solarGo);
-        Img(Rect("Ribbon", solarGo.transform, 0, 0, 6, 104), new Color(0.24f, 0.50f, 0.42f, 0.95f), spriteWhite).raycastTarget = false;
         solarTermRailTitle = Txt(solarGo.transform, CurrentSolarTerm().name, 26, Ink, 8, 50, 104, 42, TextAnchor.MiddleCenter);
-        solarTermRailTitle.resizeTextForBestFit = true; solarTermRailTitle.resizeTextMinSize = 18; solarTermRailTitle.resizeTextMaxSize = 26;
+        solarTermRailTitle.resizeTextForBestFit = true; solarTermRailTitle.resizeTextMinSize = 18; solarTermRailTitle.resizeTextMaxSize = 26; solarTermRailTitle.horizontalOverflow = HorizontalWrapMode.Overflow; solarTermRailTitle.verticalOverflow = VerticalWrapMode.Truncate;
         var solarTag = Rect("SolarTag", solarGo.transform, 10, 12, 98, 30);
         Rounded(solarTag, new Color(Paper2.r, Paper2.g, Paper2.b, 0.78f));
         solarTag.GetComponent<Image>().raycastTarget = false;
         solarTermRailSub = Txt(solarTag.transform, "节气 · " + SolarTermDaysRemaining() + "日", 19, InkSoft, 4, 0, 90, 30, TextAnchor.MiddleCenter);
-        solarTermRailSub.resizeTextForBestFit = true; solarTermRailSub.resizeTextMinSize = 14; solarTermRailSub.resizeTextMaxSize = 19;
+        solarTermRailSub.resizeTextForBestFit = true; solarTermRailSub.resizeTextMinSize = 14; solarTermRailSub.resizeTextMaxSize = 19; solarTermRailSub.horizontalOverflow = HorizontalWrapMode.Overflow; solarTermRailSub.verticalOverflow = VerticalWrapMode.Truncate;
         var solarBtn = solarGo.AddComponent<Button>(); solarBtn.targetGraphic = solarGo.GetComponent<Image>();
         solarBtn.onClick.AddListener(() => { PlayClickSfx(); OpenSolarTermQuickPopup(); });
 
@@ -1295,13 +1302,12 @@ public partial class DemoBootstrap : MonoBehaviour
         var alertGo = Rect("CongestionAlertEntry", root, 0, 484, 118, 104);
         alertRailGo = alertGo;
         Rounded(alertGo, CardBg); SoftShadow(alertGo);
-        Img(Rect("Ribbon", alertGo.transform, 0, 0, 6, 104), Vermilion, spriteWhite).raycastTarget = false;
         Txt(alertGo.transform, "急报", 27, Ink, 8, 50, 104, 42, TextAnchor.MiddleCenter);
         var alertTag = Rect("AlertTag", alertGo.transform, 10, 12, 98, 30);
         Rounded(alertTag, new Color(Paper2.r, Paper2.g, Paper2.b, 0.78f));
         alertTag.GetComponent<Image>().raycastTarget = false;
         alertRailSub = Txt(alertTag.transform, "畅通", 19, InkSoft, 4, 0, 90, 30, TextAnchor.MiddleCenter);
-        alertRailSub.resizeTextForBestFit = true; alertRailSub.resizeTextMinSize = 14; alertRailSub.resizeTextMaxSize = 19;
+        alertRailSub.resizeTextForBestFit = true; alertRailSub.resizeTextMinSize = 14; alertRailSub.resizeTextMaxSize = 19; alertRailSub.horizontalOverflow = HorizontalWrapMode.Overflow; alertRailSub.verticalOverflow = VerticalWrapMode.Truncate;
         Img(Rect("BadgeRing", alertGo.transform, 88, 76, 26, 26), CardBg, spriteCircle).raycastTarget = false;
         alertRailBadge = Rect("Badge", alertGo.transform, 90, 78, 22, 22);
         Img(alertRailBadge, Vermilion, spriteCircle).raycastTarget = false;
@@ -1348,8 +1354,6 @@ public partial class DemoBootstrap : MonoBehaviour
         var noticeGo = Rect("NoticeBoard", root, 960, 1048, 112, 104);
         noticeBoardGo = noticeGo;
         Rounded(noticeGo, CardBg); SoftShadow(noticeGo);
-        var noticeRibbon = Rect("Ribbon", noticeGo.transform, 106, 0, 6, 104);
-        Img(noticeRibbon, Vermilion, spriteWhite).raycastTarget = false;
         Txt(noticeGo.transform, "公告", 27, Ink, 4, 50, 98, 42, TextAnchor.MiddleCenter);
         var noticeTag = Rect("Tag", noticeGo.transform, 12, 12, 86, 30);
         Rounded(noticeTag, new Color(Paper2.r, Paper2.g, Paper2.b, 0.78f));
@@ -1366,8 +1370,6 @@ public partial class DemoBootstrap : MonoBehaviour
         var upgGo = Rect("QuickUpgrade", root, 960, 926, 112, 104);
         quickUpgradeGo = upgGo;
         Rounded(upgGo, CardBg); SoftShadow(upgGo);
-        var upgRibbon = Rect("Ribbon", upgGo.transform, 106, 0, 6, 104);
-        Img(upgRibbon, Gold, spriteWhite).raycastTarget = false;
         Txt(upgGo.transform, "升级", 27, Ink, 4, 50, 98, 42, TextAnchor.MiddleCenter);
         var upgTag = Rect("Tag", upgGo.transform, 12, 12, 86, 30);
         Rounded(upgTag, new Color(Paper2.r, Paper2.g, Paper2.b, 0.78f));
@@ -1633,13 +1635,6 @@ public partial class DemoBootstrap : MonoBehaviour
             HidePressRing();
         }
     }
-    float nextPortalEndHint;
-    void ShowPortalEndHint()
-    {
-        if (Time.unscaledTime < nextPortalEndHint) return;
-        nextPortalEndHint = Time.unscaledTime + 1.5f;
-        Toast("交界港只能作为本区域线路的起点或终点");
-    }
     float nextConnectHintTime;
     void ShowConnectHint(string msg)
     {
@@ -1666,6 +1661,44 @@ public partial class DemoBootstrap : MonoBehaviour
                 ShowConnectHint("该星港已在当前草稿中，从另一端连接试试");
             return false;
         }
+        Vector2 lastAnchor = activeSegWaypoints.Count > 0 ? activeSegWaypoints[activeSegWaypoints.Count - 1] : Pos(a);
+        scratchControlPts.Clear();
+        scratchControlPts.Add(Pos(a));
+        for (int i = 0; i < activeSegWaypoints.Count; i++) scratchControlPts.Add(activeSegWaypoints[i]);
+        if (autoRouteEnabled)
+        {
+            if (!TerrainField.FindShortestGridWaypoints(currentRegion, lastAnchor, Pos(b), scratchAutoWaypoints))
+            {
+                ShowConnectHint("无法找到绕开禁建区的可行路径");
+                return false;
+            }
+            if (scratchAutoWaypoints.Count > 0)
+            {
+                for (int i = 0; i < scratchAutoWaypoints.Count; i++) scratchControlPts.Add(scratchAutoWaypoints[i]);
+            }
+        }
+        scratchControlPts.Add(Pos(b));
+
+        TerrainField.SampleCatmullRomPolyline(scratchControlPts, false, scratchPolyline);
+        TerrainField.EvaluatePolyline(currentRegion, scratchPolyline, out var tr);
+        if (tr.blocked)
+        {
+            // 若仅因平滑切角轻微擦进禁建区，尝试回退到未平滑控制点校验；若仍通不过再阻断
+            TerrainField.EvaluatePolyline(currentRegion, scratchControlPts, out var rawTr);
+            if (rawTr.blocked)
+            {
+                ShowConnectHint("前方穿越裂谷/绝壁禁建区，请在点阵落拐点（右键/空格）绕行");
+                return false;
+            }
+        }
+
+        var committedWp = new List<Vector2>();
+        for (int i = 1; i < scratchControlPts.Count - 1; i++) committedWp.Add(scratchControlPts[i]);
+        draftSegWaypoints.Add(committedWp);
+        activeSegWaypoints.Clear();
+        InvalidateAutoRouteCache();
+        ClearActiveWaypointSegs();
+        ClearAutoPreviewSegs();
         draft.Add(b); draftCost = DraftCostOf(draft);
         TriggerHaptic(12); PlaySnapSfx();
         if (closeLoop) ShowConnectHint("已闭合成环，松手确认开通");
@@ -1680,7 +1713,7 @@ public partial class DemoBootstrap : MonoBehaviour
             CancelDraft();
             return;
         }
-        if (draftCost > coins) { Toast("金币不足：还差 ¥" + FormatShortfall(draftCost - coins)); CancelDraft(); return; }
+        if (draftCost > coins) { float gap = (float)(draftCost - coins); CancelDraft(); NotifyOrOfferDiamondSupply("金币不足：还差 ¥" + FormatShortfall(gap), false, gap); return; }
         int cost = draftCost;
         var snapshot = new List<int>(draft);
         int from = snapshot[0];
@@ -1691,6 +1724,7 @@ public partial class DemoBootstrap : MonoBehaviour
     {
         unchecked { connectPopupVersion++; }
         draft.Clear(); draftSegNeeds.Clear(); draftCost = 0;
+        ClearDraftWaypoints();
         ClearDraftSegs(); ResetBuildVisuals();
     }
 
@@ -1719,6 +1753,9 @@ public partial class DemoBootstrap : MonoBehaviour
         ClosePanel(true);
         var line = new Line { id = nextLineId, name = nextLineId + " 号线", color = LineColors[(nextLineId-1) % LineColors.Length] };
         line.st = new List<int>(snapshot);
+        for (int i = 0; i < draftSegWaypoints.Count; i++)
+            line.segWaypoints.Add(new SegmentWaypoints { pts = new List<Vector2>(draftSegWaypoints[i]) });
+        SyncLineWaypointsCount(line);
         lines.Add(line); coins -= cost;
         BuildStationsOnPath(snapshot);
         ClearDraftState();
@@ -1743,7 +1780,29 @@ public partial class DemoBootstrap : MonoBehaviour
         }
         BeginUndo("延长线路");
         ClosePanel(true);
+        bool prepend = line.st.Count > 0 && newPath.Count > line.st.Count && newPath[newPath.Count - 1] == line.st[line.st.Count - 1] && newPath[0] != line.st[0];
+        SyncLineWaypointsCount(line);
+        var addedSegs = new List<SegmentWaypoints>();
+        for (int i = 0; i < draftSegWaypoints.Count; i++)
+            addedSegs.Add(new SegmentWaypoints { pts = new List<Vector2>(draftSegWaypoints[i]) });
+        if (prepend)
+        {
+            var reversedAdded = new List<SegmentWaypoints>(addedSegs.Count);
+            for (int i = addedSegs.Count - 1; i >= 0; i--)
+            {
+                var sw = new SegmentWaypoints { pts = new List<Vector2>(addedSegs[i].pts) };
+                sw.pts.Reverse();
+                reversedAdded.Add(sw);
+            }
+            reversedAdded.AddRange(line.segWaypoints);
+            line.segWaypoints = reversedAdded;
+        }
+        else
+        {
+            line.segWaypoints.AddRange(addedSegs);
+        }
         line.st = new List<int>(newPath);
+        SyncLineWaypointsCount(line);
         coins -= cost; BuildStationsOnPath(draftStations);
         ClearDraftState();
         CreateLineVisuals(); RefreshAllLines(); RefreshStationDots(); RecalcIncome(); RefreshHUD();
@@ -1815,11 +1874,6 @@ public partial class DemoBootstrap : MonoBehaviour
         return set.Count;
     }
 
-    float DailyOf(Line line, List<int> st)
-    {
-        if (ReferenceEquals(st, line.st) && traffic != null) return TrafficRevenue(line, traffic);
-        return TrafficRevenue(line, CalculateTraffic(line, st));
-    }
     float EstimateNetworkDeltaFast(Line line, List<int> path, bool isNew)
     {
         if (path == null || path.Count < 2) return 0f;
@@ -1875,48 +1929,6 @@ public partial class DemoBootstrap : MonoBehaviour
         }
         finally { dayClock = savedClock; }
         return totalProfit;
-    }
-    float EstimateNetworkDelta(Line line, List<int> path, bool isNew)
-    {
-        if (path == null || path.Count < 2) return 0f;
-        var beforeSlots = new TrafficResult[4];
-        bool reuseSlots = hasForecastSignature && pendingForecastMask == 0;
-        for (int slot = 0; slot < 4; slot++)
-            beforeSlots[slot] = reuseSlots && trafficSlots[slot] != null ? trafficSlots[slot] : ComputeSlotResult(slot);
-        float beforeProfit = EvaluateAllLinesProfit(beforeSlots);
-
-        float afterProfit = beforeProfit;
-        var afterSlots = new TrafficResult[4];
-        Line added = null;
-        List<int> savedPath = null;
-        try
-        {
-            if (isNew)
-            {
-                added = new Line
-                {
-                    id = nextLineId,
-                    name = nextLineId + " 号线",
-                    color = LineColors[(nextLineId - 1) % LineColors.Length],
-                    st = new List<int>(path)
-                };
-                lines.Add(added);
-            }
-            else if (line != null)
-            {
-                savedPath = line.st;
-                line.st = path;
-            }
-            for (int slot = 0; slot < 4; slot++)
-                afterSlots[slot] = ComputeSlotResult(slot);
-            afterProfit = EvaluateAllLinesProfit(afterSlots);
-        }
-        finally
-        {
-            if (added != null) lines.Remove(added);
-            if (!isNew && line != null && savedPath != null) line.st = savedPath;
-        }
-        return afterProfit - beforeProfit;
     }
     float EvaluateAllLinesProfit(TrafficResult[] slots)
     {
@@ -2268,14 +2280,27 @@ public partial class DemoBootstrap : MonoBehaviour
     {
         foreach (var g in draftSegs) if (g) Destroy(g);
         draftSegs.Clear();
+        ClearActiveWaypointSegs();
     }
     void AddDraftSeg(int a, int b, int segIdx = -1, bool animate = false)
     {
+        float need = segIdx >= 0 && segIdx < draftSegNeeds.Count ? draftSegNeeds[segIdx] : DraftPairNeedScore(a, b);
+        Color col = NeedColorGradient(need);
+        if (segIdx >= 0 && segIdx < draftSegWaypoints.Count && draftSegWaypoints[segIdx].Count > 0)
+        {
+            FillDraftSegmentPolyline(draft, segIdx, scratchPolyline);
+            var polyGo = Rect("DSegPoly", lineLayer, 0, 0, W, H);
+            var poly = polyGo.AddComponent<LinePolylineGraphic>();
+            poly.raycastTarget = false;
+            poly.SetPolyline(scratchPolyline, Vector2.zero, col, new Color(1f, 1f, 1f, 0.35f), 14.5f * overlayZoom, 2.5f * overlayZoom);
+            draftSegs.Add(polyGo);
+            if (animate) polyGo.AddComponent<DraftSegGrow>();
+            return;
+        }
         var p1 = Pos(a); var p2 = Pos(b); var d = p2 - p1;
         var go = Rect("DSeg", lineLayer, p1.x, p1.y, d.magnitude, 14.5f * overlayZoom);
         var drt = go.GetComponent<RectTransform>(); drt.pivot = new Vector2(0, 0.5f);
-        float need = segIdx >= 0 && segIdx < draftSegNeeds.Count ? draftSegNeeds[segIdx] : DraftPairNeedScore(a, b);
-        var img = Img(go, NeedColorGradient(need), spriteHandStroke);
+        var img = Img(go, col, spriteHandStroke);
         img.type = Image.Type.Sliced; img.raycastTarget = false;
         drt.localRotation = Quaternion.Euler(0,0, Mathf.Atan2(d.y,d.x)*Mathf.Rad2Deg);
         zoomRects.Add(new ZoomRect(drt, 14.5f));
@@ -2285,7 +2310,25 @@ public partial class DemoBootstrap : MonoBehaviour
     void RedrawDraft()
     {
         ClearDraftSegs();
-        for (int i = 0; i < draft.Count-1; i++) AddDraftSeg(draft[i], draft[i+1], i, i == draft.Count - 2);
+        if (draft.Count < 2) { RedrawActiveWaypointSegs(); return; }
+        bool hasAnyWp = false;
+        for (int i = 0; i < draftSegWaypoints.Count; i++)
+            if (draftSegWaypoints[i] != null && draftSegWaypoints[i].Count > 0) { hasAnyWp = true; break; }
+        if (hasAnyWp || draft.Count >= 3)
+        {
+            FillWholeDraftPolyline(draft, scratchPolyline);
+            var polyGo = Rect("DSegWholePoly", lineLayer, 0, 0, W, H);
+            var poly = polyGo.AddComponent<LinePolylineGraphic>();
+            poly.raycastTarget = false;
+            float avgNeed = draftSegNeeds.Count > 0 ? draftSegNeeds[draftSegNeeds.Count - 1] : 0.5f;
+            poly.SetPolyline(scratchPolyline, Vector2.zero, NeedColorGradient(avgNeed), new Color(1f, 1f, 1f, 0.35f), 14.5f * overlayZoom, 2.5f * overlayZoom);
+            draftSegs.Add(polyGo);
+        }
+        else
+        {
+            for (int i = 0; i < draft.Count - 1; i++) AddDraftSeg(draft[i], draft[i + 1], i, i == draft.Count - 2);
+        }
+        RedrawActiveWaypointSegs();
     }
 
     // ---------- line visuals ----------
@@ -2344,31 +2387,63 @@ public partial class DemoBootstrap : MonoBehaviour
             Color coreColor = skin >= 0 ? Color.Lerp(trim, Color.white, 0.35f) : new Color(1f, 0.98f, 0.92f, 0.56f);
             coreColor.a = skin >= 0 ? 0.78f : 0.56f;
             float totalLen = 0f;
-            for (int i = 0; i < line.st.Count - 1; i++)
+            Color bodyColor = line.color;
+            bodyColor.a = 0.94f;
+            int segCount = line.st.Count - 1;
+            int spanStart = 0;
+            while (spanStart < segCount)
             {
-                string sr = SegmentRegion(line.st[i], line.st[i + 1]);
-                Vector2 baseOffset = ComputeCachedOffset(line.id, line.st[i], line.st[i + 1], sr);
-                if (sr != null)
+                string sr = SegmentRegion(line.st[spanStart], line.st[spanStart + 1]);
+                if (string.IsNullOrEmpty(sr)) { spanStart++; continue; }
+                int spanEnd = spanStart;
+                while (spanEnd + 1 < segCount && SegmentRegion(line.st[spanEnd + 1], line.st[spanEnd + 2]) == sr)
+                    spanEnd++;
+
+                FillRegionSpanPolyline(line, spanStart, spanEnd, sr, scratchPolyline, scratchSubSegIndices);
+                for (int k = 0; k < scratchPolyline.Count - 1; k++)
                 {
-                    Vector2 pa = PosInRegion(line.st[i], sr), pb = PosInRegion(line.st[i + 1], sr);
+                    Vector2 pa = scratchPolyline[k], pb = scratchPolyline[k + 1];
                     float segLen = Vector2.Distance(pa, pb);
+                    if (segLen < 0.05f) continue;
+                    int logicSeg = k < scratchSubSegIndices.Count ? scratchSubSegIndices[k] : spanStart;
                     totalLen += segLen;
                     lv.cachedSegs.Add(new CachedTrainSegment {
-                        stationA = line.st[i], stationB = line.st[i + 1], region = sr,
-                        posA = pa, posB = pb, baseOffset = baseOffset,
+                        stationA = line.st[logicSeg], stationB = line.st[logicSeg + 1], region = sr,
+                        posA = pa, posB = pb, baseOffset = ComputeCachedOffset(line.id, line.st[logicSeg], line.st[logicSeg + 1], sr),
                         length = segLen, angleDeg = Mathf.Atan2(pb.y - pa.y, pb.x - pa.x) * Mathf.Rad2Deg
                     });
                 }
-                if (sr != currentRegion) continue;
-                Vector2 offset = baseOffset * overlayZoom;
-                Vector2 basePos = Pos(line.st[i]);
-                Color bodyColor = line.color;
-                bodyColor.a = 0.94f;
-                var segBody = AddSeg(line.st[i], line.st[i+1], bodyColor, 9.2f, lineLayer, offset, spriteHandStroke);
-                var trackCore = AddSeg(line.st[i], line.st[i+1], coreColor, 2.5f, lineLayer, offset, spriteHandStroke);
-                var hit = AddSeg(line.st[i], line.st[i+1], new Color(1,1,1,0f), 34, lineLayer, offset);
-                var lt = hit.AddComponent<LineTapPress>(); lt.boot = this; lt.lineId = line.id; lt.segment = i;
-                lv.segments.Add(new LineSegmentVisual { from = line.st[i], to = line.st[i + 1], basePos = basePos, baseOffset = baseOffset, body = segBody, core = trackCore, hit = hit, coreImg = trackCore.GetComponent<Image>(), baseCoreColor = coreColor });
+
+                if (sr == currentRegion && scratchPolyline.Count >= 2)
+                {
+                    // 废除首段 spanBaseOffset 整体平移整条线：LinePoly 原点固定 (0,0)，仅对真正共线的子段施加局部偏移，确保站点与拐点不漂移。
+                    int ptCount = scratchPolyline.Count;
+                    for (int k = 0; k < ptCount; k++)
+                    {
+                        Vector2 offL = k > 0 && k - 1 < scratchSubSegIndices.Count
+                            ? ComputeCachedOffset(line.id, line.st[scratchSubSegIndices[k - 1]], line.st[scratchSubSegIndices[k - 1] + 1], sr)
+                            : Vector2.zero;
+                        Vector2 offR = k < ptCount - 1 && k < scratchSubSegIndices.Count
+                            ? ComputeCachedOffset(line.id, line.st[scratchSubSegIndices[k]], line.st[scratchSubSegIndices[k] + 1], sr)
+                            : Vector2.zero;
+                        Vector2 ptOff = (k == 0) ? offR : (k == ptCount - 1 ? offL : (offL + offR) * 0.5f);
+                        scratchPolyline[k] += ptOff * overlayZoom;
+                    }
+                    var polyGo = Rect($"LinePoly_{line.id}_{spanStart}", lineLayer, 0f, 0f, W, H);
+                    var poly = polyGo.AddComponent<LinePolylineGraphic>();
+                    poly.raycastTarget = false;
+                    poly.SetPolyline(scratchPolyline, Vector2.zero, bodyColor, coreColor, 9.2f * overlayZoom, 2.5f * overlayZoom, scratchSubSegIndices);
+
+                    for (int s = spanStart; s <= spanEnd; s++)
+                    {
+                        lv.segments.Add(new LineSegmentVisual {
+                            from = line.st[s], to = line.st[s + 1], logicSegIndex = s,
+                            basePos = Vector2.zero, baseOffset = ComputeCachedOffset(line.id, line.st[s], line.st[s + 1], sr),
+                            poly = poly, hit = null, baseCoreColor = coreColor
+                        });
+                    }
+                }
+                spanStart = spanEnd + 1;
             }
             lv.cachedTotalLength = totalLen;
             lineVisuals[line.id] = lv;
@@ -2481,11 +2556,11 @@ public partial class DemoBootstrap : MonoBehaviour
             if (!lineVisuals.TryGetValue(line.id, out var lv)) continue;
             foreach (var seg in lv.segments)
             {
-                var img = seg.coreImg;
-                if (!img) continue;
                 string key = line.id + ":" + Mathf.Min(seg.from, seg.to) + ":" + Mathf.Max(seg.from, seg.to);
                 float load = traffic.lineSegLoad.TryGetValue(key, out float val) ? val : 0f;
-                img.color = CongestionShiftedColor(seg.baseCoreColor, load);
+                Color c = CongestionShiftedColor(seg.baseCoreColor, load);
+                if (seg.poly) seg.poly.SetLogicSegmentCoreColor(seg.logicSegIndex, c);
+                else if (seg.coreImg) seg.coreImg.color = c;
             }
         }
     }
@@ -2704,17 +2779,29 @@ public partial class DemoBootstrap : MonoBehaviour
             int hov = near >= 0 && !draft.Contains(near) && !IsLoop(draft) ? near : -1;
             if (!backtracked && near >= 0 && near != dragFrom && IsLoop(draft))
                 ShowConnectHint("环线已闭合，松手确认开通（移回上一站可撤销闭合）");
-            Vector2 end = backtracked ? Pos(dragFrom) : (hov >= 0 ? Pos(hov) : (IsLoop(draft) && near == draft[0] ? Pos(draft[0]) : local));
-            var p1 = Pos(dragFrom); var d = end - p1;
+            Vector2 snappedGrid = TerrainField.SnapToGrid(local, currentRegion);
+            if (!backtracked && hov < 0 && !(IsLoop(draft) && near == draft[0]))
+            {
+                if (Input.GetMouseButtonDown(1) || Input.GetKeyDown(KeyCode.Space))
+                    TryAddActiveWaypoint(snappedGrid);
+                else if (Input.GetKeyDown(KeyCode.Backspace))
+                    TryPopActiveWaypoint();
+            }
+            Vector2 end = backtracked ? Pos(dragFrom) : (hov >= 0 ? Pos(hov) : (IsLoop(draft) && near == draft[0] ? Pos(draft[0]) : snappedGrid));
+            var p1 = activeSegWaypoints.Count > 0 ? activeSegWaypoints[activeSegWaypoints.Count - 1] : Pos(dragFrom);
+            var d = end - p1;
             previewImg.rectTransform.anchoredPosition = p1;
             previewImg.rectTransform.sizeDelta = new Vector2(Mathf.Max(1, d.magnitude), 14.5f * overlayZoom);
             previewImg.rectTransform.localRotation = Quaternion.Euler(0,0, Mathf.Atan2(d.y,d.x)*Mathf.Rad2Deg);
             float targetNeed = hov >= 0 ? DraftPairNeedScore(dragFrom, hov) : EvaluateDragDirectionNeed(dragFrom, end);
             float blend = 1f - Mathf.Exp(-14f * dt);
             draftPreviewNeed = Mathf.Lerp(draftPreviewNeed, targetNeed, blend);
-            draftPreviewColor = Color.Lerp(draftPreviewColor, NeedColorGradient(draftPreviewNeed), blend);
-            previewImg.color = draftPreviewColor;
-            if (dragTip) { dragTip.rectTransform.anchoredPosition = end; dragTip.color = draftPreviewColor; }
+            Color basePreviewCol = NeedColorGradient(draftPreviewNeed);
+            draftPreviewColor = Color.Lerp(draftPreviewColor, basePreviewCol, blend);
+            bool routeOk = UpdateActiveDrawPreview(p1, end, draftPreviewColor);
+            if (previewImg) previewImg.enabled = false;
+            Color tipColor = routeOk ? draftPreviewColor : new Color(0.96f, 0.24f, 0.22f, 0.95f);
+            if (dragTip) { dragTip.rectTransform.anchoredPosition = end; dragTip.color = tipColor; }
             hoverStation = hov;
             if (!backtracked && hov >= 0 && hov != dragFrom)
             {
@@ -2821,17 +2908,6 @@ public partial class DemoBootstrap : MonoBehaviour
         if (stations[i].portal || IsOpen(i)) return radius * 1.1f;
         return radius;
     }
-    int NearestStation(Vector2 p, float radius)
-    {
-        int best = -1; float bd = float.MaxValue;
-        for (int i = 0; i < stations.Count; i++)
-        {
-            if (!StationInRegion(i, currentRegion) || !IsStationShown(i) || draft.Contains(i)) continue;
-            float d = Vector2.Distance(p, Pos(i));
-            if (d < SnapRadius(i, radius) && d < bd) { bd = d; best = i; }
-        }
-        return best;
-    }
     int NearestStationAny(Vector2 p, float radius)
     {
         int best = -1; float bd = float.MaxValue;
@@ -2869,7 +2945,10 @@ public partial class DemoBootstrap : MonoBehaviour
         foreach (int index in path) if (counted.Add(index)) c += StationOpeningCost(index);
         float trackFactor = TrackBuildCostFactor();
         for (int i = 0; i < path.Count-1; i++)
-            c += Mathf.RoundToInt((30f + Vector2.Distance(Pos(path[i]), Pos(path[i+1])) * 0.75f) * trackFactor);
+        {
+            FillDraftSegmentPolyline(path, i, scratchPolyline);
+            c += EvaluatePolylineTrackCost(currentRegion, scratchPolyline, trackFactor, out _);
+        }
         return c;
     }
     bool HandleDraftRevisit(int near)
@@ -2901,6 +2980,9 @@ public partial class DemoBootstrap : MonoBehaviour
         int keepSegs = Mathf.Max(0, draft.Count - 1);
         if (draftSegNeeds.Count > keepSegs)
             draftSegNeeds.RemoveRange(keepSegs, draftSegNeeds.Count - keepSegs);
+        if (draftSegWaypoints.Count > keepSegs)
+            draftSegWaypoints.RemoveRange(keepSegs, draftSegWaypoints.Count - keepSegs);
+        activeSegWaypoints.Clear();
         dragFrom = station; hoverStation = -1;
         draftCost = DraftCostOf(draft);
         PrepareDraftNeedField(station, draft);
@@ -3713,6 +3795,12 @@ public partial class DemoBootstrap : MonoBehaviour
     {
         var go = Rect(name, p, x, y, w, h);
         var im = Img(go, c, spriteRound); im.type = Image.Type.Sliced;
+        if (h >= 44f && w >= 60f && c.a > 0.6f)
+        {
+            var rimSh = go.AddComponent<Shadow>();
+            rimSh.effectColor = Color.Lerp(c, new Color(0.06f, 0.04f, 0.02f, c.a), 0.36f);
+            rimSh.effectDistance = new Vector2(0f, -3.5f);
+        }
         int scaled = ScaledFontSize(size);
         var t = Txt(go.transform, label, size, new Color(1,0.98f,0.94f), 0, 0, w, h, TextAnchor.MiddleCenter);
         t.resizeTextForBestFit = true; t.resizeTextMinSize = Mathf.Max(15, Mathf.RoundToInt(size * 0.68f)); t.resizeTextMaxSize = scaled;
@@ -4018,6 +4106,7 @@ public partial class DemoBootstrap : MonoBehaviour
         var spec = Themes[theme];
         Paper = spec.paper; Paper2 = spec.paper2; CardBg = spec.cardBg; HeaderBg = spec.headerBg;
         Ink = spec.ink; InkSoft = spec.inkSoft; Indigo = spec.indigo; Matcha = spec.matcha; Sea = spec.sea;
+        SyncTerrainAndGridForRegion(currentRegion);
     }
     void ApplyTheme(int theme, bool rebuildUI = true, bool isPreview = false)
     {

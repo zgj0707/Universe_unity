@@ -26,6 +26,7 @@ public partial class DemoBootstrap
 
     string metroRegionFilter = "月之亮面";
     bool metroLandscapeMode = false;
+    bool metroLegendCollapsed = false;
     readonly MetroStyleProfile metroStyle = MetroStyleProfile.CreatePreset(MetroPresetTheme.MinimalWhite);
     MetroLayoutResult metroLastLayout;
     bool metroCleanMode;
@@ -191,6 +192,8 @@ public partial class DemoBootstrap
         metroScopeTxt.resizeTextForBestFit = true;
         metroScopeTxt.resizeTextMinSize = 20;
         metroScopeTxt.resizeTextMaxSize = 32;
+        metroScopeTxt.horizontalOverflow = HorizontalWrapMode.Overflow;
+        metroScopeTxt.verticalOverflow = VerticalWrapMode.Truncate;
 
         // 区域下拉按钮
         var regBtn = Btn(topBar.transform, "MetroRegionDropdown", metroRegionFilter + " ▼", 26, 580, 14, 210, 64, Paper2, () =>
@@ -420,10 +423,6 @@ public partial class DemoBootstrap
         }
 
         metroLegendRt.gameObject.SetActive(true);
-        int showCount = Mathf.Min(10, metroLastLayout.legends.Count);
-        float cardW = 300f;
-        float cardH = 66f + showCount * 32f + (showCount == 0 ? 34f : 12f);
-
         float marginX = 32f;
         float marginTop = 138f;
         float marginBot = 138f;
@@ -434,11 +433,8 @@ public partial class DemoBootstrap
         metroLegendRt.anchorMax = metroLegendRt.anchorMin;
         metroLegendRt.pivot = metroLegendRt.anchorMin;
         metroLegendRt.anchoredPosition = new Vector2(isRight ? -marginX : marginX, isTop ? -marginTop : marginBot);
-        metroLegendRt.sizeDelta = new Vector2(cardW, cardH);
 
         var bg = metroLegendRt.GetComponent<Image>() ?? metroLegendRt.gameObject.AddComponent<Image>();
-        bg.sprite = spriteRound;
-        bg.type = Image.Type.Sliced;
         bg.color = metroStyle.cardBgColor;
         bg.raycastTarget = false;
 
@@ -446,27 +442,67 @@ public partial class DemoBootstrap
         outline.effectColor = metroStyle.cardBorderColor;
         outline.effectDistance = new Vector2(1.5f, -1.5f);
 
-        string legendTitle = string.IsNullOrEmpty(metroLastLayout.legendTitle)
-            ? metroLastLayout.scopeTitle + "线路"
-            : metroLastLayout.legendTitle;
-        CreateCrispUiText(metroLegendRt, "LegendTitle", legendTitle, 25, metroStyle.labelColor, 18, cardH - 46, cardW - 36, 36, TextAnchor.MiddleLeft, true);
-
-        if (showCount == 0)
+        if (metroLegendCollapsed)
         {
-            CreateCrispUiText(metroLegendRt, "LegendEmpty", "当前区域暂未开通线路", 20, metroStyle.labelColor, 18, 20, cardW - 36, 30, TextAnchor.MiddleLeft, false);
+            const float dotSize = 74f;
+            metroLegendRt.sizeDelta = new Vector2(dotSize, dotSize);
+            bg.sprite = spriteCircle;
+            bg.type = Image.Type.Simple;
+
+            var dotBtnGo = Rect("LegendDotBtn", metroLegendRt, 0f, 0f, dotSize, dotSize);
+            var dotImg = Img(dotBtnGo, new Color(metroStyle.cardBgColor.r, metroStyle.cardBgColor.g, metroStyle.cardBgColor.b, 0.98f), spriteCircle);
+            var dotBtn = dotBtnGo.AddComponent<Button>();
+            dotBtn.targetGraphic = dotImg;
+            dotBtn.onClick.AddListener(() => { metroLegendCollapsed = false; RefreshMetroLegend(); });
+
+            // 小圆点内三色图例微缩线徽记 + 图例小字
+            Color c0 = metroLastLayout.legends.Count > 0 ? metroLastLayout.legends[0].color : Indigo;
+            Color c1 = metroLastLayout.legends.Count > 1 ? metroLastLayout.legends[1].color : Gold;
+            Img(Rect("DotBar0", dotBtnGo.transform, 19f, 43f, 36f, 6f), c0, spriteRound).raycastTarget = false;
+            Img(Rect("DotBar1", dotBtnGo.transform, 19f, 31f, 36f, 6f), c1, spriteRound).raycastTarget = false;
+            CreateCrispUiText(dotBtnGo.transform, "DotLbl", "图例", 18, metroStyle.labelColor, 6f, 6f, dotSize - 12f, 22f, TextAnchor.MiddleCenter, true);
             return;
         }
 
-        float rowY = cardH - 82f;
+        int showCount = Mathf.Min(12, metroLastLayout.legends.Count);
+        const float cardW = 420f;
+        const float rowStep = 44f;
+        float cardH = 88f + showCount * rowStep + (showCount == 0 ? 48f : 18f);
+        metroLegendRt.sizeDelta = new Vector2(cardW, cardH);
+        bg.sprite = spriteRound;
+        bg.type = Image.Type.Sliced;
+
+        string legendTitle = string.IsNullOrEmpty(metroLastLayout.legendTitle)
+            ? metroLastLayout.scopeTitle + "线路"
+            : metroLastLayout.legendTitle;
+        var titleTxt = CreateCrispUiText(metroLegendRt, "LegendTitle", legendTitle, 32, metroStyle.labelColor, 22, cardH - 64f, cardW - 92f, 44f, TextAnchor.MiddleLeft, true);
+        if (titleTxt) { titleTxt.horizontalOverflow = HorizontalWrapMode.Overflow; titleTxt.verticalOverflow = VerticalWrapMode.Truncate; }
+
+        // 右上角一键收纳成小圆点按钮
+        var minBtnGo = Rect("CollapseLegendBtn", metroLegendRt, cardW - 60f, cardH - 60f, 44f, 44f);
+        var minImg = Img(minBtnGo, new Color(metroStyle.labelColor.r, metroStyle.labelColor.g, metroStyle.labelColor.b, 0.12f), spriteCircle);
+        var minBtn = minBtnGo.AddComponent<Button>();
+        minBtn.targetGraphic = minImg;
+        minBtn.onClick.AddListener(() => { metroLegendCollapsed = true; RefreshMetroLegend(); });
+        CreateCrispUiText(minBtnGo.transform, "MinGlyph", "—", 24, metroStyle.labelColor, 0f, 0f, 44f, 44f, TextAnchor.MiddleCenter, true);
+
+        if (showCount == 0)
+        {
+            CreateCrispUiText(metroLegendRt, "LegendEmpty", "当前区域暂未开通线路", 26, metroStyle.labelColor, 22, 24, cardW - 44f, 38f, TextAnchor.MiddleLeft, false);
+            return;
+        }
+
+        float rowY = cardH - 112f;
         for (int i = 0; i < showCount; i++)
         {
             var item = metroLastLayout.legends[i];
-            var barGo = Rect("Bar_" + i, metroLegendRt, 18, rowY + 8, 28, 10);
+            var barGo = Rect("Bar_" + i, metroLegendRt, 22f, rowY + 12f, 38f, 14f);
             var bImg = Img(barGo, item.color, spriteRound);
             bImg.raycastTarget = false;
 
-            CreateCrispUiText(metroLegendRt, "LegendItem_" + i, item.lineName, 20, metroStyle.labelColor, 56, rowY, cardW - 72, 28, TextAnchor.MiddleLeft, false);
-            rowY -= 32f;
+            var rowTxt = CreateCrispUiText(metroLegendRt, "LegendItem_" + i, item.lineName, 28, metroStyle.labelColor, 72f, rowY, cardW - 90f, 38f, TextAnchor.MiddleLeft, false);
+            if (rowTxt) { rowTxt.horizontalOverflow = HorizontalWrapMode.Overflow; rowTxt.verticalOverflow = VerticalWrapMode.Truncate; }
+            rowY -= rowStep;
         }
     }
 

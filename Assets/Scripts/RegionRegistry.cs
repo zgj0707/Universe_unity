@@ -28,11 +28,11 @@ public partial class DemoBootstrap
             "月之亮面", new RegionSpec
             {
                 id = "月之亮面", displayTitle = "月之亮面", spacedTitle = "月之亮面", planet = "Moon",
-                texResource = "MapArt/moon_nearside", cardBgResource = "PageArt/region_hk_bg",
-                titleMaskResource = "PageArt/region_title_hk", bgmResource = "Audio/bgm_moon_near", prevRegion = "",
+                texResource = "MapArt/moon_nearside", cardBgResource = "PageArt/region_moon_near_bg",
+                titleMaskResource = "PageArt/region_title_moon_near", bgmResource = "Audio/bgm_moon_near", prevRegion = "",
                 lonMin = -35f, lonMax = 35f, latMin = -62f, latMax = 62f,
                 canvasWidthScale = 1f, canvasOffsetX = 0f,
-                minZoom = 1f, maxZoom = 2.5f, initZoom = 1f, kmPerPx = 2.00f, economicScale = 0.4f,
+                minZoom = 1f, maxZoom = 6f, initZoom = 1f, kmPerPx = 2.00f, economicScale = 0.4f,
                 unlockIncome = 0f, order = 0, unlockStations = 0,
                 panMargin = new Vector2(0.25f, 0.25f),
                 accentColor = new Color(0.36f, 0.56f, 0.34f, 1f),
@@ -44,11 +44,11 @@ public partial class DemoBootstrap
             "月背", new RegionSpec
             {
                 id = "月背", displayTitle = "月背", spacedTitle = "月 背", planet = "Moon",
-                texResource = "MapArt/moon_farside", cardBgResource = "PageArt/region_macau_bg",
-                titleMaskResource = "PageArt/region_title_macau", bgmResource = "Audio/bgm_moon_far", prevRegion = "月之亮面",
+                texResource = "MapArt/moon_farside", cardBgResource = "PageArt/region_moon_far_bg",
+                titleMaskResource = "PageArt/region_title_moon_far", bgmResource = "Audio/bgm_moon_far", prevRegion = "月之亮面",
                 lonMin = 145f, lonMax = 215f, latMin = -62f, latMax = 62f,
                 canvasWidthScale = 1f, canvasOffsetX = 0f,
-                minZoom = 1f, maxZoom = 2.5f, initZoom = 1f, kmPerPx = 2.00f, economicScale = 0.4f,
+                minZoom = 1f, maxZoom = 6f, initZoom = 1f, kmPerPx = 2.00f, economicScale = 0.4f,
                 unlockIncome = 600f, order = 1, unlockStations = 4,
                 panMargin = new Vector2(0.25f, 0.25f),
                 accentColor = new Color(0.24f, 0.43f, 0.66f, 1f),
@@ -61,10 +61,10 @@ public partial class DemoBootstrap
             {
                 id = "火星·西半球", displayTitle = "火星·西半球", spacedTitle = "西 半 球", planet = "Mars",
                 texResource = "MapArt/mars_west", cardBgResource = "PageArt/region_mars_west",
-                titleMaskResource = "", bgmResource = "Audio/bgm_mars", prevRegion = "月背",
+                titleMaskResource = "PageArt/region_title_mars_west", bgmResource = "Audio/bgm_mars", prevRegion = "月背",
                 lonMin = -186f, lonMax = 6f, latMin = -68f, latMax = 68f,
                 canvasWidthScale = 2.40f, canvasOffsetX = -0.70f,
-                minZoom = 0.85f, maxZoom = 8f, initZoom = 0.96f, kmPerPx = 4.60f, economicScale = 0.92f,
+                minZoom = 0.85f, maxZoom = 12f, initZoom = 0.96f, kmPerPx = 4.60f, economicScale = 0.92f,
                 unlockIncome = 1200f, order = 2, unlockStations = 2,
                 panMargin = new Vector2(1.65f, 0.25f),
                 accentColor = new Color(0.75f, 0.30f, 0.22f, 1f),
@@ -86,10 +86,10 @@ public partial class DemoBootstrap
             {
                 id = "火星·东半球", displayTitle = "火星·东半球", spacedTitle = "东 半 球", planet = "Mars",
                 texResource = "MapArt/mars_east", cardBgResource = "PageArt/region_mars_east",
-                titleMaskResource = "", bgmResource = "Audio/bgm_mars", prevRegion = "火星·西半球",
+                titleMaskResource = "PageArt/region_title_mars_east", bgmResource = "Audio/bgm_mars", prevRegion = "火星·西半球",
                 lonMin = -6f, lonMax = 186f, latMin = -68f, latMax = 68f,
                 canvasWidthScale = 2.40f, canvasOffsetX = -0.70f,
-                minZoom = 0.85f, maxZoom = 8f, initZoom = 0.96f, kmPerPx = 4.60f, economicScale = 0.92f,
+                minZoom = 0.85f, maxZoom = 12f, initZoom = 0.96f, kmPerPx = 4.60f, economicScale = 0.92f,
                 unlockIncome = 3800f, order = 3, unlockStations = 4,
                 panMargin = new Vector2(1.65f, 0.25f),
                 accentColor = new Color(0.70f, 0.36f, 0.26f, 1f),
@@ -174,8 +174,8 @@ public partial class DemoBootstrap
         if (unlockedRegions.Contains(region) || unlockedRegions.Contains(normalized)) return true;
 
         // 迁移期兼容：旧存档的月背/火星解锁位分别对应月背与首块火星区西半球，东半球保持逐级解锁。
-        if (normalized == "月背") return macauUnlocked;
-        if (normalized == "火星·西半球") return guangdongUnlocked;
+        if (normalized == "月背") return moonFarUnlocked;
+        if (normalized == "火星·西半球") return marsWestUnlocked;
         return false;
     }
 
@@ -195,7 +195,7 @@ public partial class DemoBootstrap
         else unlockedRegions.Remove(normalized);
 
         // 迁移期兼容：维持旧解锁开关与首区注册表同步。
-        if (normalized == "月背") macauUnlocked = unlocked;
-        if (normalized == "火星·西半球") guangdongUnlocked = unlocked;
+        if (normalized == "月背") moonFarUnlocked = unlocked;
+        if (normalized == "火星·西半球") marsWestUnlocked = unlocked;
     }
 }

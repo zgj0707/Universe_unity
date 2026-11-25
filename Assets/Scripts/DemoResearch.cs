@@ -80,7 +80,6 @@ public partial class DemoBootstrap
     GameObject historyInfoPanel, historyControls, eraJournalModal;
     bool techCollapseDone = true;
     readonly HashSet<string> techSessionUnlocked = new HashSet<string>();
-    bool IsCollapsedIntoHub(string key, bool collapsed) { return collapsed && techDone.Contains(key) && !techSessionUnlocked.Contains(key); }
     TechCoinWidget historyCoinWidget;
     readonly HashSet<string> historyAnimated = new HashSet<string>();
     readonly Dictionary<string, Vector2> historyPositions = new Dictionary<string, Vector2>();
@@ -141,10 +140,18 @@ public partial class DemoBootstrap
         int n = 0; foreach (var node in historyNodes) if (node.era == era && techDone.Contains(node.key)) n++;
         return n;
     }
+    int lastUnlockedTechEra = -1;
+    int lastUnlockedCoTechEra = -1;
     int LatestUnlockedTechEra()
     {
         for (int e = 2; e >= 0; e--) if (IsTechEraUnlocked(e)) return e;
         return 0;
+    }
+    int DefaultOpenTechEra(bool isCorporate)
+    {
+        int last = isCorporate ? lastUnlockedCoTechEra : lastUnlockedTechEra;
+        if (last >= 0 && IsTechEraUnlocked(last)) return last;
+        return LatestUnlockedTechEra();
     }
     bool IsTechEraUnlocked(int era)
     {
@@ -678,19 +685,22 @@ public partial class DemoBootstrap
             return;
         }
         if (rp < rpCost) {
-            Toast("科研点不足：需要 " + rpCost + " RP（还差 " + Mathf.CeilToInt(rpCost - rp) + "，推进运营或接公司标书可获 RP）");
+            NotifyOrOfferDiamondSupply("科研点不足：需要 " + rpCost + " RP（还差 " + Mathf.CeilToInt(rpCost - rp) + "，推进运营或接公司标书可获 RP）", true, rpCost - rp);
             return;
         }
         historyAnimated.Clear();
         foreach (var candidate in historyNodes) if (candidate.era == currentTechEra && HistoryVisible(candidate)) historyAnimated.Add(candidate.key);
         BeginUndo("解锁科技");
         coins -= cost; rp -= rpCost; techDone.Add(key); techSessionUnlocked.Add(key);
+        lastUnlockedTechEra = node.era;
         if (node.loco >= 0) {
             researchVehicles.Add(new ResearchVehicle { node = node.loco });
             if (node.loco == 0 || node.loco == 4 || node.loco == 8) { diamonds += 50; Toast("飞车里程碑：钻石 +50"); }
             else if (node.loco == 10 || node.loco == 13 || node.loco == 15) { diamonds += 60; Toast("跨时代旗舰飞车：钻石 +60"); }
         }
         historyJustUnlocked = key;
+        SyncTerrainTechState();
+        InvalidateAutoRouteCache();
         TriggerHaptic(20);
         PlayTechSfx();
         SyncStoryProgression(true);
@@ -897,7 +907,7 @@ public partial class DemoBootstrap
         techTreeTab = isCorporate ? 1 : 0;
         if (mode == 0)
         {
-            currentTechEra = LatestUnlockedTechEra();
+            currentTechEra = DefaultOpenTechEra(isCorporate);
             if (isCorporate) { coTechCollapseDone = true; coTechSessionUnlocked.Clear(); }
             else { techCollapseDone = true; techSessionUnlocked.Clear(); }
         }
@@ -914,7 +924,6 @@ public partial class DemoBootstrap
         var pageRt = page.GetComponent<RectTransform>(); pageRt.anchorMin = Vector2.zero; pageRt.anchorMax = Vector2.one; pageRt.offsetMin = pageRt.offsetMax = Vector2.zero;
         Img(page, new Color(0.972f, 0.955f, 0.922f)).raycastTarget = false;
         pageRoot = page; historyPage = page;
-        SyncRegionalMusic(false);
 
         var farLayer = Rect("FarParallaxLayer", page.transform, 0, 0, 0, 0);
         ResearchSubCanvas(farLayer);
@@ -1125,7 +1134,7 @@ public partial class DemoBootstrap
             int nameMaxSize = ScaledFontSize(ready ? 25 : 23, 1.24f);
             var name = Txt(card.transform, nodeTitle, nameMaxSize, nameColor, 6, locoIdx >= 0 ? 83 : 62, 188, locoIdx >= 0 ? 32 : 48, TextAnchor.MiddleCenter);
             name.fontStyle = FontStyle.Normal;
-            name.resizeTextForBestFit = true; name.resizeTextMinSize = 16; name.resizeTextMaxSize = nameMaxSize;
+            name.resizeTextForBestFit = true; name.resizeTextMinSize = 14; name.resizeTextMaxSize = nameMaxSize; name.horizontalOverflow = HorizontalWrapMode.Wrap; name.verticalOverflow = VerticalWrapMode.Truncate;
 
             if (locoIdx >= 0)
             {
@@ -1150,7 +1159,7 @@ public partial class DemoBootstrap
 
             Color labelColor = locked ? new Color(InkSoft.r, InkSoft.g, InkSoft.b, 0.45f) : InkSoft;
             var labelText = Txt(card.transform, badgeSub + (done ? " · 已解锁" : ready ? "" : " · 前置不足"), 20, labelColor, 6, 18, 188, 34, TextAnchor.MiddleCenter);
-            labelText.resizeTextForBestFit = true; labelText.resizeTextMinSize = 15; labelText.resizeTextMaxSize = ScaledFontSize(20, 1.24f);
+            labelText.resizeTextForBestFit = true; labelText.resizeTextMinSize = 15; labelText.resizeTextMaxSize = ScaledFontSize(20, 1.24f); labelText.horizontalOverflow = HorizontalWrapMode.Overflow; labelText.verticalOverflow = VerticalWrapMode.Truncate;
 
             var touch = card.AddComponent<HistoryNodeTouch>();
             touch.requireDoubleTap = true;
@@ -1264,7 +1273,7 @@ public partial class DemoBootstrap
         var titleRt = titleCard.GetComponent<RectTransform>(); titleRt.anchorMin = titleRt.anchorMax = new Vector2(0,1); titleRt.pivot = new Vector2(0,1); titleRt.anchoredPosition = new Vector2(254,-45);
         var title = Txt(titleCard.transform, isCorporate ? "星航治理 · 发展树" : "星轨典籍 · 科技树", 34, Ink, 0, 0, 0, 0, TextAnchor.MiddleLeft);
         title.fontStyle = FontStyle.Normal; title.raycastTarget = false;
-        title.resizeTextForBestFit = true; title.resizeTextMinSize = 18; title.resizeTextMaxSize = ScaledFontSize(34);
+        title.resizeTextForBestFit = true; title.resizeTextMinSize = 18; title.resizeTextMaxSize = ScaledFontSize(34); title.horizontalOverflow = HorizontalWrapMode.Overflow; title.verticalOverflow = VerticalWrapMode.Truncate;
         var titleTextRt = title.rectTransform; titleTextRt.anchorMin = Vector2.zero; titleTextRt.anchorMax = Vector2.one;
         titleTextRt.offsetMin = new Vector2(20, 4); titleTextRt.offsetMax = new Vector2(-20, -4);
         backRt.anchorMin = backRt.anchorMax = Vector2.zero;
@@ -1283,7 +1292,7 @@ public partial class DemoBootstrap
         var coinIcon = Rect("Icon", coinRing.transform, 4, 4, 48, 48);
         Img(coinIcon, Gold, spriteCircle).raycastTarget = false;
         var coinText = Txt(coinShakeTarget.transform, FormatCoins(coins), 36, Ink, 82, 18, 126, 58, TextAnchor.MiddleLeft);
-        coinText.resizeTextForBestFit = true; coinText.resizeTextMinSize = 16; coinText.resizeTextMaxSize = ScaledFontSize(36);
+        coinText.resizeTextForBestFit = true; coinText.resizeTextMinSize = 16; coinText.resizeTextMaxSize = ScaledFontSize(36); coinText.horizontalOverflow = HorizontalWrapMode.Overflow; coinText.verticalOverflow = VerticalWrapMode.Truncate;
 
         var widget = coinBadge.AddComponent<TechCoinWidget>();
         widget.shakeTarget = coinShakeTarget.GetComponent<RectTransform>();
@@ -1312,6 +1321,7 @@ public partial class DemoBootstrap
         var rpDot = Rect("RPDot", rpBadge.transform, 16, 19, 18, 18); Img(rpDot, Indigo, spriteCircle).raycastTarget = false;
         historyRpText = Txt(rpBadge.transform, "科研点  " + Mathf.FloorToInt(rp) + " RP", 24, Indigo, 42, 8, 232, 40, TextAnchor.MiddleLeft);
         historyRpText.resizeTextForBestFit = true; historyRpText.resizeTextMinSize = 17; historyRpText.resizeTextMaxSize = ScaledFontSize(24); historyRpText.raycastTarget = false;
+        historyRpText.horizontalOverflow = HorizontalWrapMode.Overflow; historyRpText.verticalOverflow = VerticalWrapMode.Truncate;
         var rpHelpHint = Txt(rpBadge.transform, "?", 24, InkSoft, 280, 8, 30, 40, TextAnchor.MiddleCenter);
         rpHelpHint.raycastTarget = false;
         var rpTouch = rpBadge.AddComponent<HistoryNodeTouch>();
@@ -1484,7 +1494,7 @@ public partial class DemoBootstrap
             var leftLabel = Txt(vol.transform, titles[i], 22, new Color(0.92f, 0.94f, 0.98f, unlockedEra ? 0.96f : 0.65f), 20, 4, 290, 36, TextAnchor.MiddleLeft);
             leftLabel.raycastTarget = false;
             var rightLabel = Txt(vol.transform, subStatus[i], 20, unlockedEra ? accentColors[i] : new Color(0.65f, 0.68f, 0.75f, 0.85f), 315, 4, itemW - 335f, 36, TextAnchor.MiddleRight);
-            rightLabel.resizeTextForBestFit = true; rightLabel.resizeTextMinSize = 14; rightLabel.resizeTextMaxSize = ScaledFontSize(20);
+            rightLabel.resizeTextForBestFit = true; rightLabel.resizeTextMinSize = 14; rightLabel.resizeTextMaxSize = ScaledFontSize(20); rightLabel.horizontalOverflow = HorizontalWrapMode.Overflow; rightLabel.verticalOverflow = VerticalWrapMode.Truncate;
             rightLabel.raycastTarget = false;
 
             var cardTap = vol.AddComponent<Button>();
@@ -1532,7 +1542,8 @@ public partial class DemoBootstrap
         long totalLong = (long)unitPrice * count;
         if (totalLong > int.MaxValue || coins < totalLong)
         {
-            Toast("金币不足，购买 ×" + count + " 还差 ¥" + FormatShortfall((float)Math.Max(1.0, totalLong - coins)));
+            float gap = (float)Math.Max(1.0, totalLong - coins);
+            NotifyOrOfferDiamondSupply("金币不足，购买 ×" + count + " 还差 ¥" + FormatShortfall(gap), false, gap);
             return;
         }
         int price = (int)totalLong;

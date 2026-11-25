@@ -197,35 +197,28 @@ public partial class DemoBootstrap
     void BuildSettingsAudioTab(Transform parent)
     {
         const float pad = 40f, innerW = 860f, cardPad = 28f, cardInnerW = 804f;
-        var bgmCard = Rect("BgmCard", parent, pad, 610f, innerW, 336f);
+        var bgmCard = Rect("BgmCard", parent, pad, 600f, innerW, 346f);
         Rounded(bgmCard, Color.Lerp(CardBg, Ink, 0.04f));
-        Txt(bgmCard.transform, "原声配乐与播放模式（BGM）", 28, Ink, cardPad, 272f, 540f, 44f, TextAnchor.MiddleLeft);
-        var bgmToggle = Btn(bgmCard.transform, "BgmSwitch", musicEnabled ? "已开启 ✓" : "已静音", 25, innerW - cardPad - 210f, 262f, 210f, 60f,
+        Txt(bgmCard.transform, "原声配乐与曲目选择（BGM）", 28, Ink, cardPad, 282f, 540f, 44f, TextAnchor.MiddleLeft);
+        var bgmToggle = Btn(bgmCard.transform, "BgmSwitch", musicEnabled ? "已开启 ✓" : "已静音", 25, innerW - cardPad - 210f, 272f, 210f, 60f,
             musicEnabled ? Matcha : Paper2, () => { SetBgmEnabled(!musicEnabled); SaveGame(); OpenAudioSettings(); });
         TInk(bgmToggle, musicEnabled ? Color.white : Ink);
-        var nowPlaying = Txt(bgmCard.transform, "正在播放：" + CurrentBgmDisplayTitle(), 24, Indigo, cardPad, 214f, cardInnerW, 40f, TextAnchor.MiddleLeft);
+
+        var nowPlaying = Txt(bgmCard.transform, "正在播放：" + CurrentBgmDisplayTitle(), 24, Indigo, cardPad, 224f, cardInnerW, 38f, TextAnchor.MiddleLeft);
         FitSingleLine(nowPlaying, 24);
-        string[] modeNames = { "场景联动", "经典长曲", "仅区域曲" };
-        const float modeGap = 14f;
-        float modeBtnW = (cardInnerW - modeGap * (modeNames.Length - 1)) / modeNames.Length;
-        for (int m = 0; m < modeNames.Length; m++)
-        {
-            int modeVal = m;
-            bool active = bgmPlayMode == modeVal;
-            var mb = Btn(bgmCard.transform, "BgmMode_" + m, active ? modeNames[m] + " ✓" : modeNames[m], 24,
-                cardPad + m * (modeBtnW + modeGap), 140f, modeBtnW, 64f, active ? Indigo : Paper2, () => { SetBgmPlayMode(modeVal); OpenAudioSettings(); });
-            TInk(mb, active ? Color.white : Ink);
-        }
-        string modeDesc = bgmPlayMode == 1
-            ? "始终播放经典长曲《Between the Bow and Breath》"
-            : bgmPlayMode == 2
-                ? "始终随「月之亮面 / 月背 / 火星」切换区域配乐"
-                : "地图播区域曲，进入内页自动淡入经典长曲（记忆进度）";
-        var modeHint = Txt(bgmCard.transform, modeDesc, 23, InkSoft, cardPad, 92f, cardInnerW, 38f, TextAnchor.MiddleLeft);
-        FitSingleLine(modeHint, 23);
+
+        var dropBtn = Btn(bgmCard.transform, "BgmDropdownBtn", "", 24, cardPad, 148f, cardInnerW, 66f, Paper2, () => OpenBgmDropdownMenu(parent));
+        var dropLabel = Txt(dropBtn.transform, CurrentBgmDropdownLabel(), 24, Ink, 22f, 0f, cardInnerW - 78f, 66f, TextAnchor.MiddleLeft);
+        FitSingleLine(dropLabel, 24);
+        Txt(dropBtn.transform, "▾", 26, Indigo, cardInnerW - 52f, 0f, 38f, 66f, TextAnchor.MiddleCenter);
+
+        var lyricTxt = Txt(bgmCard.transform, "「" + CurrentBgmChineseLyric() + "」", 22, InkSoft, cardPad, 88f, cardInnerW, 48f, TextAnchor.MiddleLeft);
+        lyricTxt.horizontalOverflow = HorizontalWrapMode.Wrap;
+        lyricTxt.verticalOverflow = VerticalWrapMode.Truncate;
+
         BuildVolumeSlider(bgmCard.transform, "BgmVolSlider", cardPad, 26f, cardInnerW, bgmVolume, Matcha, SetBgmVolume);
 
-        var sfxCard = Rect("SfxCard", parent, pad, 330f, innerW, 256f);
+        var sfxCard = Rect("SfxCard", parent, pad, 326f, innerW, 250f);
         Rounded(sfxCard, Color.Lerp(CardBg, Ink, 0.04f));
         Txt(sfxCard.transform, "触点与鸣笛音效（SFX）", 28, Ink, cardPad, 194f, 540f, 44f, TextAnchor.MiddleLeft);
         var sfxToggle = Btn(sfxCard.transform, "SfxSwitch", sfxEnabled ? "已开启 ✓" : "已关闭", 25, innerW - cardPad - 210f, 184f, 210f, 60f,
@@ -246,6 +239,73 @@ public partial class DemoBootstrap
 
         var doneBtn = Btn(parent, "SettingsOk", "完成设置", 26, pad, 40f, innerW, 84f, Matcha, ClosePanel);
         TInk(doneBtn, Color.white);
+    }
+
+    void OpenBgmDropdownMenu(Transform settingsPopup)
+    {
+        if (!settingsPopup) return;
+        var existing = settingsPopup.Find("BgmDropdownOverlay");
+        if (existing) { Destroy(existing.gameObject); return; }
+
+        var overlay = Rect("BgmDropdownOverlay", settingsPopup, 0f, 0f, 0f, 0f);
+        var overlayRt = overlay.GetComponent<RectTransform>();
+        overlayRt.anchorMin = Vector2.zero;
+        overlayRt.anchorMax = Vector2.one;
+        overlayRt.offsetMin = Vector2.zero;
+        overlayRt.offsetMax = Vector2.zero;
+
+        var backdropImg = overlay.AddComponent<Image>();
+        backdropImg.color = new Color(0f, 0f, 0f, 0.22f);
+        var backdropBtn = overlay.AddComponent<Button>();
+        backdropBtn.transition = Selectable.Transition.None;
+        backdropBtn.onClick.AddListener(() => { PlayCloseSfx(); Destroy(overlay); });
+
+        const float menuX = 68f, menuY = 230f, menuW = 804f, menuH = 510f;
+        var menuBox = Rect("BgmDropdownBox", overlay.transform, menuX, menuY, menuW, menuH);
+        Rounded(menuBox, CardBg);
+        SoftShadow(menuBox);
+
+        var viewport = Rect("Viewport", menuBox.transform, 14f, 14f, menuW - 28f, menuH - 28f);
+        viewport.AddComponent<Image>().color = new Color(1f, 1f, 1f, 0.001f);
+        viewport.AddComponent<RectMask2D>();
+
+        int itemCount = 2 + BgmCatalog.Length;
+        const float itemH = 62f, itemGap = 8f;
+        float contentH = Mathf.Max(menuH - 28f, itemCount * (itemH + itemGap) + 6f);
+        var content = Rect("Content", viewport.transform, 0f, 0f, menuW - 28f, contentH);
+        var contentRt = content.GetComponent<RectTransform>();
+        contentRt.anchorMin = new Vector2(0f, 1f);
+        contentRt.anchorMax = new Vector2(1f, 1f);
+        contentRt.pivot = new Vector2(0.5f, 1f);
+        contentRt.anchoredPosition = Vector2.zero;
+        contentRt.sizeDelta = new Vector2(0f, contentH);
+
+        var scroll = menuBox.AddComponent<ScrollRect>();
+        scroll.viewport = viewport.GetComponent<RectTransform>();
+        scroll.content = contentRt;
+        scroll.horizontal = false;
+        scroll.vertical = true;
+        scroll.movementType = ScrollRect.MovementType.Clamped;
+        scroll.scrollSensitivity = 38f;
+
+        void AddDropdownOption(int orderIdx, string label, bool selected, Action onPick)
+        {
+            float yPos = contentH - 6f - (orderIdx + 1) * itemH - orderIdx * itemGap;
+            var opt = Btn(content.transform, "BgmOpt_" + orderIdx, "", 23, 4f, yPos, menuW - 36f, itemH,
+                selected ? Indigo : Paper2, () => { Destroy(overlay); onPick?.Invoke(); OpenAudioSettings(); });
+            var lbl = Txt(opt.transform, selected ? label + " ✓" : label, 23, selected ? Color.white : Ink,
+                20f, 0f, menuW - 76f, itemH, TextAnchor.MiddleLeft);
+            FitSingleLine(lbl, 23);
+        }
+
+        AddDropdownOption(0, "随机播放 · 全馆藏轮播（11 首）", bgmPlayMode == 0, () => SetBgmPlayMode(0));
+        AddDropdownOption(1, "跟随区域 · 随月面 / 月背 / 火星切换", bgmPlayMode == 2, () => SetBgmPlayMode(2));
+        for (int i = 0; i < BgmCatalog.Length; i++)
+        {
+            int idx = i;
+            bool isPicked = bgmPlayMode == 1 && selectedBgmTrackIndex == idx;
+            AddDropdownOption(2 + i, "单曲 · " + BgmCatalog[i].cnTitle, isPicked, () => SetBgmPlayMode(1, idx));
+        }
     }
 
     void BuildSettingsArchiveTab(Transform parent)
@@ -981,17 +1041,44 @@ public partial class DemoBootstrap
     {
         if (!dragCostBadge || draft.Count == 0) return;
         Vector2 current = Pos(draft[draft.Count - 1]);
-        float remaining = Vector2.Distance(current, point);
-        bool preview = !IsLoop(draft) && remaining > 24f;
-        int value = draftCost + (preview ? Mathf.RoundToInt(30f + remaining * 0.75f) : 0);
+        Vector2 anchorStart = activeSegWaypoints.Count > 0 ? activeSegWaypoints[activeSegWaypoints.Count - 1] : current;
+        scratchControlPts.Clear();
+        scratchControlPts.Add(current);
+        for (int i = 0; i < activeSegWaypoints.Count; i++) scratchControlPts.Add(activeSegWaypoints[i]);
+        bool autoOk = true;
+        if (autoRouteEnabled && Vector2.Distance(anchorStart, point) >= 48f)
+        {
+            autoOk = GetCachedAutoRouteWaypoints(anchorStart, point, scratchAutoWaypoints);
+            for (int i = 0; i < scratchAutoWaypoints.Count; i++) scratchControlPts.Add(scratchAutoWaypoints[i]);
+        }
+        scratchControlPts.Add(point);
+        TerrainField.SampleCatmullRomPolyline(scratchControlPts, false, scratchPolyline);
+        int previewCost = EvaluatePolylineTrackCost(currentRegion, scratchPolyline, TrackBuildCostFactor(), out var previewTr);
+        bool blockedNow = !autoOk || (previewTr.blocked && !autoRouteEnabled);
+        bool preview = !IsLoop(draft) && (previewTr.distance > 24f || activeSegWaypoints.Count > 0);
+        int value = draftCost + (preview ? previewCost : 0);
         if (draftCost != dragCostLastCommitted) { dragCostLastCommitted = draftCost; dragCostPulse = 0.22f; }
         dragCostDisplayed = Mathf.Lerp(dragCostDisplayed, value, 1f - Mathf.Exp(-18f * dt));
         if (Mathf.Abs(dragCostDisplayed-value) < 0.5f) dragCostDisplayed = value;
-        dragCostHeading.text = preview
-            ? (draftPreviewNeed >= 0.72f ? "高需走廊 · 含拖拽段" : draftPreviewNeed >= 0.40f ? "适中需求 · 含拖拽段" : "客需较平 · 含拖拽段")
-            : "已选造价";
-        dragCostNumber.text = "¥" + Mathf.RoundToInt(dragCostDisplayed);
-        dragCostNumber.color = value > coins ? Vermilion : Ink;
+        if (preview && blockedNow)
+        {
+            dragCostHeading.text = "禁建天堑 · 请绕行";
+            dragCostNumber.text = "禁止穿越";
+            dragCostNumber.color = Vermilion;
+        }
+        else
+        {
+            string terrainTag = preview && previewTr.crossedHazard
+                ? $" (跨天堑+{Mathf.RoundToInt(previewTr.penaltyRatio * 100f)}%)"
+                : (preview && previewTr.penaltyRatio >= 0.08f
+                    ? $" (含地形+{Mathf.RoundToInt(previewTr.penaltyRatio * 100f)}%)"
+                    : "");
+            dragCostHeading.text = preview
+                ? (draftPreviewNeed >= 0.72f ? "高需走廊" + terrainTag : draftPreviewNeed >= 0.40f ? "适中需求" + terrainTag : "客需较平" + terrainTag)
+                : "已选造价";
+            dragCostNumber.text = "¥" + Mathf.RoundToInt(dragCostDisplayed);
+            dragCostNumber.color = value > coins ? Vermilion : Ink;
+        }
         if (dragCostSubText)
         {
             if (hoverStation != dragCostLastHov || draft.Count != dragCostLastDraftCount)
@@ -1000,14 +1087,23 @@ public partial class DemoBootstrap
                 dragCostLastDraftCount = draft.Count;
                 dragCostAddedPassengers = hoverStation >= 0 ? EstimateDraftAddedPassengers(draft, hoverStation) : 0;
             }
-            if (hoverStation >= 0 && dragCostAddedPassengers > 0)
+            if (preview && blockedNow)
+            {
+                dragCostSubText.text = "右键 / 空格在点阵落拐点绕行";
+                dragCostSubText.color = Vermilion;
+            }
+            else if (hoverStation >= 0 && dragCostAddedPassengers > 0)
             {
                 dragCostSubText.text = "预计增客 +" + dragCostAddedPassengers + " 人/日";
                 dragCostSubText.color = Matcha;
             }
             else if (preview)
             {
-                dragCostSubText.text = draftPreviewNeed >= 0.72f ? "高潜直达方向 · 建议延伸" : draftPreviewNeed >= 0.40f ? "客需适中 · 可继续拖向星港" : "拖向目标港查看预计客流";
+                dragCostSubText.text = activeSegWaypoints.Count > 0
+                    ? $"已落 {activeSegWaypoints.Count} 个拐点（Backspace 撤销）"
+                    : (autoRouteEnabled && scratchAutoWaypoints.Count > 0
+                        ? "已自动规划最近可行绕行路线"
+                        : "拖向星港，右键/空格可吸附点阵落拐点");
                 dragCostSubText.color = draftPreviewNeed >= 0.72f ? Vermilion : InkSoft;
             }
             else
@@ -1204,6 +1300,7 @@ public partial class DemoBootstrap
             }
         }
         CloseLineBubble();
+        ClearDraftWaypoints();
         draft.Clear(); draftSegNeeds.Clear(); draft.Add(idx); draftCost = DraftCostOf(draft);
         PrepareDraftNeedField(idx, draft);
         draftPreviewNeed = EvaluateDragDirectionNeed(idx, Pos(idx));
@@ -1212,8 +1309,9 @@ public partial class DemoBootstrap
         dragCostDisplayed = 0; dragCostLastCommitted = 0; dragCostPulse = 0;
         if (dragCostBadge) { dragCostBadge.SetActive(true); UpdateDragCostBadge(Pos(idx), Pos(idx), 1f); }
         RedrawDraft();
-        if (previewImg) { previewImg.color = draftPreviewColor; previewImg.gameObject.SetActive(true); }
+        if (previewImg) { previewImg.color = draftPreviewColor; previewImg.enabled = false; previewImg.gameObject.SetActive(true); }
         if (dragTip) { dragTip.color = draftPreviewColor; dragTip.gameObject.SetActive(true); }
+        SetDotGridHighlight(true);
         UpdateRings();
         Haptic.Vibrate(22); PlayTone(false);
     }
@@ -1221,6 +1319,8 @@ public partial class DemoBootstrap
     {
         if (!dragging) return;
         dragging = false; hoverStation = -1;
+        SetDotGridHighlight(false);
+        ClearAutoPreviewSegs();
         if (dragCostBadge) dragCostBadge.SetActive(false);
         if (previewImg) previewImg.gameObject.SetActive(false);
         if (dragTip) dragTip.gameObject.SetActive(false);
@@ -1231,6 +1331,8 @@ public partial class DemoBootstrap
     void CancelDraft()
     {
         draft.Clear(); draftSegNeeds.Clear(); draftCost = 0;
+        SetDotGridHighlight(false);
+        ClearDraftWaypoints();
         if (dragCostBadge) dragCostBadge.SetActive(false);
         ClearDraftSegs(); ResetBuildVisuals();
     }
