@@ -45,7 +45,8 @@ public partial class DemoBootstrap
         new BgmTrackInfo("Audio/bgm_archive_memories", "bgm_archive_memories", "《记忆档案馆》", "一页页泛黄的营运手记与车票，珍藏着岁月与相遇的温度。"),
         new BgmTrackInfo("Audio/bgm_felt_woodwinds", "bgm_felt_woodwinds", "《毡音木管协奏》", "温暖毡音钢琴与清澈木管交织，像午后茶室里最安宁的一场重逢。"),
         new BgmTrackInfo("Audio/bgm_midnight_orbital", "bgm_midnight_orbital", "《夜轨星茫》", "午夜轨道列车穿行在无垠星茫之中，窗外灯火点亮深邃夜空。"),
-        new BgmTrackInfo("Audio/bgm_midnight_orbital_lofi", "bgm_midnight_orbital_lofi", "《星茫夜轨 · Lo-Fi 版》", "黑胶微噪伴着温柔节拍，轨道列车在午夜星海里不紧不慢地摇晃前行。")
+        new BgmTrackInfo("Audio/bgm_midnight_orbital_lofi", "bgm_midnight_orbital_lofi", "《星茫夜轨 · Lo-Fi 版》", "黑胶微噪伴着温柔节拍，轨道列车在午夜星海里不紧不慢地摇晃前行。"),
+        new BgmTrackInfo("Audio/bgm_pipa_classical_cn", "bgm_pipa_classical_cn", "《星夜琵琶 · 国风雅韵》", "琵琶清弹落玉盘，山水余韵伴着月色与星轨缓缓流淌。")
     };
 
     AudioSource musicB;
