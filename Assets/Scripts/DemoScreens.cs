@@ -1378,7 +1378,7 @@ public partial class DemoBootstrap
         if (error != null) { Toast(error); return; }
         BeginUndo(assign ? "调入星舰" : "撤回星舰");
         MoveLineFleetVehicle(line, vehicle, assign);
-        RecalcIncome(); EndUndo(); RefreshHUD();
+        RecalcIncome(); EndUndo(); SaveGame(); RefreshHUD();
         if (onDone != null) onDone(); else OpenLineFleet(line);
         ShowForecastDelayToast();
     }
@@ -1407,7 +1407,7 @@ public partial class DemoBootstrap
             return;
         }
         SyncLineFleet(line);
-        RecalcIncome(); EndUndo(); RefreshHUD();
+        RecalcIncome(); EndUndo(); SaveGame(); RefreshHUD();
         if (onDone != null) onDone(); else OpenLineFleet(line);
         ShowForecastDelayToast();
     }

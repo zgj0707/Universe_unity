@@ -1550,7 +1550,7 @@ public partial class DemoBootstrap
         BeginUndo(count > 1 ? ("批量购买飞车 ×" + count) : "购买飞车");
         coins -= price;
         for (int i = 0; i < count; i++) researchVehicles.Add(new ResearchVehicle { node = index });
-        SyncCulturalCollection(true); EndUndo(); RefreshHUD(); OpenLocoShop();
+        SyncCulturalCollection(true); EndUndo(); SaveGame(); RefreshHUD(); OpenLocoShop();
         Toast("已购买 " + LocoNames[index] + " ×" + count);
     }
 }

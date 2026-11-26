@@ -33,7 +33,7 @@ public partial class DemoBootstrap : MonoBehaviour
         public int id;
         public string name, customName; public float x, y; public int level; public bool built, closed; public int trafficEvent;
         public bool portal, county; public string portalTo, portalTo2, city; public int administrativeCode; public string region = "月之亮面"; public float otherX, otherY, thirdX, thirdY;
-        public float riderBonus; public int facLevel;
+        public float riderBonus; public int facLevel; [NonSerialized] public float waiting;
         public float lon, lat; public bool hasGeo; public int roleHint;
         [NonSerialized] public Dictionary<string, Vector2> regionPositions = new Dictionary<string, Vector2>(StringComparer.Ordinal);
         public List<string> portalRegions = new List<string>();
@@ -675,9 +675,9 @@ public partial class DemoBootstrap : MonoBehaviour
         mapWheelZoom = mapZoom;
         mapZoom.map = mapRect; mapZoom.viewport = root;
         mapZoom.canZoom = () => !dragging && !lineInsertActive && pageRoot == null && activePanel == null && sceneryViewer == null;
-        mapZoom.minZoom = () => { var s = GetRegionSpec(currentRegion); return s != null ? s.minZoom : 1f; };
-        mapZoom.maxZoom = () => { var s = GetRegionSpec(currentRegion); return s != null ? s.maxZoom : 2.5f; };
-        mapZoom.panMarginRatio = () => { var s = GetRegionSpec(currentRegion); return s != null ? s.panMargin : new Vector2(0.25f, 0.25f); };
+        mapZoom.minZoom = () => { if (IsInEventSandbox()) return 0.92f; var s = GetRegionSpec(currentRegion); return s != null ? s.minZoom : 1f; };
+        mapZoom.maxZoom = () => { if (IsInEventSandbox()) return 4.5f; var s = GetRegionSpec(currentRegion); return s != null ? s.maxZoom : 2.5f; };
+        mapZoom.panMarginRatio = () => { if (IsInEventSandbox()) return new Vector2(0.25f, 0.25f); var s = GetRegionSpec(currentRegion); return s != null ? s.panMargin : new Vector2(0.25f, 0.25f); };
         mapZoom.onPanStart = () => { pressing = false; pressIdx = -1; HidePressRing(); };
         BuildAllRegionMaps(map.transform);
 
@@ -1227,13 +1227,13 @@ public partial class DemoBootstrap : MonoBehaviour
     void BuildLeftRail()
     {
         leftRailGos.Clear();
-        string[] names = { "任务", "图鉴", "排行" };
-        string[] icons = { "手帐", "博物", "评级" };
-        Color[] accents = { new Color(0.85f,0.48f,0.28f,0.95f), Matcha, Indigo };
-        for (int i = 0; i < 3; i++)
+        string[] names = { "任务", "图鉴", "排行", "活动" };
+        string[] icons = { "手帐", "博物", "评级", "限时" };
+        Color[] accents = { new Color(0.85f,0.48f,0.28f,0.95f), Matcha, Indigo, Vermilion };
+        for (int i = 0; i < names.Length; i++)
         {
             int k = i;
-            var b = Rect("L" + i, root, 0, 1080 - i * 118, 118, 104);
+            var b = Rect("L" + i, root, 0, 1080 - i * 114, 118, 104);
             leftRailGos.Add(b);
             Rounded(b, CardBg); SoftShadow(b);
             Txt(b.transform, names[i], 27, Ink, 8, 50, 104, 42, TextAnchor.MiddleCenter);
@@ -1248,6 +1248,13 @@ public partial class DemoBootstrap : MonoBehaviour
                 sceneryBadge = dotGo;
                 dotGo.SetActive(pendingCheckin.Count > 0 || CountClaimablePlaques() > 0);
             }
+            else if (i == 3)
+            {
+                Img(Rect("EventBadgeRing", b.transform, 88, 76, 26, 26), CardBg, spriteCircle).raycastTarget = false;
+                var evDot = Rect("EventBadge", b.transform, 90, 78, 22, 22); Img(evDot, Vermilion, spriteCircle).raycastTarget = false;
+                eventBadgeGo = evDot;
+                evDot.SetActive(HasAnyEventBadge());
+            }
             var btn = b.AddComponent<Button>(); btn.targetGraphic = b.GetComponent<Image>();
             btn.onClick.AddListener(() => {
                 PlayClickSfx();
@@ -1257,11 +1264,12 @@ public partial class DemoBootstrap : MonoBehaviour
                     OpenSceneryScreen();
                 }
                 else if (k == 0) OpenDailyTasks();
-                else
+                else if (k == 2)
                 {
                     if (!IsFeatureUnlocked(GameFeature.Leaderboard)) { PlayErrorSfx(); Toast(FeatureLockHint(GameFeature.Leaderboard)); return; }
                     OpenLeaderboard();
                 }
+                else OpenEventScreen();
             });
         }
     }
@@ -1557,16 +1565,18 @@ public partial class DemoBootstrap : MonoBehaviour
         float railMin = dockY + 190f;
         float railMax = Mathf.Max(railMin + 260f, barY - 46f);
         float railMidY = Mathf.Lerp(railMin, railMax, 0.48f);
+        const float railStep = 114f;
+        float railTopY = Mathf.Min(railMax - 112f, Mathf.Max(railMin + leftRailGos.Count * railStep, railMidY + 224f));
         for (int i = 0; i < leftRailGos.Count; i++)
             if (leftRailGos[i])
-                leftRailGos[i].GetComponent<RectTransform>().anchoredPosition = new Vector2(safeL, Mathf.Min(railMax - 112f, railMidY + 224f - i * 118f));
-        float filterY = Mathf.Max(dockY + 184f, railMidY - 130f);
+                leftRailGos[i].GetComponent<RectTransform>().anchoredPosition = new Vector2(safeL, railTopY - i * railStep);
+        float filterY = Mathf.Max(dockY + 120f, railTopY - leftRailGos.Count * railStep);
         if (stationFilterGo)
             stationFilterGo.GetComponent<RectTransform>().anchoredPosition = new Vector2(safeL, filterY);
         if (solarTermRailGo)
-            solarTermRailGo.GetComponent<RectTransform>().anchoredPosition = new Vector2(safeL, filterY - 118f);
+            solarTermRailGo.GetComponent<RectTransform>().anchoredPosition = new Vector2(safeL, filterY - railStep);
         if (alertRailGo)
-            alertRailGo.GetComponent<RectTransform>().anchoredPosition = new Vector2(safeL, filterY - 236f);
+            alertRailGo.GetComponent<RectTransform>().anchoredPosition = new Vector2(safeL, filterY - railStep * 2f);
 
         float rightRailX = rw - safeR - 120f;
         if (speedBoardGo)
@@ -1620,9 +1630,10 @@ public partial class DemoBootstrap : MonoBehaviour
     }
 
     // ---------- long press draw ----------
-    public void OnStationDown(int idx) { BeginPress(idx); }
+    public void OnStationDown(int idx) { if (!AshCycleCompleted()) BeginPress(idx); }
     public void OnStationUp(int idx)
     {
+        if (AshCycleCompleted()) { ShowStationActions(idx); return; }
         if (pressing && pressIdx == idx && pressTimer < 0.42f && !dragging)
         {
             pressing = false; pressIdx = -1;
@@ -1713,7 +1724,7 @@ public partial class DemoBootstrap : MonoBehaviour
             CancelDraft();
             return;
         }
-        if (draftCost > coins) { float gap = (float)(draftCost - coins); CancelDraft(); NotifyOrOfferDiamondSupply("金币不足：还差 ¥" + FormatShortfall(gap), false, gap); return; }
+        if (!IsInEventSandbox() && draftCost > coins) { float gap = (float)(draftCost - coins); CancelDraft(); NotifyOrOfferDiamondSupply("金币不足：还差 ¥" + FormatShortfall(gap), false, gap); return; }
         int cost = draftCost;
         var snapshot = new List<int>(draft);
         int from = snapshot[0];
@@ -1735,7 +1746,25 @@ public partial class DemoBootstrap : MonoBehaviour
         return count;
     }
     int RegionLineLimit(string region) { return RegionStationCount(region) / 2; }
-    int LineLimit() { return RegionLineLimit(currentRegion); }
+    int LineLimit() { return IsInEventSandbox() ? GetSandboxLineLimit(activeSandboxEventId) : RegionLineLimit(currentRegion); }
+    void SyncMainLinesToSandbox()
+    {
+        if (!IsInEventSandbox()) return;
+        var st = GetOrCreateEventSandbox(activeSandboxEventId);
+        var oldLines = new Dictionary<int, SavedEventLine>();
+        foreach (var saved in st.lines) if (saved != null) oldLines[saved.id] = saved;
+        var updated = new List<SavedEventLine>();
+        foreach (var l in lines)
+        {
+            oldLines.TryGetValue(l.id, out var old);
+            string vk = old != null ? old.vehicleKey : (activeSandboxEventId == EventIdAshDome ? "veh_ash_scavenger" : "veh_neon_firefly");
+            updated.Add(new SavedEventLine { id = l.id, name = l.name, color = l.color,
+                stations = new List<int>(l.st), cars = Mathf.Max(1, l.trains), vehicleKey = vk,
+                skinIndex = old != null ? old.skinIndex : -1, dispatch = NormalizeSandboxDispatch(l.dispatch, l.trains) });
+        }
+        st.lines = updated;
+        st.nextLineId = Mathf.Max(st.nextLineId, nextLineId);
+    }
     bool PathTouchesRegion(List<int> path, string region)
     {
         for (int i = 0; i + 1 < path.Count; i++) if (SegmentRegion(path[i], path[i + 1]) == region) return true;
@@ -1756,11 +1785,13 @@ public partial class DemoBootstrap : MonoBehaviour
         for (int i = 0; i < draftSegWaypoints.Count; i++)
             line.segWaypoints.Add(new SegmentWaypoints { pts = new List<Vector2>(draftSegWaypoints[i]) });
         SyncLineWaypointsCount(line);
-        lines.Add(line); coins -= cost;
-        BuildStationsOnPath(snapshot);
+        lines.Add(line);
+        if (!IsInEventSandbox()) { coins -= cost; BuildStationsOnPath(snapshot); }
         ClearDraftState();
-        CreateLineVisuals(); RefreshAllLines(); RefreshStationDots(); RecalcIncome(); RefreshHUD();
         nextLineId++;
+        CreateLineVisuals(); SyncMainLinesToSandbox(); if (IsInEventSandbox()) SaveSandboxStorage();
+        RefreshAllLines(); RefreshStationDots(); RecalcIncome(); RefreshHUD();
+        if (!IsInEventSandbox()) {
         CheckSceneryOnLine(snapshot);
         QueueStory("new_line", "不被看好的新线", "有人说这条线不会有乘客。首班车靠站时，等车的人却排到了街角。\n你把星航时刻表贴上墙：从今天起，这座城市多了一条路。");
         CheckLineStory(line);
@@ -1770,6 +1801,7 @@ public partial class DemoBootstrap : MonoBehaviour
         CheckPortalMilestoneFromPath(snapshot);
         CheckCrossBayMilestoneBubbles();
         SyncStoryProgression(true);
+        }
         EndUndo();
     }
 
@@ -1803,9 +1835,11 @@ public partial class DemoBootstrap : MonoBehaviour
         }
         line.st = new List<int>(newPath);
         SyncLineWaypointsCount(line);
-        coins -= cost; BuildStationsOnPath(draftStations);
+        if (!IsInEventSandbox()) { coins -= cost; BuildStationsOnPath(draftStations); }
         ClearDraftState();
-        CreateLineVisuals(); RefreshAllLines(); RefreshStationDots(); RecalcIncome(); RefreshHUD();
+        CreateLineVisuals(); SyncMainLinesToSandbox(); if (IsInEventSandbox()) SaveSandboxStorage();
+        RefreshAllLines(); RefreshStationDots(); RecalcIncome(); RefreshHUD();
+        if (!IsInEventSandbox()) {
         CheckSceneryOnLine(draftStations);
         CheckLineStory(line);
         PlayBuildSfx(); TriggerHaptic(18);
@@ -1813,6 +1847,7 @@ public partial class DemoBootstrap : MonoBehaviour
         CheckPortalMilestoneFromPath(draftStations);
         CheckCrossBayMilestoneBubbles();
         SyncStoryProgression(true);
+        }
         EndUndo();
     }
 
@@ -2111,7 +2146,7 @@ public partial class DemoBootstrap : MonoBehaviour
         Text headingTxt = null;
         foreach (var t in p.GetComponentsInChildren<Text>(true))
             if (t.transform.parent == p.transform && t.text == title) { headingTxt = t; break; }
-        Txt(p.transform, "从 " + StationDisplayName(from, currentRegion) + " 起 · 新增 " + (UniqueCount(snapshot) - 1) + " 站 · 造价 ¥" + cost, 22, InkSoft, 30, h - 114, 820, 30, TextAnchor.MiddleLeft);
+        Txt(p.transform, "从 " + StationDisplayName(from, currentRegion) + " 起 · 新增 " + (UniqueCount(snapshot) - 1) + " 站 · " + (IsInEventSandbox() ? "沿街通车" : "造价 ¥" + cost), 22, InkSoft, 30, h - 114, 820, 30, TextAnchor.MiddleLeft);
         var view = Rect("OptionsViewport", p.transform, 24, 122, 872, viewHeight);
         bool needVScroll = opts.Count > 5;
         ScrollRect scroll = null;
@@ -2170,11 +2205,11 @@ public partial class DemoBootstrap : MonoBehaviour
                 bool active = r == curSelected;
                 if (rowImgs[r]) rowImgs[r].color = active ? new Color(0.985f, 0.948f, 0.862f, 1f) : new Color(1, 1, 1, 0.94f);
                 if (checkMarks[r]) checkMarks[r].SetActive(active);
-                if (!active && r == prevIdx) ApplyRowLabel(r, " · 选择后查看预计收益");
+                if (!active && r == prevIdx) ApplyRowLabel(r, IsInEventSandbox() ? "" : " · 选择后查看预计收益");
             }
 
-            int gain = GetOrComputeGain(curSelected);
-            ApplyRowLabel(curSelected, " · 粗估 " + (gain >= 0 ? "+" : "") + gain + "/天");
+            if (IsInEventSandbox()) ApplyRowLabel(curSelected, "");
+            else { int gain = GetOrComputeGain(curSelected); ApplyRowLabel(curSelected, " · 粗估 " + (gain >= 0 ? "+" : "") + gain + "/天"); }
         }
 
         for (int i = 0; i < opts.Count; i++)
@@ -2188,12 +2223,13 @@ public partial class DemoBootstrap : MonoBehaviour
             var barImg = Img(Rect("Bar", row.transform, 0, 20, 7, 56), accent, spriteRound);
             barImg.raycastTarget = false;
             string t1 = opt.isNew ? "开通新线路" : ("延长 " + opt.line.name);
+            string routeSeparator = IsInEventSandbox() ? "  " : " · ";
             string route = opt.isNew
-                ? (nextLineId + " 号线 · " + RouteEndpointsSummary(snapshot) + " · " + UniqueCount(snapshot) + " 站")
-                : (RouteEndpointsSummary(opt.path ?? opt.line.st) + " · +" + (snapshot.Count - 1) + " 站");
+                ? (nextLineId + " 号线" + routeSeparator + RouteEndpointsSummary(snapshot) + routeSeparator + UniqueCount(snapshot) + " 站")
+                : (RouteEndpointsSummary(opt.path ?? opt.line.st) + routeSeparator + "+" + (snapshot.Count - 1) + " 站");
             routePrefixes[i] = route;
-            int initGain = i == curSelected ? GetOrComputeGain(i) : 0;
-            string initSuffix = i == curSelected
+            int initGain = !IsInEventSandbox() && i == curSelected ? GetOrComputeGain(i) : 0;
+            string initSuffix = IsInEventSandbox() ? "" : i == curSelected
                 ? (" · 粗估 " + (initGain >= 0 ? "+" : "") + initGain + "/天")
                 : " · 选择后查看预计收益";
             Txt(row.transform, t1, 30, Ink, 28, 50, 520, 38, TextAnchor.MiddleLeft);
@@ -2483,7 +2519,7 @@ public partial class DemoBootstrap : MonoBehaviour
     void SyncLineTrainVisuals(Line line, LineVisual lv)
     {
         if (!trainLayer) return;
-        int desired = RunningTrains(line) > 0 ? 1 : 0;
+        int desired = IsInEventSandbox() ? Mathf.Clamp(line.trains, 1, 4) : (RunningTrains(line) > 0 ? 1 : 0);
         while (lv.trains.Count > desired)
         {
             int last = lv.trains.Count - 1;
@@ -2579,7 +2615,7 @@ public partial class DemoBootstrap : MonoBehaviour
     void ShowStationOdArcs(int origin)
     {
         ClearStationOdArcs();
-        if (!odArcLayer || origin < 0 || origin >= stations.Count || !StationInRegion(origin, currentRegion)) return;
+        if (!odArcLayer || origin < 0 || origin >= stations.Count || (!IsInEventSandbox() && !StationInRegion(origin, currentRegion))) return;
         var dests = GetStationOdTopDests(origin, 3);
         if (dests.Count == 0) return;
 
@@ -2591,7 +2627,7 @@ public partial class DemoBootstrap : MonoBehaviour
         for (int idx = 0; idx < dests.Count; idx++)
         {
             var df = dests[idx];
-            if (!StationInRegion(df.dest, currentRegion)) continue;
+            if (df.dest < 0 || df.dest >= stations.Count || (!IsInEventSandbox() && !StationInRegion(df.dest, currentRegion))) continue;
             Vector2 p2 = Pos(df.dest);
             Vector2 diff = p2 - p0;
             float dist = diff.magnitude;
@@ -2703,6 +2739,7 @@ public partial class DemoBootstrap : MonoBehaviour
     }
     Vector2 PosInRegion(int i, string region)
     {
+        if (IsInEventSandbox() && i >= 0 && i < stations.Count) return new Vector2(stations[i].x, stations[i].y);
         Vector2 p = stations[i].GetNormalizedPos(region);
         return new Vector2(MAP_X + p.x * MAP_W, MAP_Y + p.y * MAP_H);
     }
@@ -2720,17 +2757,17 @@ public partial class DemoBootstrap : MonoBehaviour
         float dt = Time.deltaTime;
         TickAudioCrossfade(Time.unscaledDeltaTime);
         TickTapTapSdkBridge();
-        TickStoryProgressionTimer(dt);
+        if (!IsInEventSandbox()) TickStoryProgressionTimer(dt);
         TickAutosave();
         UpdateRegionalMarkers(false);
-        TickPress(dt);
+        TickEventSandbox(Time.unscaledDeltaTime);
+        TickPress(Time.unscaledDeltaTime);
         if (lineInsertActive) { TickDragEdgeAutoPan(dt); UpdateLineInsert(Input.mousePosition); }
-        TickClock(dt);
-        TickStationTraffic(dt);
-        TickStory();
-        TickNarrativeBubbles();
-        TickResearch(dt);
-        TickProgressiveForecasts();
+        if (!IsInEventSandbox())
+        {
+            TickClock(dt); TickStationTraffic(dt); TickStory(); TickNarrativeBubbles();
+            TickResearch(dt); TickProgressiveForecasts();
+        }
         TickFloaters(dt);
         UpdateMetroMapOverlay();
         bool mapVisible = pageRoot == null && sceneryViewer == null && metroMapPageRoot == null;
@@ -2940,6 +2977,7 @@ public partial class DemoBootstrap : MonoBehaviour
     }
     int DraftCostOf(List<int> path)
     {
+        if (IsInEventSandbox()) return 0;
         int c = 0;
         var counted = new HashSet<int>();
         foreach (int index in path) if (counted.Add(index)) c += StationOpeningCost(index);
@@ -3078,7 +3116,9 @@ public partial class DemoBootstrap : MonoBehaviour
                 continue;
             }
             float total = lv.cachedTotalLength;
-            lv.t += dt * 58f * FleetTrait(line, 2) / total;
+            var sandboxLine = IsInEventSandbox() ? FindSandboxLine(line) : null;
+            var sandboxVehicle = sandboxLine != null ? GetSandboxVehicleDef(activeSandboxEventId, sandboxLine.vehicleKey) : null;
+            lv.t += IsInEventSandbox() ? dt * 252f * (sandboxVehicle != null ? sandboxVehicle.speedMult : 1f) / total : dt * 58f * FleetTrait(line, 2) / total;
             bool loop = IsLoop(line.st);
             float period = loop ? 1f : 2f;
             lv.t = Mathf.Repeat(lv.t, period);

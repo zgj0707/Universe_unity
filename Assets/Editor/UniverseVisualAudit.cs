@@ -175,6 +175,35 @@ public static class UniverseVisualAudit
                 break;
             case 9:
                 Capture("10_scenery_album.png");
+                Invoke(Boot, "ClosePage", true);
+                Invoke(Boot, "OpenEventScreen");
+                break;
+            case 10:
+                Capture("11_events_hub.png");
+                Invoke(Boot, "OpenEventSandbox", "ashdome");
+                Invoke(Boot, "ClosePanel", true);
+                Invoke(Boot, "OnClickSandboxStation", 1);
+                Invoke(Boot, "OnClickSandboxStation", 8);
+                Invoke(Boot, "OnClickSandboxStation", 15);
+                Invoke(Boot, "CommitSandboxDraftLine");
+                break;
+            case 11:
+                Capture("12_event_ashdome.png");
+                Invoke(Boot, "OpenSandboxTreeScreen", "ashdome");
+                break;
+            case 12:
+                Capture("14_event_tree.png");
+                Invoke(Boot, "ClosePage", true);
+                Invoke(Boot, "OpenEventSandbox", "neon");
+                Invoke(Boot, "ClosePanel", true);
+                Invoke(Boot, "OnClickSandboxStation", 0);
+                Invoke(Boot, "OnClickSandboxStation", 14);
+                Invoke(Boot, "OnClickSandboxStation", 3);
+                Invoke(Boot, "CommitSandboxDraftLine");
+                break;
+            case 13:
+                Capture("13_event_neon.png");
+                Invoke(Boot, "CloseEventSandbox");
                 FinishAudit(Errors.Count > 0 ? 1 : 0);
                 break;
         }

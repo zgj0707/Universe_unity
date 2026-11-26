@@ -343,14 +343,20 @@ public partial class DemoBootstrap
 #if UNITY_EDITOR
         bool syncOn = DevTestSaveSyncEnabled;
         var syncBtn = Btn(parent, "DevTestSaveSyncToggle",
-            syncOn ? "[Editor开发] 持续写回仓库测试档：开" : "[Editor开发] 持续写回仓库测试档：关",
-            24, pad, curY, innerW, 74f, syncOn ? Indigo : Paper2, () => {
+            syncOn ? "[Editor] 测试档同步：开" : "[Editor] 测试档同步：关",
+            22, pad, curY, halfBtnW, 74f, syncOn ? Indigo : Paper2, () => {
                 bool next = !DevTestSaveSyncEnabled;
                 DevTestSaveSyncEnabled = next;
                 OpenAudioSettings();
                 Toast(next ? "已开启同步：将持续写回仓库测试档" : "已关闭同步：仅读写本机存档");
             });
         TInk(syncBtn, syncOn ? Color.white : Ink);
+        var forceSaveBtn = Btn(parent, "ForceDevTestSave", "[Editor] 立即写入测试档", 22,
+            pad + halfBtnW + 24f, curY, halfBtnW, 74f, Indigo, () => {
+                ForceSaveToBundledTestSave();
+                OpenAudioSettings();
+            });
+        TInk(forceSaveBtn, Color.white);
         curY += 90f;
 #endif
 
@@ -397,8 +403,15 @@ public partial class DemoBootstrap
     }
     void PlayTone(bool high)
     {
-        if (sfx && sfxEnabled && sfxVolume > 0.001f)
-            sfx.PlayOneShot(high ? toneHi : toneLo, sfxVolume);
+        var clip = high ? toneHi : toneLo;
+        if (!clip)
+        {
+            toneLo = MakeTone(620f, 0.07f);
+            toneHi = MakeTone(940f, 0.055f);
+            clip = high ? toneHi : toneLo;
+        }
+        if (sfx && clip && sfxEnabled && sfxVolume > 0.001f)
+            sfx.PlayOneShot(clip, sfxVolume);
     }
 
     // ---------- clock ----------
@@ -658,6 +671,38 @@ public partial class DemoBootstrap
     void ShowStationActions(int index)
     {
         if (index < 0 || index >= stations.Count || pageRoot || sceneryViewer) return;
+        if (IsInEventSandbox())
+        {
+            ShowStationOdArcs(index);
+            var evtSt = GetOrCreateEventSandbox(activeSandboxEventId);
+            var spec = GetEventSpec(activeSandboxEventId);
+            var stationDef = GetSandboxStationDefs(activeSandboxEventId)[index];
+            var evtStation = stations[index];
+            var connected = new List<string>();
+            foreach (var line in lines) if (line.st.Contains(index)) connected.Add(line.name);
+            string tag = stationDef.isSpecialB ? "禁区" : stationDef.isSpecialA ? (activeSandboxEventId == EventIdAshDome ? "避风港" : "换乘热点") : "区域 " + stationDef.tierOrKind;
+            if (activeSandboxEventId == EventIdAshDome && !stationDef.isSpecialA && !stationDef.isSpecialB)
+                tag += "  " + (ashFallenStations.Contains(index) ? "已封控失联" : evtSt.stationPop[index] == 0 ? "已全部撤空" : $"待撤离人数：{evtSt.stationPop[index]} 人");
+            int cost = 2 + evtStation.level;
+            Vector2 sandboxAnchor = root.InverseTransformPoint(mapRect.TransformPoint(Pos(index)));
+            var panel = OpenBubble(evtStation.name, 420, 548, sandboxAnchor);
+            Txt(panel.transform, tag + "  等级 " + evtStation.level + " / 5", 25, Ink, 28, 320, 492, 40, TextAnchor.MiddleLeft);
+            var routes = Txt(panel.transform, "连接线路：" + (connected.Count > 0 ? string.Join("、", connected) : "暂无"), 21, InkSoft, 28, 245, 492, 70, TextAnchor.UpperLeft);
+            routes.horizontalOverflow = HorizontalWrapMode.Wrap;
+            Txt(panel.transform, $"当前{spec.tokenName}：{evtSt.tokens}", 22, Indigo, 28, 205, 492, 36, TextAnchor.MiddleLeft);
+            if (AshCycleCompleted()) return;
+            TInk(Btn(panel.transform, "UpgradeStation", evtStation.level >= 5 ? "已满级" : $"升级  {cost} {spec.tokenName}", 23, 28, 112, 492, 74, Matcha, () => {
+                if (evtStation.level >= 5) { Toast("站点已满级"); return; }
+                if (evtSt.tokens < cost) { Toast(spec.tokenName + "不足"); return; }
+                evtSt.tokens -= cost; evtStation.level++;
+                if (evtSt.stationLevels == null) evtSt.stationLevels = new List<int>();
+                while (evtSt.stationLevels.Count < stations.Count) evtSt.stationLevels.Add(1);
+                evtSt.stationLevels[index] = evtStation.level;
+                RefreshSandboxHudText(); SaveSandboxStorage(); ClosePanel(true); ShowStationActions(index);
+            }), Color.white);
+            if (connected.Count > 0) TInk(Btn(panel.transform, "RemoveWaystation", "移除航线途经站", 23, 28, 24, 492, 74, Paper2, () => OpenRemoveStationLines(index, 0)), Ink);
+            return;
+        }
         var station = stations[index];
         Vector3 world = mapRect.TransformPoint(Pos(index)); Vector2 anchor = root.InverseTransformPoint(world);
         string status = "预估客流 " + StationEstimatedDemand(index) + " 人/日";
@@ -1079,15 +1124,18 @@ public partial class DemoBootstrap
             dragCostNumber.text = "¥" + Mathf.RoundToInt(dragCostDisplayed);
             dragCostNumber.color = value > coins ? Vermilion : Ink;
         }
+        if (IsInEventSandbox()) { dragCostHeading.text = "街道线路"; dragCostNumber.text = draft.Count + " 站  沿街铺线"; dragCostNumber.color = Ink; }
         if (dragCostSubText)
         {
-            if (hoverStation != dragCostLastHov || draft.Count != dragCostLastDraftCount)
+            if (IsInEventSandbox()) { dragCostSubText.text = "拖向站点连接线路"; dragCostSubText.color = InkSoft; }
+            else if (hoverStation != dragCostLastHov || draft.Count != dragCostLastDraftCount)
             {
                 dragCostLastHov = hoverStation;
                 dragCostLastDraftCount = draft.Count;
                 dragCostAddedPassengers = hoverStation >= 0 ? EstimateDraftAddedPassengers(draft, hoverStation) : 0;
             }
-            if (preview && blockedNow)
+            if (IsInEventSandbox()) { }
+            else if (preview && blockedNow)
             {
                 dragCostSubText.text = "右键 / 空格在点阵落拐点绕行";
                 dragCostSubText.color = Vermilion;
@@ -1231,6 +1279,7 @@ public partial class DemoBootstrap
     }
     void TickPress(float dt)
     {
+        dt = Mathf.Min(dt, 0.05f);
         if (!pressing) return;
         if (!Input.GetMouseButton(0))
         {

@@ -204,6 +204,15 @@ public partial class DemoBootstrap
         EnsureActivePreviewPoly();
         if (!activePreviewPoly || draft.Count == 0) return true;
 
+        if (IsInEventSandbox())
+        {
+            var streetPath = FindSandboxStreetPathToPoint(activeSandboxEventId, dragFrom, end);
+            if (streetPath.Count < 2) { activePreviewPoly.gameObject.SetActive(false); return true; }
+            activePreviewPoly.gameObject.SetActive(true);
+            activePreviewPoly.SetPolyline(streetPath, Vector2.zero, col, new Color(1f, 1f, 1f, 0.42f), 14f * overlayZoom, 2.5f * overlayZoom);
+            return true;
+        }
+
         scratchAutoWaypoints.Clear();
         bool ok = true;
         if (autoRouteEnabled && Vector2.Distance(p1, end) >= 48f)
@@ -299,8 +308,10 @@ public partial class DemoBootstrap
         TerrainField.SampleCatmullRomPolyline(scratchControlPts, false, outPts);
     }
 
+    readonly List<Vector2> scratchSegPolyTmp = new List<Vector2>(64);
+
     /// <summary>
-    /// 展开同一区域内连续多段的整线向心 Catmull-Rom 平滑折线（100% 精准过站，闭环首尾连续）。零 GC。
+    /// 逐段独立展开同一区域内连续多段的平滑折线：每两站之间仅根据本段锚点独立平滑，新增或改动某段绝不影响原有段。零 GC。
     /// </summary>
     void FillRegionSpanPolyline(
         Line line,
@@ -312,18 +323,31 @@ public partial class DemoBootstrap
         int overrideSegIdx = -1,
         IReadOnlyList<Vector2> overrideWaypoints = null)
     {
-        scratchControlPts.Clear();
-        scratchCtrlSegIndices.Clear();
+        outPts.Clear();
+        if (outSubSegIndices != null) outSubSegIndices.Clear();
         if (line == null || line.st == null || segStart < 0 || segEndInclusive >= line.st.Count - 1 || segStart > segEndInclusive)
+            return;
+
+        if (IsInEventSandbox())
         {
-            outPts.Clear();
-            if (outSubSegIndices != null) outSubSegIndices.Clear();
+            for (int s = segStart; s <= segEndInclusive; s++)
+            {
+                var streetPath = FindSandboxStreetPath(activeSandboxEventId, line.st[s], line.st[s + 1]);
+                if (streetPath.Count < 2) continue;
+                for (int p = outPts.Count == 0 ? 0 : 1; p < streetPath.Count; p++)
+                {
+                    if (outPts.Count > 0 && outSubSegIndices != null) outSubSegIndices.Add(s);
+                    outPts.Add(streetPath[p]);
+                }
+            }
             return;
         }
 
-        scratchControlPts.Add(PosInRegion(line.st[segStart], region));
         for (int s = segStart; s <= segEndInclusive; s++)
         {
+            scratchControlPts.Clear();
+            scratchControlPts.Add(PosInRegion(line.st[s], region));
+
             IReadOnlyList<Vector2> wp = null;
             if (s == overrideSegIdx && overrideWaypoints != null)
                 wp = overrideWaypoints;
@@ -331,19 +355,20 @@ public partial class DemoBootstrap
                 wp = line.segWaypoints[s].pts;
 
             if (wp != null)
-            {
-                for (int i = 0; i < wp.Count; i++)
-                {
-                    scratchControlPts.Add(wp[i]);
-                    scratchCtrlSegIndices.Add(s);
-                }
-            }
-            scratchControlPts.Add(PosInRegion(line.st[s + 1], region));
-            scratchCtrlSegIndices.Add(s);
-        }
+                for (int i = 0; i < wp.Count; i++) scratchControlPts.Add(wp[i]);
 
-        bool spanIsLoop = segStart == 0 && segEndInclusive == line.st.Count - 2 && IsLoop(line.st);
-        TerrainField.SampleCatmullRomPolyline(scratchControlPts, spanIsLoop, outPts, outSubSegIndices, scratchCtrlSegIndices);
+            scratchControlPts.Add(PosInRegion(line.st[s + 1], region));
+            TerrainField.SampleCatmullRomPolyline(scratchControlPts, false, scratchSegPolyTmp);
+            if (scratchSegPolyTmp.Count < 2) continue;
+
+            int startIdx = outPts.Count == 0 ? 0 : 1;
+            for (int p = startIdx; p < scratchSegPolyTmp.Count; p++)
+            {
+                if (outPts.Count > 0 && outSubSegIndices != null)
+                    outSubSegIndices.Add(s);
+                outPts.Add(scratchSegPolyTmp[p]);
+            }
+        }
     }
 
     /// <summary>
@@ -351,6 +376,13 @@ public partial class DemoBootstrap
     /// </summary>
     void FillDraftSegmentPolyline(List<int> path, int segIdx, List<Vector2> outPts)
     {
+        if (IsInEventSandbox())
+        {
+            outPts.Clear();
+            if (path != null && segIdx >= 0 && segIdx < path.Count - 1)
+                outPts.AddRange(FindSandboxStreetPath(activeSandboxEventId, path[segIdx], path[segIdx + 1]));
+            return;
+        }
         scratchControlPts.Clear();
         if (path == null || segIdx < 0 || segIdx >= path.Count - 1) { outPts.Clear(); return; }
         scratchControlPts.Add(Pos(path[segIdx]));
@@ -365,6 +397,18 @@ public partial class DemoBootstrap
 
     void FillWholeDraftPolyline(List<int> path, List<Vector2> outPts)
     {
+        if (IsInEventSandbox())
+        {
+            outPts.Clear();
+            if (path == null) return;
+            for (int s = 0; s + 1 < path.Count; s++)
+            {
+                var streetPath = FindSandboxStreetPath(activeSandboxEventId, path[s], path[s + 1]);
+                if (streetPath.Count < 2) continue;
+                for (int p = outPts.Count == 0 ? 0 : 1; p < streetPath.Count; p++) outPts.Add(streetPath[p]);
+            }
+            return;
+        }
         scratchControlPts.Clear();
         if (path == null || path.Count < 2) { outPts.Clear(); return; }
         scratchControlPts.Add(Pos(path[0]));
@@ -399,6 +443,7 @@ public partial class DemoBootstrap
     int EvaluateLineSegmentCost(Line line, int segIdx, float trackFactor, out TerrainField.SegmentTerrainResult tr)
     {
         tr = default;
+        if (IsInEventSandbox()) return 0;
         if (line == null || line.st == null || segIdx < 0 || segIdx >= line.st.Count - 1) return 0;
         string reg = SegmentRegion(line.st[segIdx], line.st[segIdx + 1]) ?? currentRegion;
         FillLineSegmentPolyline(line, segIdx, reg, scratchPolyline);
@@ -407,6 +452,7 @@ public partial class DemoBootstrap
 
     bool TryAddActiveWaypoint(Vector2 snappedPos)
     {
+        if (IsInEventSandbox()) return false;
         if (!dragging || draft.Count == 0 || IsLoop(draft)) return false;
         if (TerrainField.IsBlocked(currentRegion, snappedPos))
         {
@@ -450,6 +496,7 @@ public partial class DemoBootstrap
 
     bool TryPopActiveWaypoint()
     {
+        if (IsInEventSandbox()) return false;
         if (activeSegWaypoints.Count == 0) return false;
         activeSegWaypoints.RemoveAt(activeSegWaypoints.Count - 1);
         InvalidateAutoRouteCache();

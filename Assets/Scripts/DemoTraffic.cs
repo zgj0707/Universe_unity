@@ -272,7 +272,7 @@ public partial class DemoBootstrap
         return levelCap * hubScale * PassengerScale * ResearchFactor(ResearchEffect.Station) * CoTechStationCapMult() * StationTalentCapMult(i);
     }
     // 单方向单区段的日化运力；不同区段可由不同乘客复用。
-    float FleetCapacity(Line line) { return 4000f * RunningTrains(line) * FleetTrait(line, 1, true) * ResearchFactor(ResearchEffect.Capacity) * (SkinCategory(GetLineSkin(line)) == 4 ? 1.08f : 1f) * LineTalentCapMult(line); }
+    float FleetCapacity(Line line) { if (IsInEventSandbox()) return SandboxSavedLineCapacity(FindSandboxLine(line), GetOrCreateEventSandbox(activeSandboxEventId)); return 4000f * RunningTrains(line) * FleetTrait(line, 1, true) * ResearchFactor(ResearchEffect.Capacity) * (SkinCategory(GetLineSkin(line)) == 4 ? 1.08f : 1f) * LineTalentCapMult(line); }
     float LineCapacity(Line line) { return FleetCapacity(line); }
     int moonNearEconomicAnchor = -2, moonFarEconomicAnchor = -2;
     Vector2 EconomicPosition(int index)
@@ -1003,6 +1003,36 @@ public partial class DemoBootstrap
     List<TrafficDestFlow> GetStationOdTopDests(int origin, int maxCount = 3)
     {
         var list = new List<TrafficDestFlow>();
+        if (IsInEventSandbox())
+        {
+            var defs = GetSandboxStationDefs(activeSandboxEventId);
+            if (origin < 0 || origin >= defs.Length || maxCount <= 0) return list;
+            var counts = new Dictionary<int, int>();
+            if (activeSandboxEventId == EventIdNeonNight)
+                foreach (var order in sandboxTaxiOrders)
+                    if (order.originStation == origin && order.destStation >= 0 && order.destStation < defs.Length && order.destStation != origin)
+                    {
+                        if (!counts.ContainsKey(order.destStation)) counts[order.destStation] = 0;
+                        counts[order.destStation]++;
+                    }
+            if (counts.Count == 0)
+                for (int i = 0; i < defs.Length; i++)
+                    if (i != origin && defs[i].isSpecialA && !defs[i].isSpecialB) counts[i] = 1;
+            var targets = new List<int>(counts.Keys);
+            Vector2 start = SandboxUvToCanvas(defs[origin].u, defs[origin].v);
+            targets.Sort((a, b) => {
+                int c = counts[b].CompareTo(counts[a]);
+                return c != 0 ? c : Vector2.Distance(start, SandboxUvToCanvas(defs[a].u, defs[a].v)).CompareTo(Vector2.Distance(start, SandboxUvToCanvas(defs[b].u, defs[b].v)));
+            });
+            for (int i = 0; i < targets.Count && list.Count < maxCount; i++)
+            {
+                int dest = targets[i];
+                bool connected = SandboxConnected(origin, dest, out int cars);
+                bool crowded = connected && (counts[dest] > cars * 2 || (activeSandboxEventId == EventIdAshDome && cars < 2));
+                list.Add(new TrafficDestFlow { dest = dest, desired = counts[dest], served = connected ? counts[dest] : 0, reachable = connected, crowded = crowded });
+            }
+            return list;
+        }
         if (origin < 0 || origin >= stations.Count || stations[origin].closed) return list;
         var netReachable = ComputeNetReachable(origin);
         bool originCrowded = StationWaitRatio(origin) >= 1f;

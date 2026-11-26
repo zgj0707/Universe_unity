@@ -145,7 +145,7 @@ public partial class DemoBootstrap
         pendingCheckin.Clear(); foreach (var sc in sceneries) if (sc.unlocked && !sc.found && TryGetSceneryContent(sc,out _,out _)) pendingCheckin.Add(sc);
         researchProfitEstimates.Clear(); hasResearchProfitSignature = false;
         RefreshSceneryViews(); RefreshPendingBadge(); RefreshFeatureGateVisuals(); UpdateStoryObjectiveBanner();
-        CreateLineVisuals(); RefreshStationDots(); RecalcIncome();
+        CreateLineVisuals(); SyncMainLinesToSandbox(); if (IsInEventSandbox()) SaveSandboxStorage(); RefreshStationDots(); RecalcIncome();
         if (!RegionUnlocked(currentRegion)) SwitchRegion("月之亮面");
         RefreshHUD(); RefreshUndoButton(); SaveGame(); Toast("已撤销：" + state.label);
     }

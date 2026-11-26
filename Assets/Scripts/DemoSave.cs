@@ -386,6 +386,7 @@ public partial class DemoBootstrap
     float saveDebounceTimer;
     void RequestSaveGame(float delay = 0.85f)
     {
+        if (IsInEventSandbox()) return;
         if (!saveReady || saveBlocked) return;
         unchecked { saveRevision++; }
         saveDirty = true;
@@ -393,8 +394,10 @@ public partial class DemoBootstrap
     }
     void SaveGame()
     {
+        if (IsInEventSandbox()) return;
         if(!saveReady || saveBlocked) return;
         unchecked { saveRevision++; }
+        autosaveSerialization = null;
         pendingAutosavePayload = null;
         saveDirty = false;
         saveDebounceTimer = 0f;
@@ -407,8 +410,17 @@ public partial class DemoBootstrap
 #endif
         } catch(Exception e) { Debug.LogError("本地存档保存失败：" + e.Message); }
     }
+#if UNITY_EDITOR
+    public void ForceSaveToBundledTestSave()
+    {
+        if (!saveReady || saveBlocked) { Debug.LogWarning("[Railway2] 当前进度尚不可保存"); return; }
+        DevTestSaveSyncEnabled = true;
+        SaveGame();
+    }
+#endif
     void TickAutosave()
     {
+        if (IsInEventSandbox()) return;
         if (!saveReady || saveBlocked) return;
         float dt = Time.unscaledDeltaTime;
         bool interacting = draft.Count > 0 || lineInsertActive || Input.GetMouseButton(0) || Input.touchCount > 0;
@@ -438,6 +450,10 @@ public partial class DemoBootstrap
                 {
                     WriteSaveJsonAtomically(BundledTestSaveAssetPath, pendingAutosavePayload.pretty);
                     DevTestSaveDirty = true;
+                    UnityEditor.EditorApplication.delayCall += () => {
+                        if (!Application.isPlaying && File.Exists(BundledTestSaveAssetPath))
+                            UnityEditor.AssetDatabase.ImportAsset(BundledTestSaveAssetPath);
+                    };
                 }
 #endif
                 saveDirty = false; saveDebounceTimer = 0f; autosaveTimer = 0f;

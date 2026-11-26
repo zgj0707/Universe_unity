@@ -11,6 +11,7 @@ public partial class DemoBootstrap
 
     public void OnLineTap(Vector2 screen)
     {
+        if (AshCycleCompleted()) return;
         if (dragging || pageRoot != null || activePanel != null) return;
         Vector2 local;
         if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(mapRect, screen, null, out local)) return;
@@ -78,7 +79,7 @@ public partial class DemoBootstrap
             BeginUndo("热力快捷增班");
             line.dispatch[slot] = Mathf.Min(line.trains, line.dispatch[slot] + 1);
             operatingRates.Clear();
-            RecalcIncome(); EndUndo(); RefreshHUD();
+            RecalcIncome(); EndUndo(); SaveGame(); RefreshHUD();
             ShowForecastDelayToast();
             return;
         }
@@ -93,7 +94,7 @@ public partial class DemoBootstrap
                 MoveLineFleetVehicle(line, v, true);
                 line.dispatch[slot] = line.trains;
                 operatingRates.Clear();
-                RecalcIncome(); EndUndo(); RefreshHUD();
+                RecalcIncome(); EndUndo(); SaveGame(); RefreshHUD();
                 ShowForecastDelayToast();
                 return;
             }
@@ -120,7 +121,7 @@ public partial class DemoBootstrap
             var hHit = hits[i];
             int ha = hHit.line.st[hHit.seg], hb = hHit.line.st[hHit.seg + 1];
             float load = SegmentLoadRatio(hHit.line, ha, hb);
-            bool showBoost = load >= 0.72f;
+            bool showBoost = IsInEventSandbox() || load >= 0.72f;
             heights[i] = showBoost ? 236f : 172f;
             total += heights[i];
         }
@@ -137,7 +138,7 @@ public partial class DemoBootstrap
             if (!lines.Contains(line)) continue;
             int a = line.st[hit.seg], b = line.st[hit.seg + 1];
             float load = SegmentLoadRatio(line, a, b);
-            bool showBoost = load >= 0.72f;
+            bool showBoost = IsInEventSandbox() || load >= 0.72f;
             float bh = heights[i];
             float y = cursorTop - bh;
             cursorTop = y - gap;
@@ -148,11 +149,19 @@ public partial class DemoBootstrap
             Txt(card.transform, line.name, 28, Ink, 20, bh - 54, 170, 38, TextAnchor.MiddleLeft);
             Txt(card.transform, StationDisplayName(a, currentRegion) + " ⇄ " + StationDisplayName(b, currentRegion), 23, InkSoft, 194, bh - 52, 342, 36, TextAnchor.MiddleLeft);
 
-            if (showBoost)
+            if (IsInEventSandbox())
+            {
+                var saved = FindSandboxLine(line);
+                var vehicle = saved != null ? GetSandboxVehicleDef(activeSandboxEventId, saved.vehicleKey) : null;
+                string status = load >= 0.95f ? "爆满拥挤" : load >= 0.72f ? "运力吃紧" : "运行通畅";
+                Txt(card.transform, $"运力 {Mathf.RoundToInt(SandboxSavedLineCapacity(saved, GetOrCreateEventSandbox(activeSandboxEventId)))} 人/日  负荷 {Mathf.RoundToInt(load * 100f)}%  {status}", 20, load >= 0.95f ? Vermilion : load >= 0.72f ? Gold : Matcha, 20, 115, 516, 30, TextAnchor.MiddleLeft);
+                Txt(card.transform, $"{(vehicle != null ? vehicle.name : "基础车型")}  载客 ×{(vehicle != null ? vehicle.capMult : 1f):0.##}  速度 ×{(vehicle != null ? vehicle.speedMult : 1f):0.##}", 18, InkSoft, 20, 90, 516, 25, TextAnchor.MiddleLeft);
+            }
+            else if (showBoost)
             {
                 int pct = Mathf.RoundToInt(load * 100f);
                 Color loadCol = load >= 0.95f ? Vermilion : load >= 0.72f ? new Color(0.84f, 0.56f, 0.12f) : Matcha;
-                string statusText = load >= 0.95f ? "负荷 " + pct + "% · 爆满拥挤" : load >= 0.72f ? "负荷 " + pct + "% · 运力吃紧" : "负荷 " + pct + "% · 运行通畅";
+                string statusText = load >= 0.95f ? "负荷 " + pct + "%  爆满拥挤" : load >= 0.72f ? "负荷 " + pct + "%  运力吃紧" : "负荷 " + pct + "%  运行通畅";
                 Txt(card.transform, statusText + "（发车 " + RunningTrains(line) + "/" + line.trains + "）", 21, loadCol, 20, 114, 326, 40, TextAnchor.MiddleLeft);
 
                 int slot = DispatchSlot();
@@ -189,21 +198,22 @@ public partial class DemoBootstrap
         if (line == null || seg < 0 || seg >= line.st.Count - 1) return "";
         int a = line.st[seg], b = line.st[seg + 1];
         int refund = Mathf.RoundToInt(EvaluateLineSegmentCost(line, seg, TrackBuildCostFactor(), out _) * DemolishRefundRate());
-        string tail = line.st.Count <= 2 ? "\n该段拆除后，这条航线会消失。" : "\n拆除后退还 ¥" + refund + "。";
+        string tail = IsInEventSandbox() ? "\n活动线路可随时免费调整。" : line.st.Count <= 2 ? "\n该段拆除后，这条航线会消失。" : "\n拆除后退还 ¥" + refund + "。";
         return StationDisplayName(a, currentRegion) + " ⇄ " + StationDisplayName(b, currentRegion) + tail;
     }
     string LineConfirmText(Line line)
     {
         if (line == null) return "";
         int refund = Mathf.RoundToInt(120f * (UniqueCount(line.st) - 1) * TrackBuildCostFactor() * DemolishRefundRate());
-        return UniqueCount(line.st) + " 港 · " + line.trains + " 星舰\n拆除后退还 ¥" + refund + "。";
+        return UniqueCount(line.st) + " 港  " + line.trains + " 星舰\n" + (IsInEventSandbox() ? "活动线路可随时免费调整。" : "拆除后退还 ¥" + refund + "。");
     }
 
     void DoDemolishSegment(Line line, int seg)
     {
         if (line == null || !lines.Contains(line) || seg < 0 || seg >= line.st.Count - 1) return;
         int n = line.st.Count;
-        if (!IsLoop(line.st) && n > 3 && seg > 0 && seg < n - 2) {
+        if (IsInEventSandbox() && !IsLoop(line.st) && n > 3 && seg > 0 && seg < n - 2 && lines.Count >= LineLimit()) { Toast("航线已达上限，无法拆分该段"); return; }
+        if (!IsInEventSandbox() && !IsLoop(line.st) && n > 3 && seg > 0 && seg < n - 2) {
             var head = line.st.GetRange(0, seg + 1); var tailPath = line.st.GetRange(seg + 1, n - seg - 1);
             for (int r = 0; r < RegionOrder.Length; r++) {
                 string region = RegionOrder[r];
@@ -231,27 +241,27 @@ public partial class DemoBootstrap
             }
             line.st = opened;
             line.segWaypoints = openedWp;
-            coins += refund;
+            if (!IsInEventSandbox()) coins += refund;
             msg = "已拆除一段，环线变为普通航线";
         }
         else if (n <= 2)
         {
-            SettleRemovedLineTax(line); ReleaseLineFleet(line); lines.Remove(line);
-            coins += refund;
+            if (!IsInEventSandbox()) { SettleRemovedLineTax(line); ReleaseLineFleet(line); } lines.Remove(line);
+            if (!IsInEventSandbox()) coins += refund;
             msg = "已拆除 " + line.name;
         }
         else if (seg == 0)
         {
             line.st.RemoveAt(0);
             line.segWaypoints.RemoveAt(0);
-            coins += refund;
+            if (!IsInEventSandbox()) coins += refund;
             msg = "已拆除一段：" + StationDisplayName(a, currentRegion) + " ⇄ " + StationDisplayName(b, currentRegion);
         }
         else if (seg == n - 2)
         {
             line.st.RemoveAt(n - 1);
             line.segWaypoints.RemoveAt(line.segWaypoints.Count - 1);
-            coins += refund;
+            if (!IsInEventSandbox()) coins += refund;
             msg = "已拆除一段：" + StationDisplayName(a, currentRegion) + " ⇄ " + StationDisplayName(b, currentRegion);
         }
         else
@@ -260,7 +270,7 @@ public partial class DemoBootstrap
             var tailWp = CloneWaypointsList(line.segWaypoints.GetRange(seg + 1, line.segWaypoints.Count - (seg + 1)));
             line.st.RemoveRange(seg + 1, n - seg - 1);
             line.segWaypoints.RemoveRange(seg, line.segWaypoints.Count - seg);
-            coins += refund;
+            if (!IsInEventSandbox()) coins += refund;
             var nl = new Line {
                 id = nextLineId,
                 name = nextLineId + " 号线",
@@ -274,7 +284,7 @@ public partial class DemoBootstrap
             msg = "航线拆分为 " + line.name + " / " + nl.name;
         }
 
-        CreateLineVisuals(); RefreshStationDots(); RecalcIncome(); RefreshHUD();
+        CreateLineVisuals(); SyncMainLinesToSandbox(); if (IsInEventSandbox()) SaveSandboxStorage(); RefreshStationDots(); RecalcIncome(); RefreshHUD();
         EndUndo(); Toast(msg);
     }
 
@@ -283,8 +293,8 @@ public partial class DemoBootstrap
         if (line == null || !lines.Contains(line)) return;
         BeginUndo("拆除整条航线");
         float refund = 120f * (UniqueCount(line.st) - 1) * TrackBuildCostFactor() * DemolishRefundRate();
-        coins += refund; SettleRemovedLineTax(line); ReleaseLineFleet(line); lines.Remove(line);
-        CreateLineVisuals(); RefreshStationDots(); RecalcIncome(); RefreshHUD();
+        if (!IsInEventSandbox()) coins += refund; if (!IsInEventSandbox()) { SettleRemovedLineTax(line); ReleaseLineFleet(line); } lines.Remove(line);
+        CreateLineVisuals(); SyncMainLinesToSandbox(); if (IsInEventSandbox()) SaveSandboxStorage(); RefreshStationDots(); RecalcIncome(); RefreshHUD();
         EndUndo(); Toast("已拆除 " + line.name);
     }
 
@@ -292,9 +302,10 @@ public partial class DemoBootstrap
     {
         if (line == null || !lines.Contains(line)) return;
         CloseLineBubble();
+        if (IsInEventSandbox()) { OpenMainSandboxLineInfo(line, seg); return; }
         bool isLoop = IsLoop(line.st);
         string pathText = isLoop
-            ? "环线 · 具体途经站请查看「航线详情」"
+            ? "环线  具体途经站请查看「航线详情」"
             : "沿线 " + UniquePathText(line.st);
         float pathHeight = Mathf.Clamp(MeasureTextHeight(pathText, 19, 860) + 6, 48, 280);
         float extra = pathHeight - 48;
@@ -324,11 +335,11 @@ public partial class DemoBootstrap
                 Img(ghost, new Color(0.90f, 0.87f, 0.81f, 0.42f), spriteRound).raycastTarget = false;
             }
             Img(Rect("ChartBase", p.transform, 36, 500 + extra, 888, 2), new Color(0.55f,0.50f,0.42f,0.28f)).raycastTarget = false;
-            Txt(p.transform, "首日运营中 · 今日收入 ¥" + line.todayRevenue + "\n日结后生成近 7 日利润曲线", 23, InkSoft, 36, 540 + extra, 860, 74, TextAnchor.UpperLeft);
+            Txt(p.transform, "首日运营中  今日收入 ¥" + line.todayRevenue + "\n日结后生成近 7 日利润曲线", 23, InkSoft, 36, 540 + extra, 860, 74, TextAnchor.UpperLeft);
         }
         else
         {
-            Txt(p.transform, "已结算 " + line.recent.Count + " 日 · 日均 ¥" + (recentSum / line.recent.Count), 22, InkSoft, 450, 678 + extra, 460, 34, TextAnchor.MiddleRight);
+            Txt(p.transform, "已结算 " + line.recent.Count + " 日  日均 ¥" + (recentSum / line.recent.Count), 22, InkSoft, 450, 678 + extra, 460, 34, TextAnchor.MiddleRight);
             int max = 1;
             foreach (int v in line.recent) if (Mathf.Abs(v) > max) max = Mathf.Abs(v);
             int start = 7 - line.recent.Count;
@@ -346,19 +357,53 @@ public partial class DemoBootstrap
         }
 
         Txt(p.transform, "运 营", 26, Ink, 36, 470 + extra, 300, 36, TextAnchor.MiddleLeft);
-        Txt(p.transform, "星港 " + unique + " · 星舰 " + line.trains + "/8 · 航线长度 " + FormatLineKm(line.st), 23, Ink, 36, 420 + extra, 860, 36, TextAnchor.MiddleLeft);
-        Txt(p.transform, "最高区段需求 " + Mathf.RoundToInt(LinePeakSectionDemand(line)) + " 人次/日 · 平均速度 " + Mathf.RoundToInt(FleetTrait(line, 2)*100) + "%", 23, InkSoft, 36, 382 + extra, 860, 34, TextAnchor.MiddleLeft);
+        Txt(p.transform, "星港 " + unique + "  星舰 " + line.trains + "/8  航线长度 " + FormatLineKm(line.st), 23, Ink, 36, 420 + extra, 860, 36, TextAnchor.MiddleLeft);
+        Txt(p.transform, "最高区段需求 " + Mathf.RoundToInt(LinePeakSectionDemand(line)) + " 人次/日  平均速度 " + Mathf.RoundToInt(FleetTrait(line, 2)*100) + "%", 23, InkSoft, 36, 382 + extra, 860, 34, TextAnchor.MiddleLeft);
         if (seg >= 0 && seg < line.st.Count - 1)
             Txt(p.transform, "选中段：" + stations[line.st[seg]].name + " ⇄ " + stations[line.st[seg + 1]].name, 22, line.color, 36, 344 + extra, 860, 34, TextAnchor.MiddleLeft);
         ScrollableText(p.transform, pathText, 22, InkSoft, 36, 296, 860, pathHeight);
 
-        Txt(p.transform, "预计成本：星舰 ¥" + Mathf.RoundToInt(forecast.vehicle) + " · 航线 ¥" + Mathf.RoundToInt(forecast.track) + " · 税 ¥" + Mathf.RoundToInt(forecast.tax), 23, InkSoft, 36, 244, 860, 38, TextAnchor.MiddleLeft);
+        Txt(p.transform, "预计成本：星舰 ¥" + Mathf.RoundToInt(forecast.vehicle) + "  航线 ¥" + Mathf.RoundToInt(forecast.track) + "  税 ¥" + Mathf.RoundToInt(forecast.tax), 23, InkSoft, 36, 244, 860, 38, TextAnchor.MiddleLeft);
         var planning = Btn(p.transform, "Operations", "票价与调度", 25, 34, 132, 892, 70, Indigo, () => { ClosePanel(true); OpenLineOperations(line); }); TInk(planning, Color.white);
         Btn(p.transform, "LineDetail", "航线详情 / 星舰", 26, 34, 34, 430, 82, Indigo, () => {
             ClosePanel(); OpenLineScreen(line.id, () => OpenLineInfo(line, seg));
         });
         var close = Btn(p.transform, "InfoClose", "关 闭", 26, 496, 34, 430, 82, new Color(0.92f,0.89f,0.83f), ClosePanel);
         TInk(close, Ink);
+    }
+
+    void OpenMainSandboxLineInfo(Line line, int seg)
+    {
+        var p = OpenPopup("线路信息", 540, 960, "sandbox_main_line_info_" + line.id);
+        BuildLineNameEditor(p.transform, line, 540);
+        Txt(p.transform, UniquePathText(line.st), 22, InkSoft, 36, 340, 860, 50, TextAnchor.MiddleLeft);
+        var st = GetOrCreateEventSandbox(activeSandboxEventId);
+        var spec = GetEventSpec(activeSandboxEventId);
+        var saved = FindSandboxLine(line);
+        var vehicle = saved != null ? GetSandboxVehicleDef(activeSandboxEventId, saved.vehicleKey) : null;
+        float load = line.st.Count > 1 ? SegmentLoadRatio(line, line.st[Mathf.Clamp(seg, 0, line.st.Count - 2)], line.st[Mathf.Clamp(seg, 0, line.st.Count - 2) + 1]) : 0f;
+        string status = load >= 0.95f ? "爆满拥挤" : load >= 0.72f ? "运力吃紧" : "运行通畅";
+        Txt(p.transform, $"车辆 {line.trains}  运力 {Mathf.RoundToInt(SandboxSavedLineCapacity(saved, st))} 人/日  负荷 {Mathf.RoundToInt(load * 100f)}%  {status}", 22, Ink, 36, 292, 860, 38, TextAnchor.MiddleLeft);
+        Txt(p.transform, $"{(vehicle != null ? vehicle.name : "基础车型")}  载客 ×{(vehicle != null ? vehicle.capMult : 1f):0.##}  速度 ×{(vehicle != null ? vehicle.speedMult : 1f):0.##}    {spec.tokenName}：{st.tokens}", 20, Indigo, 36, 258, 860, 32, TextAnchor.MiddleLeft);
+        var add = Btn(p.transform, "AddCar", "+1 辆（4 券）", 24, 36, 200, 210, 65, Matcha, () => {
+            if (line.trains >= 4) { Toast("车辆已满"); return; }
+            if (st.tokens < 4) { Toast(spec.tokenName + "不足"); return; }
+            st.tokens -= 4; line.trains++; CreateLineVisuals(); SyncMainLinesToSandbox(); RefreshSandboxHudText(); SaveSandboxStorage();
+            ClosePanel(true); OpenMainSandboxLineInfo(line, seg);
+        }); TInk(add, Color.white);
+        var remove = Btn(p.transform, "RemoveCar", "减少车辆", 24, 260, 200, 210, 65, Vermilion, () => {
+            if (line.trains <= 1) { Toast("至少保留 1 辆车"); return; }
+            line.trains--; CreateLineVisuals(); SyncMainLinesToSandbox(); SaveSandboxStorage();
+            ClosePanel(true); OpenMainSandboxLineInfo(line, seg);
+        }); TInk(remove, Color.white);
+        for (int i = 0; i < LineColors.Length; i++) {
+            Color color = LineColors[i];
+            var button = Btn(p.transform, "Color" + i, "", 20, 36 + i * 100, 115, 80, 60, color, () => {
+                line.color = color; CreateLineVisuals(); SyncMainLinesToSandbox(); SaveSandboxStorage();
+                ClosePanel(true); OpenMainSandboxLineInfo(line, seg);
+            });
+        }
+        var close = Btn(p.transform, "Close", "关闭", 24, 680, 20, 240, 65, Paper2, ClosePanel); TInk(close, Ink);
     }
 
     void BuildLineNameEditor(Transform parent, Line line, float h)
@@ -392,7 +437,7 @@ public partial class DemoBootstrap
         var save = Btn(editor.transform, "Save", "确定", 26, 482, 0, 120, 76, Matcha, () => {
             string value = input.text.Trim();
             if (string.IsNullOrWhiteSpace(value)) { Toast("航线名称不能为空"); return; }
-            if (line.name != value) { BeginUndo("修改航线名称"); line.name = value; EndUndo(); }
+            if (line.name != value) { BeginUndo("修改航线名称"); line.name = value; SyncMainLinesToSandbox(); if (IsInEventSandbox()) SaveSandboxStorage(); EndUndo(); }
             label.text = DisplayPlaceAliases(line.name) + "  ✎";
             editor.SetActive(false);
             nameButton.gameObject.SetActive(true);
@@ -516,7 +561,7 @@ public partial class DemoBootstrap
     bool CanInsertStation(Line line, int segment, int target)
     {
         if (line == null || !lines.Contains(line) || segment < 0 || segment >= line.st.Count - 1 ||
-            target < 0 || target >= stations.Count || line.st.Contains(target)) return false;
+            target < 0 || target >= stations.Count || line.st.Contains(target) || (IsInEventSandbox() && stations[target].closed)) return false;
         int a = line.st[segment], b = line.st[segment + 1];
         if (stations[target].portal && (stations[a].portal || stations[b].portal)) return false;
         return StationInRegion(target, currentRegion) && SegmentRegion(a, b) == currentRegion &&
@@ -577,6 +622,15 @@ public partial class DemoBootstrap
         if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(mapRect, screen, null, out var local)) return;
         float snap = 44f / Mathf.Max(1f, mapRect.localScale.x);
         int near = NearestStationAny(local, snap);
+        if (IsInEventSandbox() && (near < 0 || stations[near].closed || !CanInsertStation(insertingLine, insertingSegment, near)))
+        {
+            near = -1; float best = float.MaxValue;
+            for (int i = 0; i < stations.Count; i++) {
+                if (stations[i].closed || !IsStationShown(i) || !CanInsertStation(insertingLine, insertingSegment, i)) continue;
+                float distance = Vector2.Distance(local, Pos(i));
+                if (distance < SnapRadius(i, snap) && distance < best) { best = distance; near = i; }
+            }
+        }
         insertTarget = CanInsertStation(insertingLine, insertingSegment, near) ? near : -1;
 
         Vector2 pa = Pos(insertingLine.st[insertingSegment]);
@@ -604,7 +658,13 @@ public partial class DemoBootstrap
             while (spanEnd + 1 < segCount && SegmentRegion(insertingLine.st[spanEnd + 1], insertingLine.st[spanEnd + 2]) == currentRegion) spanEnd++;
             FillRegionSpanPolyline(insertingLine, spanStart, spanEnd, currentRegion, scratchPolyline, scratchSubSegIndices, insertingSegment, scratchInsertWps);
 
-            if (insertBadgeText) insertBadgeText.text = "插入造价 ¥" + InsertStationCost(insertingLine, insertingSegment, insertTarget);
+            if (insertBadgeText) insertBadgeText.text = IsInEventSandbox() ? "插入途经站" : "插入造价 ¥" + InsertStationCost(insertingLine, insertingSegment, insertTarget);
+        }
+        else if (IsInEventSandbox())
+        {
+            insertHasGridPoint = false; insertGridBlocked = false;
+            scratchPolyline.Clear();
+            if (insertBadgeText) insertBadgeText.text = "拖至可用站点";
         }
         else
         {
@@ -642,11 +702,11 @@ public partial class DemoBootstrap
             if (insertBadgeText)
             {
                 if (insertGridBlocked)
-                    insertBadgeText.text = "禁建天堑 · 请拖至安全点阵";
+                    insertBadgeText.text = "禁建天堑  请拖至安全点阵";
                 else if (afterPct != beforePct)
-                    insertBadgeText.text = $"地形惩罚 +{afterPct}%（原 +{beforePct}%）· {insertTempWaypoints.Count}拐点";
+                    insertBadgeText.text = $"地形惩罚 +{afterPct}%（原 +{beforePct}%）  {insertTempWaypoints.Count}拐点";
                 else
-                    insertBadgeText.text = $"地形惩罚 +{afterPct}% · {insertTempWaypoints.Count}拐点 (右键加点)";
+                    insertBadgeText.text = $"地形惩罚 +{afterPct}%  {insertTempWaypoints.Count}拐点 (右键加点)";
             }
         }
         if (insertPreviewPoly)
@@ -668,10 +728,11 @@ public partial class DemoBootstrap
         bool useGrid = insertHasGridPoint, gridBlocked = insertGridBlocked;
         var committedWps = new List<Vector2>(insertTempWaypoints);
         CancelLineInsert();
+        if (IsInEventSandbox()) { if (CanInsertStation(line, segment, target)) CommitLineInsertion(line, segment, target); return; }
         if (CanInsertStation(line, segment, target))
         {
             int cost = InsertStationCost(line, segment, target);
-            string details = line.name + " · " + StationDisplayName(target, currentRegion) + "\n造价 ¥" + cost + "（含必要开港费用）";
+            string details = line.name + "  " + StationDisplayName(target, currentRegion) + "\n造价 ¥" + cost + "（含必要开港费用）";
             float detailsHeight = Mathf.Clamp(MeasureTextHeight(details, 25, 620) + 8, 54, H - 410);
             var p = OpenPopup("插入途经港", detailsHeight + 200, 680);
             ScrollableText(p.transform, details, 25, InkSoft, 28, 102, 620, detailsHeight);
@@ -682,7 +743,17 @@ public partial class DemoBootstrap
         if (useGrid && line != null && lines.Contains(line) && segment >= 0 && segment < line.st.Count - 1)
         {
             if (gridBlocked) { Toast("路径穿越裂谷/绝壁禁建区，未修改"); return; }
+            var origPts = (line.segWaypoints != null && segment < line.segWaypoints.Count && line.segWaypoints[segment] != null)
+                ? line.segWaypoints[segment].pts : null;
+            // 若玩家仅点击未实质改变任何拐点（例如新增的占位格点清理后与原列表一致），不覆盖原路径
             CleanupRedundantWaypoints(committedWps, Pos(line.st[segment]), Pos(line.st[segment + 1]));
+            bool unchanged = (origPts == null ? committedWps.Count == 0 : origPts.Count == committedWps.Count);
+            if (unchanged && origPts != null)
+            {
+                for (int i = 0; i < origPts.Count; i++)
+                    if (Vector2.Distance(origPts[i], committedWps[i]) > 2f) { unchanged = false; break; }
+            }
+            if (unchanged) return;
             EvaluateSegmentWaypointPreview(line, segment, committedWps, out _, out int afterPct, out bool finalBlocked);
             if (finalBlocked) { Toast("路径穿越裂谷/绝壁禁建区，未修改"); return; }
             BeginUndo("调整点阵拐点");
@@ -691,7 +762,7 @@ public partial class DemoBootstrap
             line.segWaypoints[segment].pts.AddRange(committedWps);
             CreateLineVisuals(); RecalcIncome(); RefreshHUD();
             EndUndo();
-            Toast($"已平滑整线（{committedWps.Count}拐点）· 当前段地形惩罚 +{afterPct}%");
+            Toast($"已平滑整线（{committedWps.Count}拐点）  当前段地形惩罚 +{afterPct}%");
             return;
         }
         Toast("请拖到本区域内星港或安全点阵格点");
@@ -740,22 +811,23 @@ public partial class DemoBootstrap
     {
         if (!CanInsertStation(line, segment, target)) { ClosePanel(true); Toast("航线或星港已变化，请重新操作"); return; }
         int cost = InsertStationCost(line, segment, target);
-        if (coins < cost) { Toast("金币不足：还差 ¥" + FormatShortfall(cost - coins)); return; }
+        if (!IsInEventSandbox() && coins < cost) { Toast("金币不足：还差 ¥" + FormatShortfall(cost - coins)); return; }
         BeginUndo("插入途经站"); ClosePanel(true);
         SyncLineWaypointsCount(line);
         Vector2 pa = Pos(line.st[segment]);
         Vector2 pb = Pos(line.st[segment + 1]);
         Vector2 pt = Pos(target);
         SplitWaypointsForInsertedStation(line, segment, pa, pb, pt, out var leftWps, out var rightWps);
-        coins -= cost; line.st.Insert(segment + 1, target);
+        if (!IsInEventSandbox()) coins -= cost; line.st.Insert(segment + 1, target);
         if (segment >= 0 && segment < line.segWaypoints.Count)
         {
             line.segWaypoints[segment].pts.Clear();
             line.segWaypoints[segment].pts.AddRange(leftWps);
             line.segWaypoints.Insert(segment + 1, new SegmentWaypoints { pts = rightWps });
         }
-        BuildStationsOnPath(new List<int> { target }); stations[target].closed = false;
-        CreateLineVisuals(); RefreshStationDots(); RecalcIncome(); RefreshHUD(); CheckSceneryOnLine(new List<int> { target });
+        if (!IsInEventSandbox()) { BuildStationsOnPath(new List<int> { target }); stations[target].closed = false; }
+        CreateLineVisuals(); SyncMainLinesToSandbox(); if (IsInEventSandbox()) SaveSandboxStorage();
+        RefreshStationDots(); RecalcIncome(); RefreshHUD(); if (!IsInEventSandbox()) CheckSceneryOnLine(new List<int> { target });
         EndUndo(); Toast("已插入 " + StationDisplayName(target, currentRegion));
     }
     bool TryRemoveWaystation(Line line, int station, out List<int> path, out int previous, out int next, out string reason)
@@ -798,7 +870,7 @@ public partial class DemoBootstrap
         float bottom = pages > 1 ? 104 : 24;
         float h = bottom + count * 82 + 124;
         var p = OpenPopup("选择要调整的航线", h, 680, "remove_station_lines_" + station);
-        Txt(p.transform, StationDisplayName(station, currentRegion) + " · 仅从所选航线移除", 24, InkSoft, 28, h - 112, 620, 38, TextAnchor.MiddleLeft);
+        Txt(p.transform, StationDisplayName(station, currentRegion) + "  仅从所选航线移除", 24, InkSoft, 28, h - 112, 620, 38, TextAnchor.MiddleLeft);
         for (int i = 0; i < count; i++) {
             var selected = options[page * pageSize + i];
             var button = Btn(p.transform, "RemoveFromLine" + selected.id, selected.name, 26, 28, bottom + (count - 1 - i) * 82, 624, 68, Paper2,
@@ -815,7 +887,7 @@ public partial class DemoBootstrap
     void PreviewRemoveWaystation(Line line, int station)
     {
         if (!TryRemoveWaystation(line, station, out var path, out int previous, out int next, out string reason)) { Toast(reason); return; }
-        int cost = WaystationChangeCost(previous, station, next);
+        int cost = IsInEventSandbox() ? 0 : WaystationChangeCost(previous, station, next);
         var forecast = CalculateTraffic(line, path);
         float projected = forecast.lineServed.TryGetValue(line, out float served) ? served : 0f;
         string money = cost > 0 ? "需支付 ¥" + cost : cost < 0 ? "退还 ¥" + (-cost) : "无需费用";
@@ -831,8 +903,8 @@ public partial class DemoBootstrap
         if (!TryRemoveWaystation(line, station, out var path, out int previous, out int next, out string reason) || previous != expectedPrevious || next != expectedNext) {
             Toast("航线已发生变化，请重新操作"); return;
         }
-        int cost = WaystationChangeCost(previous, station, next);
-        if (cost > coins) { Toast("金币不足：还差 ¥" + FormatShortfall(cost - coins)); return; }
+        int cost = IsInEventSandbox() ? 0 : WaystationChangeCost(previous, station, next);
+        if (!IsInEventSandbox() && cost > coins) { Toast("金币不足：还差 ¥" + FormatShortfall(cost - coins)); return; }
         BeginUndo("移除途经港");
         SyncLineWaypointsCount(line);
         bool wasLoop = IsLoop(line.st);
@@ -861,7 +933,7 @@ public partial class DemoBootstrap
                 TerrainField.FindShortestGridWaypoints(currentRegion, Pos(previous), Pos(next), line.segWaypoints[mergedSeg].pts);
             }
         }
-        CreateLineVisuals(); RefreshStationDots(); RecalcIncome(); RefreshHUD(); EndUndo();
+        CreateLineVisuals(); SyncMainLinesToSandbox(); if (IsInEventSandbox()) SaveSandboxStorage(); RefreshStationDots(); RecalcIncome(); RefreshHUD(); EndUndo();
         Toast("已从 " + line.name + " 移除 " + StationDisplayName(station, currentRegion));
     }
     void RefreshInsertWaypointHandles()

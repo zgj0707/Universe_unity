@@ -204,7 +204,7 @@ public static class TerrainField
 
         result.steepRatio = (float)steepHits / (steps + 1);
         result.hazardRatio = (float)hazardHits / (steps + 1);
-        float basePenalty = (result.steepRatio * 0.45f + result.climbSum * 0.80f) * TerrainPenaltyScale;
+        float basePenalty = (result.steepRatio * 0.45f + result.climbSum * 0.25f) * TerrainPenaltyScale;
         float hazardBonus = result.crossedHazard ? Mathf.Max(0.35f, Mathf.Clamp01(result.hazardRatio * 3.5f)) * HazardCrossPenaltyBonus : 0f;
         result.penaltyRatio = basePenalty + hazardBonus;
     }
@@ -237,7 +237,9 @@ public static class TerrainField
         {
             total.steepRatio = weightedSteep / total.distance;
             total.hazardRatio = weightedHazard / total.distance;
-            total.penaltyRatio = weightedPenalty / total.distance;
+            float basePenalty = (total.steepRatio * 0.45f + total.climbSum * 0.25f) * TerrainPenaltyScale;
+            float hazardBonus = total.crossedHazard ? Mathf.Max(0.35f, Mathf.Clamp01(total.hazardRatio * 3.5f)) * HazardCrossPenaltyBonus : 0f;
+            total.penaltyRatio = basePenalty + hazardBonus;
         }
     }
 
@@ -576,7 +578,7 @@ public static class TerrainField
             if (Vector2.Distance(p0, p1) > maxArm) p0 = p1 + (p0 - p1).normalized * maxArm;
             if (Vector2.Distance(p3, p2) > maxArm) p3 = p2 + (p3 - p2).normalized * maxArm;
 
-            int subDiv = Mathf.Clamp(Mathf.CeilToInt(segLen / 34f), 3, 8);
+            int subDiv = Mathf.Clamp(Mathf.CeilToInt(segLen / 10f), 8, 28);
             int logicSeg = ctrlSegIndices != null && i < ctrlSegIndices.Count ? ctrlSegIndices[i] : i;
 
             // 向心 Catmull-Rom 节点参数 (α = 0.5)，加最小距离下限防极近点过冲甩圈
@@ -584,6 +586,11 @@ public static class TerrainField
             float t1 = t0 + Mathf.Pow(Mathf.Max(6f, Vector2.Distance(p0, p1)), 0.5f);
             float t2 = t1 + Mathf.Pow(Mathf.Max(6f, Vector2.Distance(p1, p2)), 0.5f);
             float t3 = t2 + Mathf.Pow(Mathf.Max(6f, Vector2.Distance(p2, p3)), 0.5f);
+
+            Vector2 mid = EvalCentripetalCatmullRom(p0, p1, p2, p3, t0, t1, t2, t3, (t1 + t2) * 0.5f);
+            Vector2 chord = p2 - p1;
+            float chordT = chord.sqrMagnitude > 0.0001f ? Mathf.Clamp01(Vector2.Dot(mid - p1, chord) / chord.sqrMagnitude) : 0f;
+            if (Vector2.Distance(mid, p1 + chord * chordT) > 2.5f) subDiv *= 2;
 
             for (int s = 1; s <= subDiv; s++)
             {
