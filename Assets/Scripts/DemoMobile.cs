@@ -1370,12 +1370,14 @@ public partial class DemoBootstrap
         if (previewImg) { previewImg.color = draftPreviewColor; previewImg.enabled = false; previewImg.gameObject.SetActive(true); }
         if (dragTip) { dragTip.color = draftPreviewColor; dragTip.gameObject.SetActive(true); }
         UpdateRings();
+        SetHazardOverlayHighlight(true);
         Haptic.Vibrate(22); PlayTone(false);
     }
     void EndDraw()
     {
         if (!dragging) return;
         dragging = false; hoverStation = -1;
+        SetHazardOverlayHighlight(false);
         ClearAutoPreviewSegs();
         if (dragCostBadge) dragCostBadge.SetActive(false);
         if (previewImg) previewImg.gameObject.SetActive(false);
@@ -1387,6 +1389,7 @@ public partial class DemoBootstrap
     void CancelDraft()
     {
         draft.Clear(); draftSegNeeds.Clear(); draftCost = 0;
+        SetHazardOverlayHighlight(false);
         ClearDraftWaypoints();
         if (dragCostBadge) dragCostBadge.SetActive(false);
         ClearDraftSegs(); ResetBuildVisuals();

@@ -538,6 +538,7 @@ public partial class DemoBootstrap
         Rounded(insertBadge, new Color(1f, 0.98f, 0.92f, 0.96f));
         insertBadge.GetComponent<Image>().raycastTarget = false;
         insertBadgeText = Txt(insertBadge.transform, "拖至新星港", 22, Ink, 12, 5, 356, 52, TextAnchor.MiddleCenter);
+        SetHazardOverlayHighlight(true);
         Haptic.Vibrate(22); PlayTone(false); UpdateLineInsert(screen);
         return true;
     }
@@ -579,6 +580,7 @@ public partial class DemoBootstrap
         Vector2 pa = Pos(insertingLine.st[insertingSegment]);
         Vector2 pb = Pos(insertingLine.st[insertingSegment + 1]);
         Color previewCol = insertingLine.color;
+        scratchInsertWps.Clear();
         if (insertTarget >= 0)
         {
             Vector2 point = Pos(insertTarget);
@@ -588,32 +590,26 @@ public partial class DemoBootstrap
                 insertRouteValid = TerrainField.FindShortestGridWaypoints(currentRegion, pa, point, insertLeftWps)
                     & TerrainField.FindShortestGridWaypoints(currentRegion, point, pb, insertRightWps);
             }
-            var leftWps = insertLeftWps;
-            var rightWps = insertRightWps;
-
-            // 该段替换为 pa -> leftWps -> point -> rightWps -> pb，其余段保留原拐点
-            scratchInsertWps.Clear();
-            for (int i = 0; i < leftWps.Count; i++) scratchInsertWps.Add(leftWps[i]);
+            for (int i = 0; i < insertLeftWps.Count; i++) scratchInsertWps.Add(insertLeftWps[i]);
             scratchInsertWps.Add(point);
-            for (int i = 0; i < rightWps.Count; i++) scratchInsertWps.Add(rightWps[i]);
-
-            // 与整线一致：找出插入段所在 currentRegion 的连续 [spanStart, spanEnd]，
-            // 展开整线控制点并用 spanIsLoop 做连续平滑预览（替换段走上面拼好的链）
-            int segCount = insertingLine.st.Count - 1;
-            int spanStart = insertingSegment;
-            while (spanStart > 0 && SegmentRegion(insertingLine.st[spanStart - 1], insertingLine.st[spanStart]) == currentRegion) spanStart--;
-            int spanEnd = insertingSegment;
-            while (spanEnd + 1 < segCount && SegmentRegion(insertingLine.st[spanEnd + 1], insertingLine.st[spanEnd + 2]) == currentRegion) spanEnd++;
-            FillRegionSpanPolyline(insertingLine, spanStart, spanEnd, currentRegion, scratchPolyline, scratchSubSegIndices, insertingSegment, scratchInsertWps);
+            for (int i = 0; i < insertRightWps.Count; i++) scratchInsertWps.Add(insertRightWps[i]);
 
             if (insertBadgeText) insertBadgeText.text = IsInEventSandbox() ? "插入途经站" : "松手查看插入造价";
         }
         else
         {
             cachedInsertTarget = -1;
-            scratchPolyline.Clear();
+            scratchInsertWps.Add(local);
             if (insertBadgeText) insertBadgeText.text = "拖至可用站点";
         }
+
+        // 与整线一致：找出插入段所在 currentRegion 的连续 [spanStart, spanEnd]，实时动态平滑预览
+        int segCount = insertingLine.st.Count - 1;
+        int spanStart = insertingSegment;
+        while (spanStart > 0 && SegmentRegion(insertingLine.st[spanStart - 1], insertingLine.st[spanStart]) == currentRegion) spanStart--;
+        int spanEnd = insertingSegment;
+        while (spanEnd + 1 < segCount && SegmentRegion(insertingLine.st[spanEnd + 1], insertingLine.st[spanEnd + 2]) == currentRegion) spanEnd++;
+        FillRegionSpanPolyline(insertingLine, spanStart, spanEnd, currentRegion, scratchPolyline, scratchSubSegIndices, insertingSegment, scratchInsertWps);
         if (insertTarget >= 0 && !IsInEventSandbox())
         {
             TerrainField.EvaluatePolyline(currentRegion, scratchPolyline, out var routeTerrain);
@@ -807,6 +803,7 @@ public partial class DemoBootstrap
     }
     void CancelLineInsert()
     {
+        SetHazardOverlayHighlight(false);
         lineInsertActive = false; insertingLine = null; insertingSegment = insertTarget = -1;
         cachedInsertTarget = -1;
         // 恢复预览时被淡化的原线透明度（poly 可能已被 CreateLineVisuals 重建，用隐式 bool 规避悬空引用）

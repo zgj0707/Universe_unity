@@ -16,6 +16,8 @@ public partial class DemoBootstrap
     }
 
     readonly List<List<Vector2>> draftSegWaypoints = new List<List<Vector2>>();
+    readonly Dictionary<string, GameObject> regionHazardOverlays = new Dictionary<string, GameObject>(StringComparer.Ordinal);
+    bool hazardOverlayHighlighted;
     LinePolylineGraphic activePreviewPoly;
     readonly List<Vector2> scratchControlPts = new List<Vector2>(32);
     readonly List<int> scratchCtrlSegIndices = new List<int>(32);
@@ -38,6 +40,15 @@ public partial class DemoBootstrap
         cachedAutoWaypoints.Clear();
     }
 
+    void SetHazardOverlayHighlight(bool active)
+    {
+        hazardOverlayHighlighted = active;
+        foreach (var kv in regionHazardOverlays)
+        {
+            if (kv.Value) kv.Value.SetActive(active && kv.Key == currentRegion);
+        }
+    }
+
     void SyncTerrainTechState()
     {
         bool canCross = techDone != null && techDone.Contains("era20_steel_bridge");
@@ -55,7 +66,10 @@ public partial class DemoBootstrap
         TerrainField.PreloadRegion(regionId);
         SyncTerrainTechState();
         InvalidateAutoRouteCache();
-
+        foreach (var kv in regionHazardOverlays)
+        {
+            if (kv.Value) kv.Value.SetActive(hazardOverlayHighlighted && kv.Key == regionId);
+        }
     }
 
     void ClearDraftWaypoints()
