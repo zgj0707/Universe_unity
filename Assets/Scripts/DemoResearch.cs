@@ -694,7 +694,7 @@ public partial class DemoBootstrap
         coins -= cost; rp -= rpCost; techDone.Add(key); techSessionUnlocked.Add(key);
         lastUnlockedTechEra = node.era;
         if (node.loco >= 0) {
-            researchVehicles.Add(new ResearchVehicle { node = node.loco });
+            researchVehicles.Add(CreateResearchVehicle(node.loco));
             if (node.loco == 0 || node.loco == 4 || node.loco == 8) { diamonds += 50; Toast("飞车里程碑：钻石 +50"); }
             else if (node.loco == 10 || node.loco == 13 || node.loco == 15) { diamonds += 60; Toast("跨时代旗舰飞车：钻石 +60"); }
         }
@@ -1549,7 +1549,7 @@ public partial class DemoBootstrap
         int price = (int)totalLong;
         BeginUndo(count > 1 ? ("批量购买飞车 ×" + count) : "购买飞车");
         coins -= price;
-        for (int i = 0; i < count; i++) researchVehicles.Add(new ResearchVehicle { node = index });
+        for (int i = 0; i < count; i++) researchVehicles.Add(CreateResearchVehicle(index));
         SyncCulturalCollection(true); EndUndo(); SaveGame(); RefreshHUD(); OpenLocoShop();
         Toast("已购买 " + LocoNames[index] + " ×" + count);
     }

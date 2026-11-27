@@ -1,7 +1,8 @@
 mergeInto(LibraryManager.library, {
   TapTapJS_IsAvailable: function () {
     if (typeof window === "undefined") return 0;
-    var hasAd = typeof window.ShowRewardVideoAd === "function" ||
+    var hasAd = (window.TapAdManager && typeof window.tap !== "undefined" && typeof window.tap.createRewardedVideoAd === "function") ||
+      typeof window.ShowRewardVideoAd === "function" ||
       (window.tap && typeof window.tap.createRewardedVideoAd === "function") ||
       (window.tap && typeof window.tap.showRewardVideoAd === "function") ||
       (window.TapSDK && typeof window.TapSDK.showRewardVideoAd === "function");
@@ -33,6 +34,9 @@ mergeInto(LibraryManager.library, {
 
     function resolveAdFn() {
       if (typeof window === "undefined") return null;
+      if (window.TapAdManager && typeof window.tap !== "undefined" && typeof window.tap.createRewardedVideoAd === "function") {
+        return function (opts) { return window.TapAdManager.showRewardedVideo(opts); };
+      }
       if (typeof window.ShowRewardVideoAd === "function") return window.ShowRewardVideoAd;
       if (window.tap && typeof window.tap.showRewardVideoAd === "function") {
         return function (opts) { return window.tap.showRewardVideoAd(opts); };
@@ -84,7 +88,7 @@ mergeInto(LibraryManager.library, {
         overlay.style.cssText = "position:fixed;inset:0;z-index:999999;background:rgba(16,20,28,0.88);display:flex;align-items:center;justify-content:center;font-family:sans-serif;color:#f7f4ec;";
 
         var card = document.createElement("div");
-        card.style.cssText = "width:min(88vw,420px);background:#1e2633;border:1px solid rgba(255,255,255,0.16);border-radius:16px;padding:24px;box-sizing:border-box;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,0.5);";
+        card.style.cssText = "width:min(88vw,420px);max-height:90vh;overflow-y:auto;background:#1e2633;border:1px solid rgba(255,255,255,0.16);border-radius:16px;padding:24px;box-sizing:border-box;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,0.5);";
 
         var title = document.createElement("div");
         title.style.cssText = "font-size:18px;font-weight:700;margin-bottom:8px;";

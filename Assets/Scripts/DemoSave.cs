@@ -79,7 +79,7 @@ public partial class DemoBootstrap
     }
     [Serializable] sealed class SavedStation { public string key, customName; public int level, trafficEvent; public bool built, closed; public float riderBonus; public int facLevel; }
     [Serializable] sealed class SavedScenery { public string key; public bool found, unlocked; }
-    [Serializable] sealed class SavedLine { public int id, trains, todayRevenue; public int skin = -1; public bool baseRemoved; public string name; public Color color; public List<string> stations; public List<SegmentWaypoints> segWaypoints; public int[] dispatch; public float fare, todayGross, todayMaintenance, todayTrack; public List<int> recent; }
+    [Serializable] sealed class SavedLine { public int id, trains, todayRevenue; public int skin = -1; public bool baseRemoved; public string name; public Color color; public List<string> stations; public List<SegmentWaypoints> segWaypoints; public int[] dispatch; public float fare, todayGross, todayMaintenance, todayTrack, terrainPenaltyRatio; public List<int> recent; }
     [Serializable] sealed class SavedVehicle { public int node, lineId, skinId; }
     [Serializable] sealed class SavedFrozenLine { public int lineId; public float[] revenue, demand, served, peak; public bool[] valid; }
     [Serializable] sealed class SaveData {
@@ -89,6 +89,8 @@ public partial class DemoBootstrap
         public List<SavedLine> lines = new List<SavedLine>(); public List<SavedVehicle> vehicles = new List<SavedVehicle>();
         public List<string> tech = new List<string>(), story = new List<string>(); public List<int> skins = new List<int>();
         public int activeTrainSkin; public List<int> trainSkins = new List<int>();
+        public List<int> equippedTrainSkinModels = new List<int>();
+        public List<int> equippedTrainSkinIds = new List<int>();
         public List<int> themes = new List<int>();
         public List<string> adKeys = new List<string>(); public List<int> adCounts = new List<int>();
         public List<int> trialThemes = new List<int>(); public List<long> trialEnds = new List<long>();
@@ -197,7 +199,7 @@ public partial class DemoBootstrap
             }
             if (valid && line.st.Count >= 2)
             {
-                // 清洗历史脏数据中的锐角折返尖刺拐点
+                // 清洗历史脏数据中的锐角折返尖刺拐点（若裸删会碰禁区，则对极端飞线尖刺整段重寻干净绕障路径）
                 if (line.segWaypoints != null)
                 {
                     for (int s = 0; s < line.segWaypoints.Count && s < line.st.Count - 1; s++)
@@ -207,14 +209,31 @@ public partial class DemoBootstrap
                         string reg = SegmentRegion(line.st[s], line.st[s + 1]) ?? currentRegion;
                         Vector2 a = PosInRegion(line.st[s], reg);
                         Vector2 b = PosInRegion(line.st[s + 1], reg);
+                        bool needReplan = false;
                         for (int k = sw.pts.Count - 1; k >= 0; k--)
                         {
                             Vector2 prev = k > 0 ? sw.pts[k - 1] : a;
                             Vector2 next = k + 1 < sw.pts.Count ? sw.pts[k + 1] : b;
                             Vector2 d1 = (sw.pts[k] - prev).normalized;
                             Vector2 d2 = (next - sw.pts[k]).normalized;
-                            if (Vector2.Dot(d1, d2) < -0.35f || Vector2.Distance(sw.pts[k], prev) < 16f || Vector2.Distance(sw.pts[k], next) < 16f)
+                            float dot = Vector2.Dot(d1, d2);
+                            float distPrevNext = Vector2.Distance(prev, next);
+                            float detour = Vector2.Distance(prev, sw.pts[k]) + Vector2.Distance(sw.pts[k], next);
+                            bool spike = dot < -0.35f || Vector2.Distance(sw.pts[k], prev) < 16f || Vector2.Distance(sw.pts[k], next) < 16f;
+                            if (spike && !TerrainField.IsSegmentBlocked(reg, prev, next))
+                            {
                                 sw.pts.RemoveAt(k);
+                            }
+                            else if (dot < -0.50f && detour > Mathf.Max(80f, distPrevNext * 2.2f))
+                            {
+                                needReplan = true;
+                                break;
+                            }
+                        }
+                        if (needReplan)
+                        {
+                            if (!TerrainField.FindShortestGridWaypoints(reg, a, b, sw.pts))
+                                sw.pts.Clear();
                         }
                     }
                 }
@@ -250,6 +269,8 @@ public partial class DemoBootstrap
         }
         foreach (var l in restoredLines) foreach (int stIdx in l.st) if (stIdx >= 0 && stIdx < stations.Count) stations[stIdx].built = true;
         techDone.Clear(); techDone.AddRange(data.tech);
+        SyncTerrainTechState();
+        foreach (var line in restoredLines) RecalculateLineTerrainPenalty(line);
         researchVehicles.Clear(); foreach(var item in data.vehicles)
             if (item != null && item.node >= 0 && item.node < LocoNames.Length)
                 researchVehicles.Add(new ResearchVehicle { node=item.node, lineId=restoredLines.Exists(l => l.id == item.lineId) ? item.lineId : 0, skinId=item.skinId });
@@ -259,6 +280,26 @@ public partial class DemoBootstrap
         if (data.trainSkins != null) foreach (int item in data.trainSkins) if (item >= 0 && item < MainTrainSkinCount) ownedTrainSkins.Add(item);
         foreach (var v in researchVehicles)
             if (v.skinId < 0 || v.skinId >= MainTrainSkinCount || !ownedTrainSkins.Contains(v.skinId) || (v.skinId != 0 && v.node != MainTrainSkins[v.skinId].locoNode)) v.skinId = 0;
+        equippedModelTrainSkins.Clear();
+        if (data.equippedTrainSkinModels != null && data.equippedTrainSkinIds != null)
+            for (int i = 0; i < Mathf.Min(data.equippedTrainSkinModels.Count, data.equippedTrainSkinIds.Count); i++)
+            {
+                int locoNode = data.equippedTrainSkinModels[i], skinId = data.equippedTrainSkinIds[i];
+                if (locoNode < 0 || locoNode >= LocoNames.Length || skinId <= 0 || skinId >= MainTrainSkinCount || !ownedTrainSkins.Contains(skinId) || MainTrainSkins[skinId].locoNode != locoNode) continue;
+                equippedModelTrainSkins[locoNode] = skinId;
+            }
+        // 兼容旧存档：未记录配装但同型号所有车辆统一使用同一有效皮肤时，自动认定为全量配装
+        for (int node = 0; node < LocoNames.Length; node++)
+        {
+            if (equippedModelTrainSkins.ContainsKey(node)) continue;
+            var modelVehicles = researchVehicles.FindAll(v => v.node == node);
+            if (modelVehicles.Count == 0) continue;
+            int inferredSkin = modelVehicles[0].skinId;
+            if (inferredSkin <= 0 || inferredSkin >= MainTrainSkinCount || !ownedTrainSkins.Contains(inferredSkin) || MainTrainSkins[inferredSkin].locoNode != node) continue;
+            bool allSame = true;
+            foreach (var v in modelVehicles) if (v.skinId != inferredSkin) { allSame = false; break; }
+            if (allSame) equippedModelTrainSkins[node] = inferredSkin;
+        }
         ownedThemes.Clear(); ownedThemes.Add(0);
         if (data.themes != null) foreach (int item in data.themes) if (item >= 0 && item < Themes.Length) ownedThemes.Add(item);
         adWatchCounts.Clear();
@@ -366,11 +407,12 @@ public partial class DemoBootstrap
         foreach (var t in talentPool) data.talentPool.Add(CopySaveTalent(t));
         foreach(var s in stations) data.stations.Add(new SavedStation { key=StationSaveKey(s), customName=string.IsNullOrEmpty(s.customName) ? "" : s.customName, level=s.level, trafficEvent=s.trafficEvent, built=s.built, closed=s.closed, riderBonus=s.riderBonus, facLevel=s.facLevel });
         foreach(var s in sceneries) data.scenery.Add(new SavedScenery { key=ScenerySaveKey(s), found=s.found, unlocked=s.unlocked });
-        foreach(var l in lines) { var record=new SavedLine { id=l.id, name=l.name, color=l.color, skin=l.skin, trains=l.trains, baseRemoved=!l.hasBaseTrain, dispatch=(int[])l.dispatch.Clone(), fare=l.fare, todayGross=l.todayGross, todayMaintenance=l.todayMaintenance, todayTrack=l.todayTrack, todayRevenue=l.todayRevenue, recent=new List<int>(l.recent), stations=new List<string>(), segWaypoints=CloneWaypointsList(l.segWaypoints) }; foreach(int i in l.st) record.stations.Add(StationSaveKey(stations[i])); data.lines.Add(record); }
+        foreach(var l in lines) { var record=new SavedLine { id=l.id, name=l.name, color=l.color, skin=l.skin, trains=l.trains, baseRemoved=!l.hasBaseTrain, dispatch=(int[])l.dispatch.Clone(), fare=l.fare, todayGross=l.todayGross, todayMaintenance=l.todayMaintenance, todayTrack=l.todayTrack, terrainPenaltyRatio=l.terrainPenaltyRatio, todayRevenue=l.todayRevenue, recent=new List<int>(l.recent), stations=new List<string>(), segWaypoints=CloneWaypointsList(l.segWaypoints) }; foreach(int i in l.st) record.stations.Add(StationSaveKey(stations[i])); data.lines.Add(record); }
         foreach(var v in researchVehicles) data.vehicles.Add(new SavedVehicle { node=v.node, lineId=v.lineId, skinId=v.skinId });
         data.tech.AddRange(techDone); data.story.AddRange(storySeen); data.skins.AddRange(ownedLineSkins);
         foreach (var ur in unlockedRegions) data.unlockedRegions.Add(ur);
         data.trainSkins.AddRange(ownedTrainSkins);
+        foreach (var kv in equippedModelTrainSkins) { data.equippedTrainSkinModels.Add(kv.Key); data.equippedTrainSkinIds.Add(kv.Value); }
         data.themes.AddRange(ownedThemes);
         foreach (var kv in adWatchCounts) { data.adKeys.Add(kv.Key); data.adCounts.Add(kv.Value); }
         foreach (var kv in themeTrialUntil) { data.trialThemes.Add(kv.Key); data.trialEnds.Add(kv.Value); }

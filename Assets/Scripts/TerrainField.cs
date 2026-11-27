@@ -171,7 +171,7 @@ public static class TerrainField
         result.distance = dist;
         if (dist < 0.01f || !TryGetRegion(regionId, out _)) return;
 
-        const float stepPx = 5.5f;
+        const float stepPx = 2f;
         int steps = Mathf.Max(2, Mathf.CeilToInt(dist / stepPx));
         float prevElev = SampleElevation(regionId, a);
         int steepHits = 0;
@@ -237,9 +237,7 @@ public static class TerrainField
         {
             total.steepRatio = weightedSteep / total.distance;
             total.hazardRatio = weightedHazard / total.distance;
-            float basePenalty = (total.steepRatio * 0.45f + total.climbSum * 0.25f) * TerrainPenaltyScale;
-            float hazardBonus = total.crossedHazard ? Mathf.Max(0.35f, Mathf.Clamp01(total.hazardRatio * 3.5f)) * HazardCrossPenaltyBonus : 0f;
-            total.penaltyRatio = basePenalty + hazardBonus;
+            total.penaltyRatio = weightedPenalty / total.distance;
         }
     }
 
@@ -295,7 +293,7 @@ public static class TerrainField
         if (CanCrossHazard || !TryGetRegion(regionId, out _)) return false;
         float dist = Vector2.Distance(a, b);
         if (dist < 0.01f) return IsBlocked(regionId, a);
-        int steps = Mathf.Max(2, Mathf.CeilToInt(dist / 6f));
+        int steps = Mathf.Max(2, Mathf.CeilToInt(dist / 2f));
         for (int i = 0; i <= steps; i++)
         {
             if (IsBlocked(regionId, Vector2.Lerp(a, b, (float)i / steps))) return true;
@@ -318,7 +316,7 @@ public static class TerrainField
         CanvasToGridNode(minX, activeCols, endPos, out int ex, out int ey);
         int startIdx = sy * activeCols + sx;
         int endIdx = ey * activeCols + ex;
-        if (startIdx == endIdx) return true;
+        if (startIdx == endIdx) return false;
 
         int activeTotal = activeCols * AStarRows;
         Array.Clear(astarState, 0, activeTotal);
@@ -351,17 +349,21 @@ public static class TerrainField
 
                 Vector2 nPos = GridNodeToCanvas(minX, maxX, nx, ny);
                 float steepBias = 1f;
+                bool nearTerminal = (Mathf.Abs(nx - sx) <= 1 && Mathf.Abs(ny - sy) <= 1) || (Mathf.Abs(nx - ex) <= 1 && Mathf.Abs(ny - ey) <= 1);
+                if (!CanCrossHazard && d >= 4 &&
+                    (IsBlocked(regionId, GridNodeToCanvas(minX, maxX, cx + dirDx[d], cy)) ||
+                     IsBlocked(regionId, GridNodeToCanvas(minX, maxX, cx, cy + dirDy[d])))) continue;
                 if (nIdx != endIdx)
                 {
                     byte nFlags = SampleFlags(regionId, nPos);
                     if ((nFlags & FlagBlocked) != 0)
                     {
-                        if (!CanCrossHazard) continue;
-                        steepBias = 4.2f; // 已解锁跨越天堑：仍优先绕近路，必要时允许强行跨越
+                        if (!CanCrossHazard && !nearTerminal) continue;
+                        steepBias = nearTerminal ? 2.5f : 4.2f;
                     }
                     else if (!CanCrossHazard && d >= 4)
                     {
-                        if (IsBlocked(regionId, GridNodeToCanvas(minX, maxX, cx + dirDx[d], cy)) &&
+                        if (IsBlocked(regionId, GridNodeToCanvas(minX, maxX, cx + dirDx[d], cy)) ||
                             IsBlocked(regionId, GridNodeToCanvas(minX, maxX, cx, cy + dirDy[d])))
                             continue;
                     }
@@ -420,15 +422,16 @@ public static class TerrainField
                 Vector2 chosen = ((CanCrossHazard || !IsBlocked(regionId, snappedWp)) && !IsSegmentBlocked(regionId, anchorPos, snappedWp))
                     ? snappedWp
                     : rawWp;
-                if (Vector2.Distance(anchorPos, chosen) >= 20f && Vector2.Distance(chosen, endPos) >= 20f)
+                bool distOk = Vector2.Distance(anchorPos, chosen) >= 20f && Vector2.Distance(chosen, endPos) >= 20f;
+                Vector2 segDir = (chosen - anchorPos).normalized;
+                Vector2 fwdDir = (endPos - anchorPos).normalized;
+                bool dirOk = Vector2.Dot(segDir, fwdDir) > -0.15f;
+                // 若从当前锚点直连终点仍会被禁建区阻挡，则不能因距离/角度阈值丢弃绕障必需拐点
+                bool needForClearance = Vector2.Distance(anchorPos, chosen) >= 2f && IsSegmentBlocked(regionId, anchorPos, endPos);
+                if ((distOk && dirOk) || needForClearance)
                 {
-                    Vector2 segDir = (chosen - anchorPos).normalized;
-                    Vector2 fwdDir = (endPos - anchorPos).normalized;
-                    if (Vector2.Dot(segDir, fwdDir) > -0.15f)
-                    {
-                        outWaypoints.Add(chosen);
-                        anchorPos = chosen;
-                    }
+                    outWaypoints.Add(chosen);
+                    anchorPos = chosen;
                 }
             }
             anchor = furthest;
@@ -442,6 +445,16 @@ public static class TerrainField
             Vector2 d2 = (next - outWaypoints[i]).normalized;
             if (Vector2.Dot(d1, d2) < -0.42f && !IsSegmentBlocked(regionId, prev, next))
                 outWaypoints.RemoveAt(i);
+        }
+        if (!CanCrossHazard)
+        {
+            Vector2 prev = startPos;
+            for (int i = 0; i <= outWaypoints.Count; i++)
+            {
+                Vector2 next = i < outWaypoints.Count ? outWaypoints[i] : endPos;
+                if (IsSegmentBlocked(regionId, prev, next)) { outWaypoints.Clear(); return false; }
+                prev = next;
+            }
         }
         return true;
     }
@@ -526,12 +539,70 @@ public static class TerrainField
     /// 整线向心 Catmull-Rom 样条采样（α = 0.5）：100% 精准穿过每一个站点与拐点，不打结、支持闭环首尾连续。
     /// 若提供 ctrlSegIndices（每个控制点所属逻辑段索引），同步输出 outSubSegIndices 供整线分段热力着色。零 GC。
     /// </summary>
+    static readonly List<float> safeCurveArms = new List<float>(128);
+    static readonly List<int> safeCurveSegments = new List<int>(1024);
+
+    // 仅衰减受阻控制段及其邻段；原始折线受阻时返回 false。
+    public static bool SampleSafeCatmullRomPolyline(string regionId, IReadOnlyList<Vector2> controlPts, bool isLoop,
+        List<Vector2> outPts, List<int> outSubSegIndices = null, IReadOnlyList<int> ctrlSegIndices = null)
+    {
+        if (CanCrossHazard || controlPts == null || controlPts.Count < 2)
+        {
+            SampleCatmullRomPolyline(controlPts, isLoop, outPts, outSubSegIndices, ctrlSegIndices);
+            return true;
+        }
+        int count = controlPts.Count - 1;
+        safeCurveArms.Clear();
+        for (int i = 0; i < count; i++)
+        {
+            safeCurveArms.Add(1f);
+            if (IsSegmentBlocked(regionId, controlPts[i], controlPts[i + 1]))
+            {
+                SampleCatmullRomPolyline(controlPts, isLoop, outPts, outSubSegIndices, ctrlSegIndices);
+                return false;
+            }
+        }
+        bool closed = isLoop && controlPts.Count >= 4 && Vector2.Distance(controlPts[0], controlPts[controlPts.Count - 1]) < 1f;
+        while (true)
+        {
+            safeCurveSegments.Clear();
+            SampleCatmullRomInternal(controlPts, isLoop, outPts, outSubSegIndices, ctrlSegIndices, safeCurveArms, safeCurveSegments);
+            bool hit = false;
+            bool changed = false;
+            for (int i = 0; i < safeCurveSegments.Count; i++)
+            {
+                if (!IsSegmentBlocked(regionId, outPts[i], outPts[i + 1])) continue;
+                hit = true;
+                int seg = safeCurveSegments[i];
+                for (int j = seg - 1; j <= seg + 1; j++)
+                {
+                    int k = j;
+                    if (closed) k = (k + count) % count;
+                    if (k >= 0 && k < count && safeCurveArms[k] > 0f)
+                    {
+                        safeCurveArms[k] = safeCurveArms[k] <= 0.25f ? 0f : safeCurveArms[k] * 0.5f;
+                        changed = true;
+                    }
+                }
+            }
+            if (!hit) return true;
+            if (!changed) return false;
+        }
+    }
+
     public static void SampleCatmullRomPolyline(
+        IReadOnlyList<Vector2> controlPts, bool isLoop, List<Vector2> outPts,
+        List<int> outSubSegIndices = null, IReadOnlyList<int> ctrlSegIndices = null)
+    {
+        SampleCatmullRomInternal(controlPts, isLoop, outPts, outSubSegIndices, ctrlSegIndices, null, null);
+    }
+
+    static void SampleCatmullRomInternal(
         IReadOnlyList<Vector2> controlPts,
         bool isLoop,
         List<Vector2> outPts,
-        List<int> outSubSegIndices = null,
-        IReadOnlyList<int> ctrlSegIndices = null)
+        List<int> outSubSegIndices,
+        IReadOnlyList<int> ctrlSegIndices, IReadOnlyList<float> arms, List<int> controlSegments)
     {
         outPts.Clear();
         if (outSubSegIndices != null) outSubSegIndices.Clear();
@@ -548,6 +619,7 @@ public static class TerrainField
             outPts.Add(controlPts[1]);
             if (outSubSegIndices != null)
                 outSubSegIndices.Add(ctrlSegIndices != null && ctrlSegIndices.Count > 0 ? ctrlSegIndices[0] : 0);
+            if (controlSegments != null) controlSegments.Add(0);
             return;
         }
 
@@ -591,14 +663,17 @@ public static class TerrainField
             Vector2 chord = p2 - p1;
             float chordT = chord.sqrMagnitude > 0.0001f ? Mathf.Clamp01(Vector2.Dot(mid - p1, chord) / chord.sqrMagnitude) : 0f;
             if (Vector2.Distance(mid, p1 + chord * chordT) > 2.5f) subDiv *= 2;
+            if (arms != null && arms[i] == 0f) subDiv = 1;
 
             for (int s = 1; s <= subDiv; s++)
             {
                 float u = (float)s / subDiv;
                 float t = Mathf.Lerp(t1, t2, u);
                 Vector2 pt = (s == subDiv) ? p2 : EvalCentripetalCatmullRom(p0, p1, p2, p3, t0, t1, t2, t3, t);
+                if (arms != null) pt = Vector2.Lerp(Vector2.Lerp(p1, p2, u), pt, arms[i]);
                 outPts.Add(pt);
                 if (outSubSegIndices != null) outSubSegIndices.Add(logicSeg);
+                if (controlSegments != null) controlSegments.Add(i);
             }
         }
     }
@@ -617,3 +692,4 @@ public static class TerrainField
         return ((t2 - t) / Mathf.Max(0.0001f, t2 - t1)) * B1 + ((t - t1) / Mathf.Max(0.0001f, t2 - t1)) * B2;
     }
 }
+

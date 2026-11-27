@@ -125,7 +125,7 @@ public partial class DemoBootstrap
     void BuildSettingsVisualTab(Transform parent)
     {
         const float pad = 40f, innerW = 860f;
-        Txt(parent, "画面质量（动效与粒子细致度）", 27, InkSoft, pad, 906f, innerW, 40f, TextAnchor.MiddleLeft);
+        Txt(parent, "画面质量", 27, InkSoft, pad, 906f, innerW, 40f, TextAnchor.MiddleLeft);
         string[] levels = { "低 · 省电", "中 · 均衡", "高 · 华彩" };
         float qW = (innerW - 24f) / 3f;
         for (int i = 0; i < levels.Length; i++)
@@ -148,9 +148,7 @@ public partial class DemoBootstrap
                 pad + i * (fpsW + 12f), 648f, fpsW, 80f, active ? Indigo : Paper2, () => { SetFrameRate(fps); OpenAudioSettings(); });
             TInk(choice, active ? Color.white : Ink);
         }
-        Txt(parent, "高画质启用全量粒子、双环涟漪与 Q 弹动效；省电档降采样省 75% 贴图显存", 22, InkSoft, pad, 594f, innerW, 40f, TextAnchor.MiddleLeft);
-
-        Txt(parent, "手帐字体字号（当前 " + Mathf.RoundToInt(UiFontScale * 100f) + "%）", 27, InkSoft, pad, 514f, innerW, 40f, TextAnchor.MiddleLeft);
+        Txt(parent, "手帐字体字号", 27, InkSoft, pad, 554f, innerW, 40f, TextAnchor.MiddleLeft);
         float fontGap = 12f;
         float fontBtnW = (innerW - fontGap * Mathf.Max(0, FontSizeTierNames.Length - 1)) / Mathf.Max(1, FontSizeTierNames.Length);
         for (int i = 0; i < FontSizeTierNames.Length; i++)
@@ -158,7 +156,7 @@ public partial class DemoBootstrap
             int selectedFont = i;
             bool activeFont = fontSizeTier == i;
             var fontBtn = Btn(parent, "FontSize" + i, FontSizeTierNames[i] + (activeFont ? " ✓" : ""), 25,
-                pad + i * (fontBtnW + fontGap), 422f, fontBtnW, 82f, activeFont ? Indigo : Paper2, () => {
+                pad + i * (fontBtnW + fontGap), 462f, fontBtnW, 82f, activeFont ? Indigo : Paper2, () => {
                     SetFontSizeTier(selectedFont);
                     OpenAudioSettings();
                     Toast("字体大小已切换为「" + FontSizeTierNames[selectedFont] + "」");
@@ -166,8 +164,8 @@ public partial class DemoBootstrap
             TInk(fontBtn, activeFont ? Color.white : Ink);
         }
 
-        Txt(parent, "纸本手帐主题", 27, InkSoft, pad, 336f, 420f, 44f, TextAnchor.MiddleLeft);
-        var moreTheme = Btn(parent, "ThemeShopLink", "主题馆藏与试用 ›", 24, pad + innerW - 308f, 330f, 308f, 56f, Paper2, () => { ClosePanel(true); OpenThemeShopScreen(); });
+        Txt(parent, "纸本手帐主题", 27, InkSoft, pad, 376f, 420f, 44f, TextAnchor.MiddleLeft);
+        var moreTheme = Btn(parent, "ThemeShopLink", "主题馆藏与试用 ›", 24, pad + innerW - 308f, 370f, 308f, 56f, Paper2, () => { ClosePanel(true); OpenThemeShopScreen(); });
         TInk(moreTheme, Indigo);
 
         float themeGap = 12f;
@@ -179,7 +177,7 @@ public partial class DemoBootstrap
             bool active = currentTheme == themeIdx && avail && previewRestoreTheme < 0;
             string label = Themes[themeIdx].shortName + (active ? " ✓" : avail ? "" : " · 锁");
             var tb = Btn(parent, "ThemeBtn" + i, label, 23,
-                pad + i * (themeBtnW + themeGap), 210f, themeBtnW, 102f, active ? Indigo : avail ? Paper2 : new Color(Paper2.r, Paper2.g, Paper2.b, 0.55f), () => {
+                pad + i * (themeBtnW + themeGap), 250f, themeBtnW, 102f, active ? Indigo : avail ? Paper2 : new Color(Paper2.r, Paper2.g, Paper2.b, 0.55f), () => {
                     if (IsThemeAvailable(themeIdx))
                     {
                         ApplyTheme(themeIdx); SaveGame(); OpenAudioSettings();
@@ -190,7 +188,7 @@ public partial class DemoBootstrap
             TInk(tb, active ? Color.white : Ink);
         }
 
-        var doneBtn = Btn(parent, "SettingsOk", "收起手记", 26, pad, 40f, innerW, 84f, Matcha, ClosePanel);
+        var doneBtn = Btn(parent, "SettingsOk", "收起手记", 26, pad, 80f, innerW, 84f, Matcha, ClosePanel);
         TInk(doneBtn, Color.white);
     }
 
@@ -199,7 +197,7 @@ public partial class DemoBootstrap
         const float pad = 40f, innerW = 860f, cardPad = 28f, cardInnerW = 804f;
         var bgmCard = Rect("BgmCard", parent, pad, 600f, innerW, 346f);
         Rounded(bgmCard, Color.Lerp(CardBg, Ink, 0.04f));
-        Txt(bgmCard.transform, "原声配乐与曲目选择（BGM）", 28, Ink, cardPad, 282f, 540f, 44f, TextAnchor.MiddleLeft);
+        Txt(bgmCard.transform, "原声配乐与曲目选择", 28, Ink, cardPad, 282f, 540f, 44f, TextAnchor.MiddleLeft);
         var bgmToggle = Btn(bgmCard.transform, "BgmSwitch", musicEnabled ? "已开启 ✓" : "已静音", 25, innerW - cardPad - 210f, 272f, 210f, 60f,
             musicEnabled ? Matcha : Paper2, () => { SetBgmEnabled(!musicEnabled); SaveGame(); OpenAudioSettings(); });
         TInk(bgmToggle, musicEnabled ? Color.white : Ink);
@@ -218,26 +216,24 @@ public partial class DemoBootstrap
 
         BuildVolumeSlider(bgmCard.transform, "BgmVolSlider", cardPad, 26f, cardInnerW, bgmVolume, Matcha, SetBgmVolume);
 
-        var sfxCard = Rect("SfxCard", parent, pad, 326f, innerW, 250f);
+        var sfxCard = Rect("SfxCard", parent, pad, 368f, innerW, 208f);
         Rounded(sfxCard, Color.Lerp(CardBg, Ink, 0.04f));
-        Txt(sfxCard.transform, "触点与鸣笛音效（SFX）", 28, Ink, cardPad, 194f, 540f, 44f, TextAnchor.MiddleLeft);
-        var sfxToggle = Btn(sfxCard.transform, "SfxSwitch", sfxEnabled ? "已开启 ✓" : "已关闭", 25, innerW - cardPad - 210f, 184f, 210f, 60f,
+        Txt(sfxCard.transform, "触点与鸣笛音效", 28, Ink, cardPad, 152f, 540f, 44f, TextAnchor.MiddleLeft);
+        var sfxToggle = Btn(sfxCard.transform, "SfxSwitch", sfxEnabled ? "已开启 ✓" : "已关闭", 25, innerW - cardPad - 210f, 142f, 210f, 60f,
             sfxEnabled ? Indigo : Paper2, () => { SetSfxEnabled(!sfxEnabled); if (sfxEnabled) PlayTechSfx(); OpenAudioSettings(); });
         TInk(sfxToggle, sfxEnabled ? Color.white : Ink);
-        Txt(sfxCard.transform, "包含：按压吸附、航线开通鸣笛、金币营收、研发共鸣", 24, InkSoft, cardPad, 128f, cardInnerW, 42f, TextAnchor.MiddleLeft);
         BuildVolumeSlider(sfxCard.transform, "SfxVolSlider", cardPad, 54f, cardInnerW - 190f, sfxVolume, Indigo, SetSfxVolume);
         var testSfxBtn = Btn(sfxCard.transform, "TestSfx", "试听", 24, innerW - cardPad - 166f, 48f, 166f, 60f, Gold, () => PlayBuildSfx());
         TInk(testSfxBtn, Color.white);
 
-        var hapCard = Rect("HapticCard", parent, pad, 152f, innerW, 154f);
+        var hapCard = Rect("HapticCard", parent, pad, 238f, innerW, 110f);
         Rounded(hapCard, Color.Lerp(CardBg, Ink, 0.04f));
-        Txt(hapCard.transform, "星港吸附轻震动反馈", 27, Ink, cardPad, 86f, 560f, 42f, TextAnchor.MiddleLeft);
-        Txt(hapCard.transform, "拖线吸附与完成里程碑时触发轻微震动提示", 23, InkSoft, cardPad, 26f, 560f, 44f, TextAnchor.MiddleLeft);
-        var hapBtn = Btn(hapCard.transform, "HapSwitch", hapticEnabled ? "开启 ✓" : "关闭", 25, innerW - cardPad - 210f, 40f, 210f, 74f,
+        Txt(hapCard.transform, "星港吸附轻震动反馈", 27, Ink, cardPad, 56f, 560f, 42f, TextAnchor.MiddleLeft);
+        var hapBtn = Btn(hapCard.transform, "HapSwitch", hapticEnabled ? "开启 ✓" : "关闭", 25, innerW - cardPad - 210f, 30f, 210f, 74f,
             hapticEnabled ? Matcha : Paper2, () => { SetHapticEnabled(!hapticEnabled); TriggerHaptic(18); OpenAudioSettings(); });
         TInk(hapBtn, hapticEnabled ? Color.white : Ink);
 
-        var doneBtn = Btn(parent, "SettingsOk", "完成设置", 26, pad, 40f, innerW, 84f, Matcha, ClosePanel);
+        var doneBtn = Btn(parent, "SettingsOk", "完成设置", 26, pad, 126f, innerW, 84f, Matcha, ClosePanel);
         TInk(doneBtn, Color.white);
     }
 
@@ -315,8 +311,6 @@ public partial class DemoBootstrap
         Rounded(summaryCard, Color.Lerp(CardBg, Indigo, 0.05f));
         Txt(summaryCard.transform, $"{companyName} · 营运志档案", 29, Ink, cardPad, 188f, cardInnerW, 44f, TextAnchor.MiddleLeft);
         Txt(summaryCard.transform, $"当前第 {day} 日 · 运营 {lines.Count} 条航线 · 已连 {DailyConnectedCount()} 港\n工程科技 {EraTechDoneCount(0)}/{EraTechNodeCount(0)} 项 · 企业治理 {CoTechEraDoneCount(0)}/{CoTechEraNodeCount(0)} 项 · 人才 {talents.Count} 名", 24, InkSoft, cardPad, 90f, cardInnerW, 86f, TextAnchor.UpperLeft);
-        Txt(summaryCard.transform, "游戏每 5 秒及关键操作时自动保存至本地档案", 23, Matcha, cardPad, 24f, cardInnerW, 40f, TextAnchor.MiddleLeft);
-
         var storyCardBox = Rect("StoryControlCard", parent, pad, 430f, innerW, 242f);
         Rounded(storyCardBox, Color.Lerp(CardBg, Gold, 0.07f));
         Txt(storyCardBox.transform, "章节剧情与星际航行引导", 28, Ink, cardPad, 180f, cardInnerW, 44f, TextAnchor.MiddleLeft);
@@ -362,7 +356,7 @@ public partial class DemoBootstrap
 
         if (HasBundledTestSave())
         {
-            var testBtn = Btn(parent, "LoadTestSave", "载入测试存档（" + DescribeBundledTestSave() + "）", 24, pad, curY, innerW, 80f, Gold, () => {
+            var testBtn = Btn(parent, "LoadTestSave", "载入测试存档", 24, pad, curY, innerW, 80f, Gold, () => {
                 Confirm("载入测试存档", "将覆盖当前本机进度，恢复至仓库内" + DescribeBundledTestSave() + "。是否继续？", () => { LoadBundledTestSave(); });
             });
             TInk(testBtn, Color.white);
@@ -966,7 +960,7 @@ public partial class DemoBootstrap
         if (index < 0 || index >= stations.Count) return;
         var station = stations[index];
         var p = OpenPopup("修改星港名称", 430, 840, "station_rename_" + index);
-        Txt(p.transform, "默认港名：" + station.name + "（最多 12 字，不影响航线与存档绑定）", 23, InkSoft, 36, 286, 768, 38, TextAnchor.MiddleLeft);
+        Txt(p.transform, "默认港名：" + station.name, 23, InkSoft, 36, 286, 768, 38, TextAnchor.MiddleLeft);
         var inputBox = Rect("StationNameInput", p.transform, 36, 174, 768, 86);
         Rounded(inputBox, new Color(1f, 0.99f, 0.97f)); SoftShadow(inputBox);
         var placeholder = Txt(inputBox.transform, "请输入新的星港名称", 28, new Color(InkSoft.r, InkSoft.g, InkSoft.b, 0.45f), 22, 8, 724, 70, TextAnchor.MiddleLeft);
@@ -1038,8 +1032,8 @@ public partial class DemoBootstrap
         JournalTape(storyCard.transform, 428f, cardH - 16f, 144f);
         var accent = Img(Rect("Accent", storyCard.transform, 0f, 20f, 8f, cardH - 40f), Gold, spriteRound); accent.raycastTarget = false;
 
-        string headerLine = string.IsNullOrEmpty(story.chapterTag) ? "沿途故事" : story.chapterTag;
-        if (!string.IsNullOrEmpty(story.speaker)) headerLine += "  ·  " + story.speaker;
+        string headerLine = string.IsNullOrEmpty(story.speaker) ? story.chapterTag : story.speaker;
+        if (string.IsNullOrEmpty(headerLine)) headerLine = "沿途故事";
         Txt(storyCard.transform, headerLine, 22, Matcha, 34f, cardH - 52f, 700f, 34f, TextAnchor.MiddleLeft);
         Txt(storyCard.transform, story.title, 36, Ink, 34f, cardH - 106f, 920f, 50f, TextAnchor.MiddleLeft);
         Txt(storyCard.transform, story.text, 25, Ink, 34f, textY, 932f, textH, TextAnchor.UpperLeft);
@@ -1106,9 +1100,14 @@ public partial class DemoBootstrap
         bool autoOk = GetCachedAutoRouteWaypoints(current, point, scratchAutoWaypoints);
         scratchControlPts.AddRange(scratchAutoWaypoints);
         scratchControlPts.Add(point);
-        TerrainField.SampleCatmullRomPolyline(scratchControlPts, false, scratchPolyline);
+        TerrainField.SampleSafeCatmullRomPolyline(currentRegion, scratchControlPts, false, scratchPolyline);
         int previewCost = EvaluatePolylineTrackCost(currentRegion, scratchPolyline, TrackBuildCostFactor(), out var previewTr);
-        bool blockedNow = !autoOk || (!TerrainField.CanCrossHazard && previewTr.blocked);
+        bool blockedNow = !autoOk;
+        if (!blockedNow && !TerrainField.CanCrossHazard && previewTr.blocked)
+        {
+            TerrainField.EvaluatePolyline(currentRegion, scratchControlPts, out var rawPreviewTr);
+            blockedNow = rawPreviewTr.blocked;
+        }
         bool preview = !IsLoop(draft) && previewTr.distance > 24f;
         int value = draftCost + (preview ? previewCost : 0);
         if (draftCost != dragCostLastCommitted) { dragCostLastCommitted = draftCost; dragCostPulse = 0.22f; }

@@ -38,20 +38,6 @@ public partial class DemoBootstrap
         raw.color = Themes[Mathf.Clamp(currentTheme, 0, Themes.Length - 1)].mapTint;
         regionMapRaws[spec.id] = raw;
 
-        // 若存在对应区域的离线天堑/陡坡叠加图层，自动挂载（默认隐藏，长按开线/编线时显示）
-        string overlayPath = spec.texResource.Replace("MapArt/", "MapData/") + "_hazard_overlay";
-        var overlayTex = Resources.Load<Texture2D>(overlayPath);
-        if (overlayTex)
-        {
-            var ovGo = Rect("HazardOverlay_" + spec.id, go.transform, spec.canvasOffsetX * W, 0, mw, H);
-            var ovRaw = ovGo.AddComponent<RawImage>();
-            ovRaw.texture = overlayTex;
-            ovRaw.color = new Color(1f, 1f, 1f, 0.82f);
-            ovRaw.raycastTarget = false;
-            ovGo.SetActive(hazardOverlayHighlighted && spec.id == currentRegion);
-            regionHazardOverlays[spec.id] = ovGo;
-        }
-
         if (spec.id == "月之亮面") moonNearMapRaw = raw;
         else if (spec.id == "月背") moonFarMapRaw = raw;
         else if (spec.id == "火星·西半球") marsWestMapRaw = raw;

@@ -72,6 +72,7 @@ public partial class DemoBootstrap : MonoBehaviour
         public bool hasBaseTrain = true;
         public int[] dispatch = { 1, 1, 1, 1 }; public float fare = 1.5f;
         public float todayGross, todayMaintenance, todayTrack;
+        public float terrainPenaltyRatio;
         public List<int> recent = new List<int>(); // 最近几个结算日的实收
         public int todayRevenue;
     }
@@ -1705,26 +1706,35 @@ public partial class DemoBootstrap : MonoBehaviour
                 ShowConnectHint("该星港已在当前草稿中，从另一端连接试试");
             return false;
         }
-        scratchControlPts.Clear();
-        scratchControlPts.Add(Pos(a));
         if (!TerrainField.FindShortestGridWaypoints(currentRegion, Pos(a), Pos(b), scratchAutoWaypoints))
         {
             ShowConnectHint("无法找到绕开禁建区的可行路径");
             return false;
         }
+        // 纳入同区前序草稿控制点共同做安全平滑校验，确保松手全线平滑零阻挡
+        int spanFirstIdx = draft.Count - 1;
+        while (spanFirstIdx > 0 && SegmentRegion(draft[spanFirstIdx - 1], draft[spanFirstIdx]) == currentRegion)
+            spanFirstIdx--;
+        scratchControlPts.Clear();
+        scratchControlPts.Add(Pos(draft[spanFirstIdx]));
+        for (int d = spanFirstIdx; d < draft.Count - 1; d++)
+        {
+            if (d < draftSegWaypoints.Count && draftSegWaypoints[d] != null)
+                foreach (var wp in draftSegWaypoints[d]) scratchControlPts.Add(wp);
+            scratchControlPts.Add(Pos(draft[d + 1]));
+        }
         scratchControlPts.AddRange(scratchAutoWaypoints);
         scratchControlPts.Add(Pos(b));
 
-        TerrainField.SampleCatmullRomPolyline(scratchControlPts, false, scratchPolyline);
+        bool safeOk = TerrainField.SampleSafeCatmullRomPolyline(currentRegion, scratchControlPts, closeLoop, scratchPolyline);
         TerrainField.EvaluatePolyline(currentRegion, scratchPolyline, out var tr);
-        if (tr.blocked)
+        if (!safeOk || (!TerrainField.CanCrossHazard && tr.blocked))
         {
             ShowConnectHint("平滑路线穿越禁建区，无法连接");
             return false;
         }
 
-        var committedWp = new List<Vector2>();
-        for (int i = 1; i < scratchControlPts.Count - 1; i++) committedWp.Add(scratchControlPts[i]);
+        var committedWp = new List<Vector2>(scratchAutoWaypoints);
         draftSegWaypoints.Add(committedWp);
         InvalidateAutoRouteCache();
         ClearAutoPreviewSegs();
@@ -2556,6 +2566,7 @@ public partial class DemoBootstrap : MonoBehaviour
     };
     static int MainTrainSkinCount => MainTrainSkins.Length;
     readonly HashSet<int> ownedTrainSkins = new HashSet<int> { 0 };
+    readonly Dictionary<int, int> equippedModelTrainSkins = new Dictionary<int, int>();
 
     void UnlockMainTrainSkin(int skinId, bool toast = true)
     {
@@ -2563,9 +2574,24 @@ public partial class DemoBootstrap : MonoBehaviour
         if (toast) Toast("已解锁主线车皮「" + MainTrainSkins[skinId].name + "」");
         SaveGame();
     }
+    int GetDefaultTrainSkinForModel(int locoNode)
+    {
+        if (equippedModelTrainSkins.TryGetValue(locoNode, out int skinId) && skinId > 0 && skinId < MainTrainSkinCount && ownedTrainSkins.Contains(skinId) && MainTrainSkins[skinId].locoNode == locoNode) return skinId;
+        return 0;
+    }
+    bool IsTrainSkinEquippedForModel(int skinId)
+    {
+        if (skinId > 0 && skinId < MainTrainSkinCount && ownedTrainSkins.Contains(skinId) && GetDefaultTrainSkinForModel(MainTrainSkins[skinId].locoNode) == skinId) return true;
+        return false;
+    }
+    ResearchVehicle CreateResearchVehicle(int locoNode)
+    {
+        return new ResearchVehicle { node = locoNode, skinId = GetDefaultTrainSkinForModel(locoNode) };
+    }
     void ApplyTrainSkinToAllOfModel(int skinId)
     {
         if (skinId <= 0 || skinId >= MainTrainSkinCount || !ownedTrainSkins.Contains(skinId)) return;
+        equippedModelTrainSkins[MainTrainSkins[skinId].locoNode] = skinId;
         foreach (var v in researchVehicles) if (v.node == MainTrainSkins[skinId].locoNode) v.skinId = skinId;
         SaveGame(); RefreshMainTrainVisuals();
     }
@@ -2576,6 +2602,7 @@ public partial class DemoBootstrap : MonoBehaviour
     }
     void RestoreOriginalSkinForAllOfModel(int locoNode)
     {
+        equippedModelTrainSkins.Remove(locoNode);
         foreach (var v in researchVehicles) if (v.node == locoNode) v.skinId = 0;
         SaveGame(); RefreshMainTrainVisuals();
     }
@@ -2854,6 +2881,7 @@ public partial class DemoBootstrap : MonoBehaviour
 
     void RefreshAllLines()
     {
+        foreach (var line in lines) RecalculateLineTerrainPenalty(line);
         CreateLineVisuals();
         RefreshStationDots();
     }

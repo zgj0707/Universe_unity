@@ -197,7 +197,7 @@ public partial class DemoBootstrap
         if (sc == null || !sc.unlocked || !TryGetSceneryContent(sc, out string imagePath, out string description)) return;
         var texture = Resources.Load<Texture2D>(imagePath);
         if (!texture) { Toast(sc.name + " · 图片暂不可用"); return; }
-        bool newlyCheckedIn = CompleteSceneryCheckin(sc);
+        CompleteSceneryCheckin(sc);
         if (sceneryViewer) Destroy(sceneryViewer);
         CloseLineBubble();
         sceneryViewer = new GameObject("SceneryViewer", typeof(RectTransform), typeof(Canvas), typeof(GraphicRaycaster), typeof(SceneryViewerLayout));
@@ -220,40 +220,18 @@ public partial class DemoBootstrap
         var raw = picture.AddComponent<RawImage>(); raw.texture = texture; raw.color = Color.white;
         layout.picture = pictureRt;
         layout.rawImage = raw;
-        var controls = Rect("Controls", stage.transform, 0, 0, 1920, 1080);
-        var reveal = picture.AddComponent<Button>(); reveal.targetGraphic = raw;
-        reveal.onClick.AddListener(() => controls.SetActive(true));
-        var info = Rect("Info", controls.transform, 1300, 190, 550, 650);
-        Rounded(info, new Color(0.10f, 0.14f, 0.13f, 0.78f));
-        var postcard = GetSceneryPostcardCopy(sc);
-        Txt(info.transform, sc.region + (sc.natural ? " · 复古邮戳明信片" : " · 人文纪念明信片"), 24, new Color(0.85f, 0.91f, 0.83f), 34, 578, 482, 36, TextAnchor.MiddleLeft);
-        Txt(info.transform, sc.name, 54, Color.white, 34, 486, 482, 80, TextAnchor.MiddleLeft);
-        Txt(info.transform, postcard.guideText, 27, new Color(0.96f, 0.96f, 0.91f), 34, 246, 482, 224, TextAnchor.UpperLeft);
-        var noteTxt = Txt(info.transform, postcard.travelerNote, 24, new Color(0.95f, 0.86f, 0.64f), 34, 48, 482, 176, TextAnchor.UpperLeft);
-        noteTxt.fontStyle = FontStyle.Italic;
-        if (newlyCheckedIn)
-        {
-            var notification = Rect("CheckinToast", stage.transform, 560, 850, 800, 88);
-            Rounded(notification, new Color(0.10f, 0.13f, 0.12f, 0.88f));
-            Txt(notification.transform, "打卡成功 · 钻石 +20", 32, Color.white, 20, 10, 760, 68, TextAnchor.MiddleCenter);
-            notification.GetComponent<Image>().raycastTarget = false;
-            Destroy(notification, 3f);
-        }
-        var back = Btn(controls.transform, "Back", "←", 40, 24, 958, 94, 94, new Color(0.12f, 0.16f, 0.15f, 0.75f), () => { Destroy(sceneryViewer); sceneryViewer = null; RequestResourceTrim(false); after?.Invoke(); });
-        TInk(back, Color.white);
-        var home = Btn(controls.transform, "Home", "主页", 24, 134, 958, 104, 94, new Color(0.12f, 0.16f, 0.15f, 0.75f), GoHome);
-        TInk(home, Color.white);
-        var heading = Txt(controls.transform, sc.name, 44, Color.white, 254, 975, 800, 60, TextAnchor.MiddleLeft);
+        var dismiss = picture.AddComponent<Button>(); dismiss.targetGraphic = raw;
+        dismiss.transition = Selectable.Transition.None;
+        dismiss.onClick.AddListener(() => { Destroy(sceneryViewer); sceneryViewer = null; RequestResourceTrim(false); after?.Invoke(); });
+        var heading = Txt(stage.transform, sc.name, 44, Color.white, 40, 975, 1000, 60, TextAnchor.MiddleLeft);
         heading.resizeTextForBestFit = true; heading.resizeTextMinSize = 24; heading.resizeTextMaxSize = ScaledFontSize(44); heading.horizontalOverflow = HorizontalWrapMode.Overflow; heading.verticalOverflow = VerticalWrapMode.Truncate;
-        var clear = Btn(controls.transform, "Clear", "清屏", 30, 1690, 44, 180, 70, new Color(0.12f, 0.16f, 0.15f, 0.75f), () => controls.SetActive(false));
-        sceneryViewer.GetComponent<SceneryViewerLayout>().clear = clear.GetComponent<RectTransform>();
-        TInk(clear, Color.white);
+        heading.raycastTarget = false;
     }
 }
 
 public class SceneryViewerLayout : MonoBehaviour
 {
-    public RectTransform stage, clear, picture;
+    public RectTransform stage, picture;
     public RawImage rawImage;
     int lastWidth = -1, lastHeight = -1;
     void LateUpdate()
@@ -268,7 +246,6 @@ public class SceneryViewerLayout : MonoBehaviour
         float scale = Mathf.Min(width / 1920f, height / 1080f);
         stage.localScale = Vector3.one * scale;
         stage.localRotation = Quaternion.Euler(0, 0, portrait ? 90 : 0);
-        if (clear) clear.anchoredPosition = new Vector2(portrait ? 1370 : 1690, 44);
         if (picture && scale > 0.0001f)
         {
             // 按屏幕真实宽高铺满全屏（居中裁剪多余边缘，不留黑边也不拉伸变形）。

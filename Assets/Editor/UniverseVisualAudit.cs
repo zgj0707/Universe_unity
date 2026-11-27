@@ -15,6 +15,7 @@ using UnityEngine.UI;
 public static class UniverseVisualAudit
 {
     const string KeyActive = "UniverseAudit_Active";
+    const string KeyPromoMode = "UniverseAudit_PromoMode";
     const string KeyOutDir = "UniverseAudit_OutDir";
     const string KeyStartTicks = "UniverseAudit_StartTicks";
 
@@ -40,8 +41,45 @@ public static class UniverseVisualAudit
             ? argDir
             : Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/VisualAudit"));
         Directory.CreateDirectory(outDir);
+        Screen.SetResolution(1080, 1920, false);
 
         SessionState.SetBool(KeyActive, true);
+        SessionState.SetBool(KeyPromoMode, false);
+        SessionState.SetString(KeyOutDir, outDir);
+        SessionState.SetString(KeyStartTicks, DateTime.UtcNow.Ticks.ToString());
+
+        Errors.Clear();
+        Warnings.Clear();
+        Step = -1;
+        LastStepTime = 0;
+        Boot = null;
+
+        Application.logMessageReceived -= OnLog;
+        Application.logMessageReceived += OnLog;
+        EditorApplication.update -= OnEditorUpdate;
+        EditorApplication.update += OnEditorUpdate;
+
+        if (!EditorSceneManager.OpenScene("Assets/Scenes/Main.unity", OpenSceneMode.Single).IsValid())
+        {
+            Debug.LogError("[VisualAudit] 无法打开 Main.unity");
+            FinishAudit(2);
+            return;
+        }
+
+        EditorApplication.isPlaying = true;
+    }
+
+    public static void CapturePromoShots()
+    {
+        string argDir = GetArg("-auditOut");
+        string outDir = !string.IsNullOrEmpty(argDir)
+            ? argDir
+            : Path.GetFullPath(Path.Combine(Application.dataPath, "../Logs/PromoShots"));
+        Directory.CreateDirectory(outDir);
+        Screen.SetResolution(1080, 1920, false);
+
+        SessionState.SetBool(KeyActive, true);
+        SessionState.SetBool(KeyPromoMode, true);
         SessionState.SetString(KeyOutDir, outDir);
         SessionState.SetString(KeyStartTicks, DateTime.UtcNow.Ticks.ToString());
 
@@ -110,7 +148,10 @@ public static class UniverseVisualAudit
 
         try
         {
-            RunStep(Step);
+            if (SessionState.GetBool(KeyPromoMode, false))
+                RunPromoStep(Step);
+            else
+                RunStep(Step);
             Step++;
             LastStepTime = EditorApplication.timeSinceStartup;
         }
@@ -207,6 +248,59 @@ public static class UniverseVisualAudit
             case 16:
                 Capture("13_event_neon.png");
                 Invoke(Boot, "CloseEventSandbox");
+                FinishAudit(Errors.Count > 0 ? 1 : 0);
+                break;
+        }
+    }
+
+    static void RunPromoStep(int s)
+    {
+        var flags = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public;
+        var toastField = typeof(DemoBootstrap).GetField("toastGo", flags);
+        Action hideToast = () => {
+            var tg = toastField?.GetValue(Boot) as GameObject;
+            if (tg) tg.SetActive(false);
+        };
+        switch (s)
+        {
+            case 0:
+                Screen.SetResolution(1080, 1920, false);
+                var allC = UnityEngine.Object.FindObjectsByType<Canvas>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+                foreach (var c in allC)
+                {
+                    if (!c.isRootCanvas) continue;
+                    var sc = c.GetComponent<CanvasScaler>();
+                    if (sc) { sc.referenceResolution = new Vector2(1080f, 1920f); sc.matchWidthOrHeight = 0.5f; }
+                }
+                hideToast();
+                break;
+            case 1:
+                // 居中大星网并缩放至全貌（西至开普勒/东至危海全收）
+                var mapRt = typeof(DemoBootstrap).GetField("mapRect", flags)?.GetValue(Boot) as RectTransform;
+                if (mapRt)
+                {
+                    mapRt.localScale = Vector3.one * 0.72f;
+                    mapRt.anchoredPosition = new Vector2(-180f, 150f);
+                }
+                hideToast();
+                break;
+            case 2:
+                hideToast();
+                Capture("01_moon_network.png");
+                Invoke(Boot, "OpenMetroMapScreen");
+                break;
+            case 3:
+                hideToast();
+                foreach (var btn in UnityEngine.Object.FindObjectsByType<Button>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
+                {
+                    var txt = btn.GetComponentInChildren<Text>();
+                    if (txt != null && txt.text == "居中构图") { btn.onClick.Invoke(); break; }
+                }
+                break;
+            case 4:
+                hideToast();
+                Capture("08_metro_map.png");
+                Invoke(Boot, "CloseMetroMapScreen");
                 FinishAudit(Errors.Count > 0 ? 1 : 0);
                 break;
         }

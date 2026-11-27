@@ -284,8 +284,7 @@ public partial class DemoBootstrap
             var card = Rect("StoryArchive_" + i, content, 4f, y, cardW - 8f, 268f);
             Rounded(card, unlocked ? CardBg : Color.Lerp(CardBg, Ink, 0.05f)); SoftShadow(card);
             Img(Rect("Accent", card.transform, 0f, 28f, 7f, 212f), unlocked ? Gold : InkSoft, spriteRound).raycastTarget = false;
-            Txt(card.transform, $"{ch.chapterTag}  ·  {ch.speaker}", 24, unlocked ? Matcha : InkSoft, 28f, 212f, 640f, 36f, TextAnchor.MiddleLeft);
-            Txt(card.transform, unlocked ? ch.title : "？？？ （随星轨网扩展后开启）", 31, unlocked ? Ink : InkSoft, 28f, 160f, 680f, 46f, TextAnchor.MiddleLeft);
+            Txt(card.transform, unlocked ? ch.title : "？？？", 31, unlocked ? Ink : InkSoft, 28f, 212f, 680f, 46f, TextAnchor.MiddleLeft);
             Txt(card.transform, unlocked ? ch.body : ch.objective, 24, InkSoft, 28f, 18f, cardW - 252f, 134f, TextAnchor.UpperLeft);
 
             if (unlocked)

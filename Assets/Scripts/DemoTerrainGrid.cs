@@ -23,11 +23,14 @@ public partial class DemoBootstrap
     readonly List<int> scratchCtrlSegIndices = new List<int>(32);
     readonly List<Vector2> scratchPolyline = new List<Vector2>(128);
     readonly List<int> scratchSubSegIndices = new List<int>(128);
+    readonly List<Vector2> scratchSpanPolyline = new List<Vector2>(256);
+    readonly List<int> scratchSpanIndices = new List<int>(256);
     readonly List<Vector2> scratchAutoWaypoints = new List<Vector2>(16);
 
     // 拖拽期 A* 路径缓存，避免鼠标同一格内抖动时重复寻路
     string cachedAutoRegion = "";
     Vector2 cachedAutoFrom = new Vector2(float.NaN, float.NaN);
+    Vector2 cachedAutoExactFrom, cachedAutoExactTo;
     Vector2 cachedAutoToGrid = new Vector2(float.NaN, float.NaN);
     bool cachedAutoFound = true;
     readonly List<Vector2> cachedAutoWaypoints = new List<Vector2>(16);
@@ -42,11 +45,60 @@ public partial class DemoBootstrap
 
     void SetHazardOverlayHighlight(bool active)
     {
+        if (IsInEventSandbox()) active = false;
         hazardOverlayHighlighted = active;
+        if (active && !string.IsNullOrEmpty(currentRegion)) EnsureRegionHazardOverlay(currentRegion);
         foreach (var kv in regionHazardOverlays)
         {
             if (kv.Value) kv.Value.SetActive(active && kv.Key == currentRegion);
         }
+    }
+
+    void EnsureRegionHazardOverlay(string regionId)
+    {
+        if (string.IsNullOrEmpty(regionId)) return;
+        if (regionHazardOverlays.TryGetValue(regionId, out var existing) && existing) return;
+        if (!regionMapArts.TryGetValue(regionId, out var host) || !host) return;
+        var spec = GetRegionSpec(regionId);
+        if (spec == null) return;
+
+        TerrainField.PreloadRegion(regionId);
+        float mw = W * spec.canvasWidthScale;
+        float startX = spec.canvasOffsetX * W;
+        int tw = Mathf.Clamp(Mathf.RoundToInt(mw / 6f), 64, 512);
+        int th = Mathf.Clamp(Mathf.RoundToInt(H / 6f), 64, 512);
+        var pixels = new Color32[tw * th];
+        var red = new Color32(235, 56, 46, 132);
+        var clear = new Color32(0, 0, 0, 0);
+        bool anyBlocked = false;
+        for (int iy = 0; iy < th; iy++)
+        {
+            float py = (iy + 0.5f) / th * H;
+            int row = iy * tw;
+            for (int ix = 0; ix < tw; ix++)
+            {
+                float px = startX + (ix + 0.5f) / tw * mw;
+                bool blk = TerrainField.IsBlocked(regionId, new Vector2(px, py));
+                if (blk) anyBlocked = true;
+                pixels[row + ix] = blk ? red : clear;
+            }
+        }
+        if (!anyBlocked)
+        {
+            regionHazardOverlays[regionId] = null;
+            return;
+        }
+        var tex = new Texture2D(tw, th, TextureFormat.RGBA32, false) { filterMode = FilterMode.Bilinear, wrapMode = TextureWrapMode.Clamp };
+        tex.SetPixels32(pixels);
+        tex.Apply(false, true);
+
+        var ovGo = Rect("HazardOverlay_" + regionId, host.transform, startX, 0f, mw, H);
+        var ovRaw = ovGo.AddComponent<RawImage>();
+        ovRaw.texture = tex;
+        ovRaw.raycastTarget = false;
+        if (host.transform.childCount > 1) ovGo.transform.SetSiblingIndex(1);
+        ovGo.SetActive(false);
+        regionHazardOverlays[regionId] = ovGo;
     }
 
     void SyncTerrainTechState()
@@ -102,13 +154,17 @@ public partial class DemoBootstrap
         Vector2 toSnapped = TerrainField.SnapToGrid(toPos, currentRegion);
         if (cachedAutoRegion == currentRegion &&
             (cachedAutoFrom - fromSnapped).sqrMagnitude < 1f &&
-            (cachedAutoToGrid - toSnapped).sqrMagnitude < 1f)
+            (cachedAutoToGrid - toSnapped).sqrMagnitude < 1f &&
+            (cachedAutoExactFrom - fromPos).sqrMagnitude < 4f &&
+            (cachedAutoExactTo - toPos).sqrMagnitude < 4f)
         {
             outWaypoints.AddRange(cachedAutoWaypoints);
             return cachedAutoFound;
         }
 
         cachedAutoRegion = currentRegion;
+        cachedAutoExactFrom = fromPos;
+        cachedAutoExactTo = toPos;
         cachedAutoFrom = fromSnapped;
         cachedAutoToGrid = toSnapped;
         cachedAutoFound = TerrainField.FindShortestGridWaypoints(currentRegion, fromPos, toPos, cachedAutoWaypoints);
@@ -167,7 +223,7 @@ public partial class DemoBootstrap
         scratchControlPts.Add(end);
         scratchCtrlSegIndices.Add(1);
 
-        TerrainField.SampleCatmullRomPolyline(scratchControlPts, false, scratchPolyline, scratchSubSegIndices, scratchCtrlSegIndices);
+        TerrainField.SampleSafeCatmullRomPolyline(currentRegion, scratchControlPts, false, scratchPolyline, scratchSubSegIndices, scratchCtrlSegIndices);
         // 仅截取当前正在拖拽的这一段（logicSeg == 1）用于预览绘制与地形碰撞检测
         int curStartPt = 0;
         if (spanFirstIdx < draft.Count - 1)
@@ -214,8 +270,18 @@ public partial class DemoBootstrap
     /// </summary>
     void FillLineSegmentPolyline(Line line, int segIdx, string region, List<Vector2> outPts)
     {
-        FillLineSegmentControlPoints(line, segIdx, region, scratchControlPts);
-        TerrainField.SampleCatmullRomPolyline(scratchControlPts, false, outPts);
+        outPts.Clear();
+        if (line == null || line.st == null || segIdx < 0 || segIdx >= line.st.Count - 1) return;
+        int first = segIdx, last = segIdx;
+        while (first > 0 && SegmentRegion(line.st[first - 1], line.st[first]) == region) first--;
+        while (last + 1 < line.st.Count - 1 && SegmentRegion(line.st[last + 1], line.st[last + 2]) == region) last++;
+        FillRegionSpanPolyline(line, first, last, region, scratchSpanPolyline, scratchSpanIndices);
+        for (int i = 0; i < scratchSpanIndices.Count; i++)
+            if (scratchSpanIndices[i] == segIdx)
+            {
+                if (outPts.Count == 0) outPts.Add(scratchSpanPolyline[i]);
+                outPts.Add(scratchSpanPolyline[i + 1]);
+            }
     }
 
 
@@ -266,7 +332,7 @@ public partial class DemoBootstrap
             scratchCtrlSegIndices.Add(s);
         }
         bool loop = segStart == 0 && segEndInclusive == line.st.Count - 2 && IsLoop(line.st);
-        TerrainField.SampleCatmullRomPolyline(scratchControlPts, loop, outPts, outSubSegIndices, scratchCtrlSegIndices);
+        TerrainField.SampleSafeCatmullRomPolyline(region, scratchControlPts, loop, outPts, outSubSegIndices, scratchCtrlSegIndices);
     }
 
     /// <summary>
@@ -281,16 +347,27 @@ public partial class DemoBootstrap
                 outPts.AddRange(FindSandboxStreetPath(activeSandboxEventId, path[segIdx], path[segIdx + 1]));
             return;
         }
-        scratchControlPts.Clear();
-        if (path == null || segIdx < 0 || segIdx >= path.Count - 1) { outPts.Clear(); return; }
-        scratchControlPts.Add(Pos(path[segIdx]));
-        if (segIdx < draftSegWaypoints.Count && draftSegWaypoints[segIdx] != null)
+        outPts.Clear();
+        if (path == null || segIdx < 0 || segIdx >= path.Count - 1) return;
+        string region = SegmentRegion(path[segIdx], path[segIdx + 1]) ?? currentRegion;
+        int first = segIdx, last = segIdx;
+        while (first > 0 && SegmentRegion(path[first - 1], path[first]) == region) first--;
+        while (last + 1 < path.Count - 1 && SegmentRegion(path[last + 1], path[last + 2]) == region) last++;
+        scratchControlPts.Clear(); scratchCtrlSegIndices.Clear();
+        scratchControlPts.Add(PosInRegion(path[first], region));
+        for (int s = first; s <= last; s++)
         {
-            var wp = draftSegWaypoints[segIdx];
-            for (int i = 0; i < wp.Count; i++) scratchControlPts.Add(wp[i]);
+            if (s < draftSegWaypoints.Count && draftSegWaypoints[s] != null)
+                foreach (var wp in draftSegWaypoints[s]) { scratchControlPts.Add(wp); scratchCtrlSegIndices.Add(s); }
+            scratchControlPts.Add(PosInRegion(path[s + 1], region)); scratchCtrlSegIndices.Add(s);
         }
-        scratchControlPts.Add(Pos(path[segIdx + 1]));
-        TerrainField.SampleCatmullRomPolyline(scratchControlPts, false, outPts);
+        TerrainField.SampleSafeCatmullRomPolyline(region, scratchControlPts, first == 0 && last == path.Count - 2 && IsLoop(path), scratchSpanPolyline, scratchSpanIndices, scratchCtrlSegIndices);
+        for (int i = 0; i < scratchSpanIndices.Count; i++)
+            if (scratchSpanIndices[i] == segIdx)
+            {
+                if (outPts.Count == 0) outPts.Add(scratchSpanPolyline[i]);
+                outPts.Add(scratchSpanPolyline[i + 1]);
+            }
     }
 
     void FillWholeDraftPolyline(List<int> path, List<Vector2> outPts)
@@ -319,7 +396,7 @@ public partial class DemoBootstrap
             }
             scratchControlPts.Add(Pos(path[s + 1]));
         }
-        TerrainField.SampleCatmullRomPolyline(scratchControlPts, IsLoop(path), outPts);
+        TerrainField.SampleSafeCatmullRomPolyline(currentRegion, scratchControlPts, IsLoop(path), outPts);
     }
 
     int EvaluatePolylineTrackCost(string regionId, IReadOnlyList<Vector2> pts, float trackFactor, out TerrainField.SegmentTerrainResult tr)
@@ -339,7 +416,7 @@ public partial class DemoBootstrap
         TerrainField.FindShortestGridWaypoints(reg, from, to, scratchAutoWaypoints);
         scratchControlPts.AddRange(scratchAutoWaypoints);
         scratchControlPts.Add(to);
-        TerrainField.SampleCatmullRomPolyline(scratchControlPts, false, scratchPolyline);
+        TerrainField.SampleSafeCatmullRomPolyline(reg, scratchControlPts, false, scratchPolyline);
         return EvaluatePolylineTrackCost(reg, scratchPolyline, trackFactor, out tr);
     }
 
@@ -351,6 +428,20 @@ public partial class DemoBootstrap
         string reg = SegmentRegion(line.st[segIdx], line.st[segIdx + 1]) ?? currentRegion;
         FillLineSegmentPolyline(line, segIdx, reg, scratchPolyline);
         return EvaluatePolylineTrackCost(reg, scratchPolyline, trackFactor, out tr);
+    }
+
+    void RecalculateLineTerrainPenalty(Line line)
+    {
+        float distance = 0f, weighted = 0f;
+        if (line == null || line.st == null) return;
+        for (int i = 0; i + 1 < line.st.Count; i++)
+        {
+            string region = SegmentRegion(line.st[i], line.st[i + 1]) ?? currentRegion;
+            FillLineSegmentPolyline(line, i, region, scratchPolyline);
+            TerrainField.EvaluatePolyline(region, scratchPolyline, out var tr);
+            distance += tr.distance; weighted += tr.distance * tr.penaltyRatio;
+        }
+        line.terrainPenaltyRatio = distance > 0.01f ? weighted / distance : 0f;
     }
 
     static List<SegmentWaypoints> CloneWaypointsList(List<SegmentWaypoints> src)

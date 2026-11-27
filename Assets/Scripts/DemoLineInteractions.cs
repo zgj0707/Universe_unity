@@ -613,7 +613,7 @@ public partial class DemoBootstrap
         if (insertTarget >= 0 && !IsInEventSandbox())
         {
             TerrainField.EvaluatePolyline(currentRegion, scratchPolyline, out var routeTerrain);
-            if (!insertRouteValid || routeTerrain.blocked)
+            if (!insertRouteValid || (!TerrainField.CanCrossHazard && routeTerrain.blocked))
             {
                 previewCol = new Color(0.96f, 0.24f, 0.22f, 0.95f);
                 if (insertBadgeText) insertBadgeText.text = "无法找到可行路线";
@@ -679,7 +679,7 @@ public partial class DemoBootstrap
             while (last + 1 < line.st.Count - 1 && SegmentRegion(line.st[last + 1], line.st[last + 2]) == currentRegion) last++;
             FillRegionSpanPolyline(line, first, last, currentRegion, scratchPolyline, scratchSubSegIndices, segment, scratchInsertWps);
             TerrainField.EvaluatePolyline(currentRegion, scratchPolyline, out var terrain);
-            if (terrain.blocked) { Toast("平滑路线穿越禁建区，无法插入"); return; }
+            if (!TerrainField.CanCrossHazard && terrain.blocked) { Toast("平滑路线穿越禁建区，无法插入"); return; }
         }
         BeginUndo("插入途经站"); ClosePanel(true);
         SyncLineWaypointsCount(line);

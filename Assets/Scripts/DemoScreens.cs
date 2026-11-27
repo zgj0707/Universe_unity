@@ -801,7 +801,7 @@ public partial class DemoBootstrap
 
         var rows = CollectFilteredSortedLines(fleetDispatchRegionFilter, fleetDispatchSortMode);
 
-        var content = FleetScroll(page, 172, PgH - 284, Mathf.Max(1, rows.Count) * 360f + 24, scrollKey: "fleet:dispatch:" + currentRegion);
+        var content = FleetScroll(page, 172, PgH - 284, Mathf.Max(1, rows.Count) * 308f + 24, scrollKey: "fleet:dispatch:" + currentRegion);
         float height = content.sizeDelta.y;
         if (rows.Count == 0)
         {
@@ -812,18 +812,16 @@ public partial class DemoBootstrap
         {
             var item = rows[i];
             var line = item.line;
-            var card = Rect("Dispatch" + i, content, 0, height - 350 - i * 360, W - 56, 340);
+            var card = Rect("Dispatch" + i, content, 0, height - 298 - i * 308, W - 56, 288);
             Rounded(card, CardBg); SoftShadow(card);
-            Img(Rect("Dot", card.transform, 28, 262, 38, 38), line.color, spriteCircle).raycastTarget = false;
-            Txt(card.transform, line.name, 36, Ink, 84, 260, 620, 48, TextAnchor.MiddleLeft);
-            var locBtn = Btn(card.transform, "Locate", "定位起点 ▸", 22, W - 56 - 204, 256, 176, 56, Paper2, () => JumpToLineStartStation(line));
+            Img(Rect("Dot", card.transform, 28, 210, 38, 38), line.color, spriteCircle).raycastTarget = false;
+            Txt(card.transform, line.name, 36, Ink, 84, 208, 620, 48, TextAnchor.MiddleLeft);
+            var locBtn = Btn(card.transform, "Locate", "定位起点 ▸", 22, W - 56 - 204, 204, 176, 56, Paper2, () => JumpToLineStartStation(line));
             TInk(locBtn, Indigo);
-            var lineStats = Txt(card.transform, item.startRegion + " · " + UniqueCount(line.st) + " 站 · " + item.km.ToString("0.0") + " km · " + line.trains + " 列 · 预计日利润 " + Mathf.RoundToInt(item.daily), 23, InkSoft, 28, 205, 960, 38, TextAnchor.MiddleLeft);
+            var lineStats = Txt(card.transform, item.startRegion + " · " + UniqueCount(line.st) + " 站 · " + item.km.ToString("0.0") + " km · " + line.trains + " 列 · 预计日利润 " + Mathf.RoundToInt(item.daily), 23, InkSoft, 28, 152, 960, 38, TextAnchor.MiddleLeft);
             FitSingleLine(lineStats, 23);
-            var assigned = researchVehicles.Find(v => v.lineId == line.id);
-            Txt(card.transform, "配置：" + (assigned == null ? "默认飞车" : LocoNames[assigned.node]), 24, InkSoft, 28, 156, 940, 34, TextAnchor.MiddleLeft);
-            var fleetButton = Btn(card.transform, "Fleet", "星舰配属", 25, 28, 38, 450, 88, Indigo, () => OpenLineFleet(line, () => OpenFleetTab(0))); TInk(fleetButton, Color.white);
-            var operations = Btn(card.transform, "Operations", "票价与调度", 25, 495, 38, 450, 88, Indigo, () => OpenLineOperations(line)); TInk(operations, Color.white);
+            var fleetButton = Btn(card.transform, "Fleet", "星舰配属", 25, 28, 34, 450, 88, Indigo, () => OpenLineFleet(line, () => OpenFleetTab(0))); TInk(fleetButton, Color.white);
+            var operations = Btn(card.transform, "Operations", "票价与调度", 25, 495, 34, 450, 88, Indigo, () => OpenLineOperations(line)); TInk(operations, Color.white);
             { var entry = card.AddComponent<FleetCardEntrance>(); entry.delay = Mathf.Min(i, 6) * 0.032f; }
         }
     }
@@ -1704,10 +1702,14 @@ public partial class DemoBootstrap
             var card = Rect("TrainSkin" + i, content, 0, height - 164 - (i - 1) * 174, width, 158);
             Rounded(card, CardBg); SoftShadow(card);
             AddTrainSkinArt(card.transform, spec, 16, 28, 132, 100, false);
-            Txt(card.transform, spec.name, 25, Ink, 160, 114, width - 390, 34, TextAnchor.MiddleLeft);
-            Txt(card.transform, "适用车型：" + LocoNames[spec.locoNode], 19, Ink, 160, 78, width - 390, 30, TextAnchor.MiddleLeft);
-            Txt(card.transform, owned ? "已解锁" : spec.source, 18, InkSoft, 160, 14, width - 390, 60, TextAnchor.MiddleLeft);
-            TInk(Btn(card.transform, "Preview", "预览 / 装配", 21, width - 210, 42, 186, 72, Matcha, () => OpenTrainSkinPreviewPopup(id)), Color.white);
+            Txt(card.transform, spec.name, 25, Ink, 160, 114, width - 416, 34, TextAnchor.MiddleLeft);
+            Txt(card.transform, "适用车型：" + LocoNames[spec.locoNode], 19, Ink, 160, 78, width - 416, 30, TextAnchor.MiddleLeft);
+            Txt(card.transform, owned ? "已解锁" : spec.source, 18, InkSoft, 160, 14, width - 416, 60, TextAnchor.MiddleLeft);
+            TInk(Btn(card.transform, "Preview", "预览", 20, width - 232, 42, 104, 72, Paper2, () => OpenTrainSkinPreviewPopup(id, true)), Ink);
+            if (owned && IsTrainSkinEquippedForModel(id))
+                TInk(Btn(card.transform, "RestoreAll", "恢复原皮", 20, width - 120, 42, 104, 72, Indigo, () => { RestoreOriginalSkinForAllOfModel(spec.locoNode); OpenFleetTab(2); Toast("已恢复「" + LocoNames[spec.locoNode] + "」原厂涂装"); }), Color.white);
+            else if (owned)
+                TInk(Btn(card.transform, "ApplyAll", "装配", 20, width - 120, 42, 104, 72, Matcha, () => { ApplyTrainSkinToAllOfModel(id); OpenFleetTab(2); Toast("已全量装配「" + spec.name + "」"); }), Color.white);
         }
     }
 
@@ -1753,8 +1755,10 @@ public partial class DemoBootstrap
         var subtitle = Rect("Subtitle", clip.transform, 0f, 0f, pw, 76f);
         Img(subtitle, new Color(0.06f, 0.05f, 0.04f, 0.64f)).raycastTarget = false;
         Txt(subtitle.transform, title, 30, Color.white, 0f, 0f, pw, 76f, TextAnchor.MiddleCenter).raycastTarget = false;
-        TInk(Btn(activePanel.transform, "Close", "×", 28, pw - 60f, ph - 60f, 48f, 48f,
-            new Color(0.10f, 0.09f, 0.08f, 0.50f), () => ClosePanel(true)), Color.white);
+        var closePreview = activePanel.AddComponent<Button>();
+        closePreview.targetGraphic = activePanel.GetComponent<Image>();
+        closePreview.transition = Selectable.Transition.None;
+        closePreview.onClick.AddListener(() => ClosePanel(true));
         activePanelKey = "pure_image_preview";
         panelOpenedFrame = Time.frameCount + 1;
         if (toastGo) toastGo.transform.SetAsLastSibling();
@@ -1763,40 +1767,10 @@ public partial class DemoBootstrap
     void OpenTrainSkinPreviewPopup(int skinId, bool purePreview = false)
     {
         if (skinId <= 0 || skinId >= MainTrainSkinCount) return;
-        var spec = MainTrainSkins[skinId]; bool owned = ownedTrainSkins.Contains(skinId);
-        if (purePreview || IsInEventSandbox() || !owned)
-        {
-            var tex = Resources.Load<Texture2D>(spec.previewArt);
-            if (tex == null) tex = Resources.Load<Texture2D>("Research/Train/" + LocoArt[spec.locoNode]);
-            OpenPureImagePreview(spec.name, tex);
-            return;
-        }
-        var bubble = OpenPopup(spec.name, 1120, 820, "train_skin_preview");
-        AddTrainSkinArt(bubble.transform, spec, 90, 680, 640, 360, true);
-        TInk(Btn(bubble.transform, "ApplyAll", "应用到全部「" + LocoNames[spec.locoNode] + "」", 19, 40, 550, 450, 68, Matcha, () => { ApplyTrainSkinToAllOfModel(skinId); OpenTrainSkinPreviewPopup(skinId); }), Color.white);
-        TInk(Btn(bubble.transform, "RestoreAll", "全部恢复原皮", 20, 505, 550, 275, 68, Indigo, () => { RestoreOriginalSkinForAllOfModel(spec.locoNode); OpenTrainSkinPreviewPopup(skinId); }), Color.white);
-        var vehicles = researchVehicles.FindAll(v => v.node == spec.locoNode);
-        if (vehicles.Count == 0)
-        {
-            var note = Txt(bubble.transform, "尚未购置「" + LocoNames[spec.locoNode] + "」，可在星舰商店购置后换装", 21, InkSoft, 40, 420, 740, 100, TextAnchor.MiddleLeft);
-            note.horizontalOverflow = HorizontalWrapMode.Wrap;
-            return;
-        }
-        var view = Rect("VehicleViewport", bubble.transform, 40, 60, 740, 470);
-        Img(view, new Color(1, 1, 1, 0.01f)); var mask = view.AddComponent<Mask>(); mask.showMaskGraphic = false;
-        var scroll = view.AddComponent<ScrollRect>(); scroll.horizontal = false; scroll.vertical = true; scroll.scrollSensitivity = 90f; scroll.viewport = view.GetComponent<RectTransform>();
-        float h = Mathf.Max(470, vehicles.Count * 90f);
-        var list = Rect("Vehicles", view.transform, 0, 0, 740, h);
-        var rt = list.GetComponent<RectTransform>(); rt.anchorMin = rt.anchorMax = new Vector2(0, 1); rt.pivot = new Vector2(0, 1); rt.anchoredPosition = Vector2.zero; scroll.content = rt;
-        for (int i = 0; i < vehicles.Count; i++)
-        {
-            var vehicle = vehicles[i]; var line = lines.Find(l => l.id == vehicle.lineId);
-            var row = Rect("Vehicle" + i, list.transform, 0, h - (i + 1) * 90, 740, 82); Rounded(row, Paper2);
-            string status = vehicle.skinId > 0 && vehicle.skinId < MainTrainSkinCount ? MainTrainSkins[vehicle.skinId].name : "原皮";
-            Txt(row.transform, "#" + (i + 1) + (line != null ? " 正在运行：" + line.name : " 车库待命") + "\n当前：" + status, 19, Ink, 16, 4, 490, 74, TextAnchor.MiddleLeft);
-            bool equipped = vehicle.skinId == skinId;
-            TInk(Btn(row.transform, "Apply", equipped ? "恢复原皮" : "穿上此皮", 20, 515, 10, 205, 62, equipped ? Indigo : Matcha, () => { ApplyTrainSkinToSingleVehicle(vehicle, equipped ? 0 : skinId); OpenTrainSkinPreviewPopup(skinId); }), Color.white);
-        }
+        var spec = MainTrainSkins[skinId];
+        var tex = Resources.Load<Texture2D>(spec.previewArt);
+        if (tex == null) tex = Resources.Load<Texture2D>("Research/Train/" + LocoArt[spec.locoNode]);
+        OpenPureImagePreview(spec.name, tex);
     }
 
     void BuildShopLiveries(Transform page)
@@ -1843,8 +1817,7 @@ public partial class DemoBootstrap
 
     void BuildShopThemes(Transform page)
     {
-        Txt(page, "全局界面风格馆 · 更换纸面、夜图与 UI 色系；购买前可免费实机预览", 22, InkSoft, 178, PgH - 235, 860, 36, TextAnchor.MiddleLeft);
-        var content = FleetScroll(page, 172, PgH - 255, Themes.Length * 256f + 24, 150f, scrollKey: "shop:themes");
+        var content = FleetScroll(page, 172, PgH - 210, Themes.Length * 256f + 24, 150f, scrollKey: "shop:themes");
         float height = content.sizeDelta.y;
         float cardWidth = content.sizeDelta.x;
         for (int i = 0; i < Themes.Length; i++)
@@ -2144,16 +2117,18 @@ public partial class DemoBootstrap
         viewerCanvas.overrideSorting = true; viewerCanvas.sortingOrder = 100;
         var bg = Rect("Backdrop", sceneryViewer.transform, 0, 0, 0, 0);
         var bgRt = bg.GetComponent<RectTransform>(); bgRt.anchorMin = Vector2.zero; bgRt.anchorMax = Vector2.one; bgRt.offsetMin = bgRt.offsetMax = Vector2.zero;
-        Img(bg, new Color(0.94f,0.92f,0.87f));
+        var bgImage = Img(bg, new Color(0.94f,0.92f,0.87f));
+        var dismiss = bg.AddComponent<Button>(); dismiss.targetGraphic = bgImage;
+        dismiss.transition = Selectable.Transition.None;
+        dismiss.onClick.AddListener(() => { Destroy(sceneryViewer); sceneryViewer = null; OpenVehicleDetails(index); });
         var stage = Rect("Landscape", sceneryViewer.transform, 0, 0, 1920, 1080);
         var stageRt = stage.GetComponent<RectTransform>(); stageRt.anchorMin = stageRt.anchorMax = new Vector2(0.5f,0.5f); stageRt.pivot = new Vector2(0.5f,0.5f);
         stageRt.anchoredPosition = Vector2.zero; sceneryViewer.GetComponent<SceneryViewerLayout>().stage = stageRt;
-        var art = Rect("VehicleImage", stage.transform, 95, 160, 1730, 760).AddComponent<RawImage>(); art.texture = texture; art.raycastTarget = false;
-        float ratio = (float)texture.width / texture.height, width = Mathf.Min(1730, 760 * ratio), height = width / ratio;
-        art.rectTransform.sizeDelta = new Vector2(width,height); art.rectTransform.anchoredPosition = new Vector2(95 + (1730-width)/2f,160 + (760-height)/2f);
-        var back = Btn(stage.transform, "Back", "←", 40, 24, 958, 94, 94, Color.white, () => { Destroy(sceneryViewer); sceneryViewer = null; OpenVehicleDetails(index); }); TInk(back, Ink);
-        var home = Btn(stage.transform, "Home", "主页", 24, 134, 958, 104, 94, Color.white, GoHome); TInk(home, Ink);
-        Txt(stage.transform, LocoNames[index] + " · " + LocoYears[index], 44, Ink, 254, 975, 800, 60, TextAnchor.MiddleLeft);
+        var art = Rect("VehicleImage", stage.transform, 0, 0, 1920, 1080).AddComponent<RawImage>(); art.texture = texture; art.raycastTarget = false;
+        float ratio = (float)texture.width / texture.height, width = Mathf.Min(1920, 1080 * ratio), height = width / ratio;
+        art.rectTransform.sizeDelta = new Vector2(width, height); art.rectTransform.anchoredPosition = new Vector2((1920 - width) / 2f, (1080 - height) / 2f);
+        var heading = Txt(stage.transform, LocoNames[index] + " · " + LocoYears[index], 44, Ink, 40, 975, 1000, 60, TextAnchor.MiddleLeft);
+        heading.raycastTarget = false;
     }
     void OpenCompanyScreen()
     {
@@ -3031,10 +3006,8 @@ public partial class DemoBootstrap
         if (sceneryCollectionTab == 2) { BuildSceneryPlaquesTab(pg.transform); return; }
         if (sceneryCollectionTab == 3) { BuildScenerySolarTab(pg.transform); return; }
 
-        Txt(pg.transform, "沿途记忆", 34, Ink, 34, PgH - 344, 360, 44, TextAnchor.MiddleLeft);
         int regionTotal = 0, regionFound = 0;
         foreach (var item in sceneries) if (sceneryRegionFilter == 0 || item.region == SceneryRegions[sceneryRegionFilter]) { regionTotal++; if (item.found) regionFound++; }
-        Txt(pg.transform, "已收录 " + regionFound + " / " + regionTotal, 22, InkSoft, 36, PgH - 376, 420, 30, TextAnchor.MiddleLeft);
         if (regionTotal > 0 && regionFound == regionTotal)
         {
             var clearTex = EraPosterGenerator.GetCustomPoster("scenery_clear_" + sceneryRegionFilter, "全览", sceneryRegionFilter % 4, 5, 512, 184, 0);
@@ -3177,10 +3150,8 @@ public partial class DemoBootstrap
         // 区块一：1:1 购买 RP 科研点
         var rpCard = Rect("RpExchangeCard", popup.transform, pad, 316f, cw, 198f);
         Rounded(rpCard, CardBg);
-        var rpTitle = Txt(rpCard.transform, "科研点补给（1 星钻 = 1 RP）", 28, Indigo, 24f, 134f, cw - 48f, 44f, TextAnchor.MiddleLeft);
+        var rpTitle = Txt(rpCard.transform, "科研点补给（1 星钻 = 1 RP）", 28, Indigo, 24f, 110f, cw - 48f, 44f, TextAnchor.MiddleLeft);
         FitSingleLine(rpTitle, 28);
-        var rpSub = Txt(rpCard.transform, "直接注入星舰与公司治理研发，加速解锁跨时代科技。", 22, InkSoft, 24f, 98f, cw - 48f, 34f, TextAnchor.MiddleLeft);
-        FitSingleLine(rpSub, 22);
 
         int[] rpAmounts = { 10, 50, 100, Mathf.Max(1, gems) };
         string[] rpLabels = { "+10 RP\n10 钻", "+50 RP\n50 钻", "+100 RP\n100 钻", gems > 0 ? $"全部兑换\n{gems} 钻" : "全部兑换\n0 钻" };
@@ -3197,10 +3168,8 @@ public partial class DemoBootstrap
         // 区块二：1:10000 兑换资金
         var coinCard = Rect("CoinExchangeCard", popup.transform, pad, 98f, cw, 198f);
         Rounded(coinCard, CardBg);
-        var coinTitle = Txt(coinCard.transform, "星航资金兑换（1 星钻 = ¥10,000）", 28, new Color(0.56f, 0.36f, 0.08f), 24f, 134f, cw - 48f, 44f, TextAnchor.MiddleLeft);
+        var coinTitle = Txt(coinCard.transform, "星航资金兑换（1 星钻 = ¥10,000）", 28, new Color(0.56f, 0.36f, 0.08f), 24f, 110f, cw - 48f, 44f, TextAnchor.MiddleLeft);
         FitSingleLine(coinTitle, 28);
-        var coinSub = Txt(coinCard.transform, "补充航线铺设、购置星舰与扩建枢纽星港的现金流。", 22, InkSoft, 24f, 98f, cw - 48f, 34f, TextAnchor.MiddleLeft);
-        FitSingleLine(coinSub, 22);
 
         int[] coinCosts = { 1, 5, 10, 50 };
         string[] coinLabels = { "+¥1万\n1 钻", "+¥5万\n5 钻", "+¥10万\n10 钻", "+¥50万\n50 钻" };

@@ -489,7 +489,7 @@ public partial class DemoBootstrap
         SyncCulturalCollection(false);
         var specs = BuildMemorialTicketSpecs();
         float viewW = W - 56f;
-        float heroH = 124f;
+        float heroH = 88f;
         float divH = 36f;
         float itemH = 224f, gap = 20f;
         float totalH = 8f + heroH + 10f + divH + 14f + specs.Length * (itemH + gap) + 20f;
@@ -504,9 +504,7 @@ public partial class DemoBootstrap
         StampCloudCornerSet(intro.transform, viewW, heroH, 44f, 8f, 0.55f);
         StampBotanicalSprig(intro.transform, "orn_kapok_bamboo", viewW - 122f, 4f, 114f, 114f, 0.34f, true, false);
         Txt(intro.transform, "星际航行纪念星票集邮册 · 已集 [" + earnedMemorialTickets.Count + " / " + specs.Length + "] 枚",
-            27, Ink, 28f, 64f, viewW - 160f, 40f, TextAnchor.MiddleLeft);
-        Txt(intro.transform, "全网每段星轨风尘皆印于卡纸票根；集满 3 枚赠「风雅客潮」全网客流 +2%，集齐 6 枚升级 +4%。",
-            21, Indigo, 28f, 16f, viewW - 160f, 42f, TextAnchor.MiddleLeft);
+            27, Ink, 28f, 24f, viewW - 160f, 40f, TextAnchor.MiddleLeft);
 
         float divBottom = heroBottom - 10f - divH;
         StampFloralDivider(content, viewW * 0.5f, divBottom, 660f, divH, 0.78f);
@@ -544,13 +542,12 @@ public partial class DemoBootstrap
             Img(innerDisc, earned ? new Color(0.992f, 0.972f, 0.918f) : new Color(0.92f, 0.90f, 0.85f), spriteCircle).raycastTarget = false;
             Txt(innerDisc.transform, earned ? spec.stampText : "虚位\n待戳", 26, earned ? Vermilion : InkSoft, 4f, 4f, 104f, 104f, TextAnchor.MiddleCenter).raycastTarget = false;
 
-            Txt(card.transform, spec.serial + "  ·  " + spec.regionTag, 22, earned ? Indigo : InkSoft, 228f, 162f, 520f, 32f, TextAnchor.MiddleLeft);
             var stPill = Rect("TicketState", card.transform, viewW - 166f, 158f, 130f, 38f);
             Rounded(stPill, earned ? new Color(0.24f, 0.52f, 0.36f, 0.16f) : new Color(0.84f, 0.82f, 0.76f, 0.72f));
             Txt(stPill.transform, earned ? "已归档 ✓" : "待盖戳", 20, earned ? Matcha : InkSoft, 0f, 0f, 130f, 38f, TextAnchor.MiddleCenter);
 
             Txt(card.transform, spec.title, 31, earned ? Ink : InkSoft, 228f, 114f, viewW - 260f, 42f, TextAnchor.MiddleLeft);
-            Txt(card.transform, "航行区间：" + spec.routeText, 23, earned ? new Color(0.55f, 0.36f, 0.18f) : InkSoft, 228f, 74f, viewW - 260f, 34f, TextAnchor.MiddleLeft);
+            Txt(card.transform, spec.routeText, 23, earned ? new Color(0.55f, 0.36f, 0.18f) : InkSoft, 228f, 74f, viewW - 260f, 34f, TextAnchor.MiddleLeft);
             var mottoTxt = Txt(card.transform, earned ? "「" + spec.motto + "」" : "尚待达成对应历程后自动盖戳归档",
                 21, InkSoft, 228f, 20f, viewW - 260f, 46f, TextAnchor.MiddleLeft);
             mottoTxt.resizeTextForBestFit = true; mottoTxt.resizeTextMinSize = 17; mottoTxt.resizeTextMaxSize = ScaledFontSize(21); mottoTxt.horizontalOverflow = HorizontalWrapMode.Overflow; mottoTxt.verticalOverflow = VerticalWrapMode.Truncate;
@@ -563,7 +560,7 @@ public partial class DemoBootstrap
     {
         var plaques = BuildCharterPlaques();
         float viewW = W - 56f;
-        float heroH = 132f;
+        float heroH = 92f;
         float divH = 36f;
         float itemH = 276f, gap = 22f;
         float totalH = 8f + heroH + 10f + divH + 14f + plaques.Length * (itemH + gap) + 20f;
@@ -578,9 +575,7 @@ public partial class DemoBootstrap
         StampCloudCornerSet(intro.transform, viewW, heroH, 48f, 8f, 0.62f);
         StampBotanicalSprig(intro.transform, "orn_bauhinia_lotus", viewW - 134f, 4f, 124f, 124f, 0.32f, true, false);
         Txt(intro.transform, "考核阶段大考 · 累计已授 [" + earnedPlaques.Count + " / " + plaques.Length + "] 枚荣誉星牌",
-            28, Ink, 30f, 70f, viewW - 170f, 42f, TextAnchor.MiddleLeft);
-        Txt(intro.transform, "达成阶段统筹指标后即可领取奖金、研学点与永久经营加成；荣誉头衔将登录于「星际群雄榜」。",
-            21, InkSoft, 30f, 18f, viewW - 170f, 44f, TextAnchor.MiddleLeft);
+            28, Ink, 30f, 26f, viewW - 170f, 42f, TextAnchor.MiddleLeft);
 
         float divBottom = heroBottom - 10f - divH;
         StampFloralDivider(content, viewW * 0.5f, divBottom, 660f, divH, 0.78f);
@@ -614,7 +609,7 @@ public partial class DemoBootstrap
                 19, earned ? new Color(0.96f, 0.80f, 0.45f) : InkSoft, 8f, 10f, 192f, 28f, TextAnchor.MiddleCenter).raycastTarget = false;
 
             Txt(card.transform, spec.title, 29, Ink, 276f, 208f, viewW - 316f, 40f, TextAnchor.MiddleLeft);
-            var condTxt = Txt(card.transform, "指标：" + spec.conditionText, 22, InkSoft, 276f, 148f, viewW - 316f, 54f, TextAnchor.MiddleLeft);
+            var condTxt = Txt(card.transform, spec.conditionText, 22, InkSoft, 276f, 148f, viewW - 316f, 54f, TextAnchor.MiddleLeft);
             condTxt.resizeTextForBestFit = true; condTxt.resizeTextMinSize = 18; condTxt.resizeTextMaxSize = ScaledFontSize(22);
             var rwTxt = Txt(card.transform, spec.rewardHint, 22, earned ? Matcha : Indigo, 276f, 104f, viewW - 316f, 38f, TextAnchor.MiddleLeft);
             FitSingleLine(rwTxt, 18);
@@ -645,7 +640,7 @@ public partial class DemoBootstrap
         int curIdx = CurrentSolarTermIndex();
         var cur = CurrentSolarTerm();
         float viewW = W - 56f;
-        float heroH = 228f;
+        float heroH = 196f;
         float divH = 36f;
         int rows = Mathf.CeilToInt(SolarTerms.Length / 2f);
         float cardW = 500f, gapX = 24f, cardH = 226f, gapY = 18f;
@@ -664,16 +659,14 @@ public partial class DemoBootstrap
         string heroFloral = curIdx < 6 ? "orn_kapok_bamboo" : "orn_bauhinia_lotus";
         StampBotanicalSprig(hero.transform, heroFloral, viewW - 200f, 16f, 184f, 184f, 0.52f, true, false);
 
-        var curPill = Rect("HeroTermPill", hero.transform, 28f, 146f, 136f, 54f);
+        var curPill = Rect("HeroTermPill", hero.transform, 28f, 114f, 136f, 54f);
         Rounded(curPill, Matcha);
         Txt(curPill.transform, cur.name, 31, Color.white, 0f, 0f, 136f, 54f, TextAnchor.MiddleCenter);
         var sTitle = Txt(hero.transform, cur.season + " · 距下节气【" + NextSolarTerm().name + "】尚余 " + SolarTermDaysRemaining() + " 日",
-            27, Ink, 182f, 148f, viewW - 390f, 50f, TextAnchor.MiddleLeft);
+            27, Ink, 182f, 116f, viewW - 390f, 50f, TextAnchor.MiddleLeft);
         FitSingleLine(sTitle, 20);
-        Txt(hero.transform, "「" + cur.poem + "」", 24, Ink, 28f, 96f, viewW - 230f, 40f, TextAnchor.MiddleLeft);
-        Txt(hero.transform, "当期节候物候：" + cur.effectHint, 23, Vermilion, 28f, 54f, viewW - 230f, 36f, TextAnchor.MiddleLeft);
-        var noteTxt = Txt(hero.transform, "星域风物历每 3 游戏日一候 · 实时牵引全网客流、名胜、商铺与维保。", 19, InkSoft, 28f, 16f, viewW - 220f, 30f, TextAnchor.MiddleLeft);
-        FitSingleLine(noteTxt, 16);
+        Txt(hero.transform, "「" + cur.poem + "」", 24, Ink, 28f, 64f, viewW - 230f, 40f, TextAnchor.MiddleLeft);
+        Txt(hero.transform, cur.effectHint, 23, Vermilion, 28f, 22f, viewW - 230f, 36f, TextAnchor.MiddleLeft);
 
         float divBottom = heroBottom - 10f - divH;
         StampFloralDivider(content, viewW * 0.5f, divBottom, 660f, divH, 0.78f);
@@ -702,8 +695,8 @@ public partial class DemoBootstrap
             Txt(badge.transform, term.name, 28, isCur ? Color.white : Ink, 0f, 26f, 126f, 38f, TextAnchor.MiddleCenter);
             Txt(badge.transform, term.season, 16, isCur ? new Color(0.92f, 0.98f, 0.92f) : InkSoft, 0f, 4f, 126f, 22f, TextAnchor.MiddleCenter);
 
-            Txt(card.transform, isCur ? "当前生效 · 余 " + SolarTermDaysRemaining() + " 日" : "第 " + (i * 3 + 1) + "~" + (i * 3 + 3) + " 日候",
-                20, isCur ? Matcha : InkSoft, 154f, cardH - 68f, cardW - 174f, 36f, TextAnchor.MiddleRight);
+            if (isCur)
+                Txt(card.transform, "当前生效 · 余 " + SolarTermDaysRemaining() + " 日", 20, Matcha, 154f, cardH - 68f, cardW - 174f, 36f, TextAnchor.MiddleRight);
 
             var poemTxt = Txt(card.transform, term.poem, 22, Ink, 20f, 94f, cardW - 44f, 40f, TextAnchor.MiddleLeft);
             poemTxt.resizeTextForBestFit = true; poemTxt.resizeTextMinSize = 18; poemTxt.resizeTextMaxSize = ScaledFontSize(22); poemTxt.horizontalOverflow = HorizontalWrapMode.Overflow; poemTxt.verticalOverflow = VerticalWrapMode.Truncate;
@@ -711,7 +704,6 @@ public partial class DemoBootstrap
             var fxTxt = Txt(card.transform, "物候：" + term.effectHint, 21, isCur ? Vermilion : Indigo, 20f, 44f, cardW - 122f, 44f, TextAnchor.MiddleLeft);
             fxTxt.resizeTextForBestFit = true; fxTxt.resizeTextMinSize = 17; fxTxt.resizeTextMaxSize = ScaledFontSize(21); fxTxt.horizontalOverflow = HorizontalWrapMode.Overflow; fxTxt.verticalOverflow = VerticalWrapMode.Truncate;
 
-            Txt(card.transform, "十二节候第 " + (i + 1) + " 候", 18, InkSoft, 20f, 14f, 240f, 24f, TextAnchor.MiddleLeft);
         }
     }
 }

@@ -26,7 +26,7 @@ public sealed class TapTapSdkBridgeHost : MonoBehaviour
 
 public partial class DemoBootstrap
 {
-    const float AdWatchdogTimeoutSeconds = 18f;
+    const float AdWatchdogTimeoutSeconds = 90f;
 
 #if UNITY_WEBGL && !UNITY_EDITOR
     [DllImport("__Internal")] static extern int TapTapJS_IsAvailable();

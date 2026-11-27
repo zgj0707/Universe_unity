@@ -184,12 +184,6 @@ public partial class DemoBootstrap
             bgRaw.color = neon ? new Color(0.38f, 0.46f, 0.86f, 0.90f) : Color.white;
         }
 
-        // 顶部抵达邮戳标签
-        var arrivalPill = Rect("ArrivalBadge", artClip.transform, (artW - 220f) * 0.5f, artH - 58f, 220f, 36f);
-        Rounded(arrivalPill, neon ? Gold : spec.accentColor);
-        arrivalPill.GetComponent<Image>().raycastTarget = false;
-        Txt(arrivalPill.transform, "抵 达 版 图", 19, neon ? new Color(0.08f, 0.08f, 0.14f) : Color.white, 0f, 0f, 220f, 36f, TextAnchor.MiddleCenter);
-
         // 居中书法集字（无椭圆遮罩与副标题，放大字形并强化柔光外轮廓）
         const float titleW = 640f, titleH = 241f;
         float titleX = (artW - titleW) * 0.5f, titleY = (artH - titleH) * 0.5f + 12f;

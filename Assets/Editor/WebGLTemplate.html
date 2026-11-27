@@ -20,6 +20,109 @@
 <div id="loading"><h1>星轨纪行：出发去月球！</h1><div id="bar"><div id="fill"></div></div><div id="tip">正在校准星际航道…</div></div>
 <script src="Build/WebGL.loader.js"></script>
 <script>
+  // TapTap 小游戏/H5 广告管理器（横屏 / 竖屏 / 电脑端自适应，广告位 ID: 1054324）
+  (function () {
+    var SPACE_ID = "1054324";
+    var rewardedAd = null;
+    var activeCallbacks = null;
+    var rewardGranted = false;
+
+    function detectViewportEnv() {
+      var w = window.innerWidth || 0;
+      var h = window.innerHeight || 0;
+      var orientation = w > h ? "landscape" : "portrait";
+      var platform = "unknown";
+      try {
+        if (window.tap && typeof window.tap.getSystemInfoSync === "function") {
+          var info = window.tap.getSystemInfoSync();
+          if (info && info.platform) platform = String(info.platform);
+        }
+      } catch (e) {}
+      return { width: w, height: h, orientation: orientation, platform: platform };
+    }
+
+    function ensureRewardedAd() {
+      if (rewardedAd) return rewardedAd;
+      if (typeof window.tap === "undefined" || typeof window.tap.createRewardedVideoAd !== "function") {
+        return null;
+      }
+      rewardedAd = window.tap.createRewardedVideoAd({ adUnitId: SPACE_ID });
+      rewardedAd.onLoad(function () {
+        console.log("[TapAdManager] 激励视频加载成功 (" + SPACE_ID + ")");
+      });
+      rewardedAd.onError(function (err) {
+        console.error("[TapAdManager] 激励视频错误:", err);
+        var cb = activeCallbacks;
+        activeCallbacks = null;
+        if (cb && typeof cb.onError === "function") {
+          cb.onError({
+            code: (err && err.errCode) ? String(err.errCode) : "AD_ERROR",
+            message: (err && err.errMsg) ? String(err.errMsg) : "广告加载失败"
+          });
+        }
+      });
+      rewardedAd.onClose(function (res) {
+        var cb = activeCallbacks;
+        activeCallbacks = null;
+        if (res && res.isEnded) {
+          rewardGranted = true;
+          if (cb && typeof cb.onSuccess === "function") {
+            cb.onSuccess({ success: true, message: "ok" });
+          }
+        } else {
+          if (cb && typeof cb.onSuccess === "function") {
+            cb.onSuccess({ success: false, message: "embed manual close" });
+          }
+        }
+      });
+      rewardedAd.load().catch(function (err) {
+        console.warn("[TapAdManager] 预加载激励视频失败:", err);
+      });
+      return rewardedAd;
+    }
+
+    window.TapAdManager = {
+      spaceId: SPACE_ID,
+      init: function () {
+        return ensureRewardedAd();
+      },
+      getEnv: detectViewportEnv,
+      showRewardedVideo: function (opts) {
+        var ad = ensureRewardedAd();
+        if (!ad) {
+          if (opts && typeof opts.onError === "function") {
+            opts.onError({ code: "SDK_UNAVAILABLE", message: "TapTap SDK 未加载" });
+          }
+          return;
+        }
+        activeCallbacks = opts || null;
+        rewardGranted = false;
+        var env = detectViewportEnv();
+        console.log("[TapAdManager] 展示激励视频:", env);
+        ad.show().catch(function (showErr) {
+          console.warn("[TapAdManager] 激励视频未就绪，重新加载后重试一次:", showErr);
+          return ad.load()
+            .then(function () { return ad.show(); })
+            .catch(function (retryErr) {
+              console.error("[TapAdManager] 激励视频重试失败:", retryErr);
+              var cb = activeCallbacks;
+              activeCallbacks = null;
+              if (cb && typeof cb.onError === "function") {
+                cb.onError({
+                  code: (retryErr && retryErr.errCode) ? String(retryErr.errCode) : "RETRY_FAILED",
+                  message: (retryErr && retryErr.errMsg) ? String(retryErr.errMsg) : "赞助短片暂无填充"
+                });
+              }
+            });
+        });
+      }
+    };
+
+    if (typeof window.tap !== "undefined" && typeof window.tap.createRewardedVideoAd === "function") {
+      try { ensureRewardedAd(); } catch (e) {}
+    }
+  })();
+
   var canvas = document.querySelector("#unity-canvas");
   // 与竖屏设计分辨率相近的像素预算，避免高 DPI 手机以数倍像素绘制整屏。
   var pixelBudget = 1080 * 1920;

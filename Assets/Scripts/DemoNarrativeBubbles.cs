@@ -189,12 +189,9 @@ public partial class DemoBootstrap
             : spec.priority == NarrativeBubblePriority.P1_WeeklyCycle ? Indigo : Matcha;
         StampFineRuleFrame(go.transform, bubbleW, bubbleH, 6f, new Color(accent.r, accent.g, accent.b, 0.22f));
 
-        string prefix = spec.priority == NarrativeBubblePriority.P0_Milestone ? "〔电台快讯〕 "
-            : spec.priority == NarrativeBubblePriority.P1_WeeklyCycle ? "〔星风周报〕 " : "〔领航提示〕 ";
-        var tagTxt = Txt(go.transform, prefix + spec.speakerTag, 20, accent, 24f, bubbleH - 42f, bubbleW - 148f, 28f, TextAnchor.MiddleLeft);
+        var tagTxt = Txt(go.transform, spec.speakerTag, 20, accent, 24f, bubbleH - 42f, bubbleW - 48f, 28f, TextAnchor.MiddleLeft);
         tagTxt.raycastTarget = false;
         FitSingleLine(tagTxt, 20);
-        Txt(go.transform, "点击跳过", 18, InkSoft, bubbleW - 124f, bubbleH - 42f, 100f, 28f, TextAnchor.MiddleRight).raycastTarget = false;
 
         var bodyTxt = Txt(go.transform, spec.text, 24, Ink, 24f, hasBadge ? 48f : 16f, textW, textH, TextAnchor.UpperLeft);
         bodyTxt.raycastTarget = false;
