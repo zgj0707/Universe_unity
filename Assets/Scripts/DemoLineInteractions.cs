@@ -495,16 +495,14 @@ public partial class DemoBootstrap
     bool lineInsertActive;
     Line insertingLine;
     int insertingSegment = -1, insertTarget = -1;
-    int insertEditWpIndex = -1;
-    readonly List<Vector2> insertTempWaypoints = new List<Vector2>(16);
-    bool insertHasGridPoint, insertGridBlocked;
-    Vector2 insertGridPos;
     LinePolylineGraphic insertPreviewPoly;
-    Image insertPreviewA, insertPreviewB;
     GameObject insertBadge;
     Text insertBadgeText;
-    readonly List<GameObject> insertWpHandles = new List<GameObject>();
     readonly List<Vector2> scratchInsertWps = new List<Vector2>(32);
+    readonly List<Vector2> insertLeftWps = new List<Vector2>(16);
+    readonly List<Vector2> insertRightWps = new List<Vector2>(16);
+    int cachedInsertTarget = -1;
+    bool insertRouteValid;
     LinePolylineGraphic insertDimmedPoly;
 
     public bool BeginLineInsert(int lineId, int segment, Vector2 screen)
@@ -515,45 +513,7 @@ public partial class DemoBootstrap
             SegmentRegion(line.st[segment], line.st[segment + 1]) != currentRegion) return false;
         CloseLineBubble();
         insertingLine = line; insertingSegment = segment; insertTarget = -1;
-        insertHasGridPoint = false; insertGridBlocked = false;
-        insertTempWaypoints.Clear();
-        if (line.segWaypoints != null && segment < line.segWaypoints.Count && line.segWaypoints[segment] != null && line.segWaypoints[segment].pts != null)
-            insertTempWaypoints.AddRange(line.segWaypoints[segment].pts);
-
-        insertEditWpIndex = -1;
-        if (RectTransformUtility.ScreenPointToLocalPointInRectangle(mapRect, screen, null, out var startLocal))
-        {
-            float wpPickR = 36f / Mathf.Max(0.45f, mapRect.localScale.x);
-            float bestWpDist = wpPickR;
-            for (int k = 0; k < insertTempWaypoints.Count; k++)
-            {
-                float d = Vector2.Distance(startLocal, insertTempWaypoints[k]);
-                if (d < bestWpDist) { bestWpDist = d; insertEditWpIndex = k; }
-            }
-            if (insertEditWpIndex < 0)
-            {
-                // 未按在现有拐点上，判断按在哪两个控制点之间并插入新拐点占位
-                scratchControlPts.Clear();
-                scratchControlPts.Add(Pos(line.st[segment]));
-                for (int k = 0; k < insertTempWaypoints.Count; k++) scratchControlPts.Add(insertTempWaypoints[k]);
-                scratchControlPts.Add(Pos(line.st[segment + 1]));
-                int bestSub = 0;
-                float bestSegDist = float.MaxValue;
-                for (int k = 0; k < scratchControlPts.Count - 1; k++)
-                {
-                    float sd = DistToSeg(startLocal, scratchControlPts[k], scratchControlPts[k + 1]);
-                    if (sd < bestSegDist) { bestSegDist = sd; bestSub = k; }
-                }
-                insertEditWpIndex = Mathf.Clamp(bestSub, 0, insertTempWaypoints.Count);
-                insertTempWaypoints.Insert(insertEditWpIndex, TerrainField.SnapToGrid(startLocal, currentRegion));
-            }
-        }
-        else
-        {
-            insertEditWpIndex = insertTempWaypoints.Count;
-            insertTempWaypoints.Add(Pos(line.st[segment]));
-        }
-
+        cachedInsertTarget = -1;
         lineInsertActive = true;
         // 预览时淡化原线所在区域整段（同一 span 的控制点段共用一个 poly），避免新旧线重叠难辨
         insertDimmedPoly = null;
@@ -571,16 +531,14 @@ public partial class DemoBootstrap
                 }
             }
         }
-        SetDotGridHighlight(true);
         var polyGo = Rect("InsertPreviewPoly", previewLayer, 0, 0, W, H);
         insertPreviewPoly = polyGo.AddComponent<LinePolylineGraphic>();
         insertPreviewPoly.raycastTarget = false;
         insertBadge = Rect("InsertCostBadge", root, 0, 0, 380, 62);
         Rounded(insertBadge, new Color(1f, 0.98f, 0.92f, 0.96f));
         insertBadge.GetComponent<Image>().raycastTarget = false;
-        insertBadgeText = Txt(insertBadge.transform, "拖至新星港或点阵拐点", 22, Ink, 12, 5, 356, 52, TextAnchor.MiddleCenter);
+        insertBadgeText = Txt(insertBadge.transform, "拖至新星港", 22, Ink, 12, 5, 356, 52, TextAnchor.MiddleCenter);
         Haptic.Vibrate(22); PlayTone(false); UpdateLineInsert(screen);
-        RefreshInsertWaypointHandles();
         return true;
     }
     bool CanInsertStation(Line line, int segment, int target)
@@ -600,46 +558,6 @@ public partial class DemoBootstrap
         int after = EvaluateStationPairCost(a, target, f, out _) + EvaluateStationPairCost(target, b, f, out _);
         return Mathf.Max(0, after - before) + StationOpeningCost(target);
     }
-    void EvaluateSegmentWaypointPreview(Line line, int segment, IReadOnlyList<Vector2> candidateWps, out int beforePct, out int afterPct, out bool blocked)
-    {
-        int a = line.st[segment], b = line.st[segment + 1];
-        float f = TrackBuildCostFactor();
-        EvaluateLineSegmentCost(line, segment, f, out var beforeTr);
-        beforePct = Mathf.RoundToInt(beforeTr.penaltyRatio * 100f);
-        scratchControlPts.Clear();
-        scratchControlPts.Add(Pos(a));
-        if (candidateWps != null)
-            for (int i = 0; i < candidateWps.Count; i++) scratchControlPts.Add(candidateWps[i]);
-        scratchControlPts.Add(Pos(b));
-        TerrainField.SampleCatmullRomPolyline(scratchControlPts, false, scratchPolyline);
-        TerrainField.EvaluatePolyline(currentRegion, scratchPolyline, out var afterTr);
-        afterPct = Mathf.RoundToInt(afterTr.penaltyRatio * 100f);
-        blocked = afterTr.blocked;
-    }
-
-    static void CleanupRedundantWaypoints(List<Vector2> wps, Vector2 startPos, Vector2 endPos)
-    {
-        // 第一轮：移除与前后点距离过近的拐点
-        for (int i = wps.Count - 1; i >= 0; i--)
-        {
-            Vector2 prev = i > 0 ? wps[i - 1] : startPos;
-            Vector2 next = i + 1 < wps.Count ? wps[i + 1] : endPos;
-            if (Vector2.Distance(wps[i], prev) < 18f || Vector2.Distance(wps[i], next) < 18f)
-                wps.RemoveAt(i);
-        }
-        // 第二轮：移除几乎拖直的拐点（进/出方向 dot > 0.990，夹角 > 172°）
-        for (int i = wps.Count - 1; i >= 0; i--)
-        {
-            Vector2 prev = i > 0 ? wps[i - 1] : startPos;
-            Vector2 next = i + 1 < wps.Count ? wps[i + 1] : endPos;
-            Vector2 inDir = (wps[i] - prev).normalized;
-            Vector2 outDir = (next - wps[i]).normalized;
-            if (inDir.sqrMagnitude < 0.0001f || outDir.sqrMagnitude < 0.0001f) continue;
-            if (Vector2.Dot(inDir, outDir) > 0.990f)
-                wps.RemoveAt(i);
-        }
-    }
-
     public void UpdateLineInsert(Vector2 screen)
     {
         if (!lineInsertActive || insertingLine == null || !lines.Contains(insertingLine) ||
@@ -663,10 +581,15 @@ public partial class DemoBootstrap
         Color previewCol = insertingLine.color;
         if (insertTarget >= 0)
         {
-            insertHasGridPoint = false;
-            insertGridBlocked = false;
             Vector2 point = Pos(insertTarget);
-            SplitWaypointsForInsertedStation(insertingLine, insertingSegment, pa, pb, point, out var leftWps, out var rightWps);
+            if (cachedInsertTarget != insertTarget)
+            {
+                cachedInsertTarget = insertTarget;
+                insertRouteValid = TerrainField.FindShortestGridWaypoints(currentRegion, pa, point, insertLeftWps)
+                    & TerrainField.FindShortestGridWaypoints(currentRegion, point, pb, insertRightWps);
+            }
+            var leftWps = insertLeftWps;
+            var rightWps = insertRightWps;
 
             // 该段替换为 pa -> leftWps -> point -> rightWps -> pb，其余段保留原拐点
             scratchInsertWps.Clear();
@@ -683,75 +606,38 @@ public partial class DemoBootstrap
             while (spanEnd + 1 < segCount && SegmentRegion(insertingLine.st[spanEnd + 1], insertingLine.st[spanEnd + 2]) == currentRegion) spanEnd++;
             FillRegionSpanPolyline(insertingLine, spanStart, spanEnd, currentRegion, scratchPolyline, scratchSubSegIndices, insertingSegment, scratchInsertWps);
 
-            if (insertBadgeText) insertBadgeText.text = IsInEventSandbox() ? "插入途经站" : "插入造价 ¥" + InsertStationCost(insertingLine, insertingSegment, insertTarget);
-        }
-        else if (IsInEventSandbox())
-        {
-            insertHasGridPoint = false; insertGridBlocked = false;
-            scratchPolyline.Clear();
-            if (insertBadgeText) insertBadgeText.text = "拖至可用站点";
+            if (insertBadgeText) insertBadgeText.text = IsInEventSandbox() ? "插入途经站" : "松手查看插入造价";
         }
         else
         {
-            insertHasGridPoint = true;
-            insertGridPos = TerrainField.SnapToGrid(local, currentRegion);
-            if (insertEditWpIndex >= 0 && insertEditWpIndex < insertTempWaypoints.Count)
-                insertTempWaypoints[insertEditWpIndex] = insertGridPos;
-
-            if ((Input.GetMouseButtonDown(1) || Input.GetKeyDown(KeyCode.Space)) && insertTempWaypoints.Count < 16)
+            cachedInsertTarget = -1;
+            scratchPolyline.Clear();
+            if (insertBadgeText) insertBadgeText.text = "拖至可用站点";
+        }
+        if (insertTarget >= 0 && !IsInEventSandbox())
+        {
+            TerrainField.EvaluatePolyline(currentRegion, scratchPolyline, out var routeTerrain);
+            if (!insertRouteValid || routeTerrain.blocked)
             {
-                int nextIdx = Mathf.Clamp(insertEditWpIndex + 1, 0, insertTempWaypoints.Count);
-                insertTempWaypoints.Insert(nextIdx, insertGridPos);
-                insertEditWpIndex = nextIdx;
-                TriggerHaptic(8); PlaySnapSfx();
-            }
-            else if (Input.GetKeyDown(KeyCode.Backspace) && insertTempWaypoints.Count > 0)
-            {
-                int rmIdx = Mathf.Clamp(insertEditWpIndex, 0, insertTempWaypoints.Count - 1);
-                insertTempWaypoints.RemoveAt(rmIdx);
-                insertEditWpIndex = Mathf.Clamp(rmIdx - 1, -1, insertTempWaypoints.Count - 1);
-                TriggerHaptic(6);
-            }
-
-            EvaluateSegmentWaypointPreview(insertingLine, insertingSegment, insertTempWaypoints, out int beforePct, out int afterPct, out insertGridBlocked);
-
-            // 用整条线做连续平滑预览
-            int segCount = insertingLine.st.Count - 1;
-            int spanStart = insertingSegment;
-            while (spanStart > 0 && SegmentRegion(insertingLine.st[spanStart - 1], insertingLine.st[spanStart]) == currentRegion) spanStart--;
-            int spanEnd = insertingSegment;
-            while (spanEnd + 1 < segCount && SegmentRegion(insertingLine.st[spanEnd + 1], insertingLine.st[spanEnd + 2]) == currentRegion) spanEnd++;
-            FillRegionSpanPolyline(insertingLine, spanStart, spanEnd, currentRegion, scratchPolyline, scratchSubSegIndices, insertingSegment, insertTempWaypoints);
-
-            if (insertGridBlocked) previewCol = new Color(0.96f, 0.24f, 0.22f, 0.95f);
-            if (insertBadgeText)
-            {
-                if (insertGridBlocked)
-                    insertBadgeText.text = "禁建天堑  请拖至安全点阵";
-                else if (afterPct != beforePct)
-                    insertBadgeText.text = $"地形惩罚 +{afterPct}%（原 +{beforePct}%）  {insertTempWaypoints.Count}拐点";
-                else
-                    insertBadgeText.text = $"地形惩罚 +{afterPct}%  {insertTempWaypoints.Count}拐点 (右键加点)";
+                previewCol = new Color(0.96f, 0.24f, 0.22f, 0.95f);
+                if (insertBadgeText) insertBadgeText.text = "无法找到可行路线";
+                insertTarget = -1;
             }
         }
         if (insertPreviewPoly)
             insertPreviewPoly.SetPolyline(scratchPolyline, Vector2.zero, previewCol, new Color(1f, 1f, 1f, 0.55f), 11f * overlayZoom, 2.5f * overlayZoom);
-        RefreshInsertWaypointHandles();
 
         if (insertBadge && RectTransformUtility.ScreenPointToLocalPointInRectangle(root, screen, null, out var badgePoint)) {
             var rect = insertBadge.GetComponent<RectTransform>();
             badgePoint -= root.rect.min;
             rect.anchoredPosition = new Vector2(Mathf.Clamp(badgePoint.x - 190f, 12f, W - 392f), Mathf.Clamp(badgePoint.y + 55f, 190f, H - 290f));
         }
-        RefreshInsertWaypointHandles();
     }
     public void EndLineInsert(Vector2 screen)
     {
         if (!lineInsertActive) return;
         UpdateLineInsert(screen);
         var line = insertingLine; int segment = insertingSegment, target = insertTarget;
-        bool useGrid = insertHasGridPoint, gridBlocked = insertGridBlocked;
-        var committedWps = new List<Vector2>(insertTempWaypoints);
         CancelLineInsert();
         if (IsInEventSandbox()) { if (CanInsertStation(line, segment, target)) CommitLineInsertion(line, segment, target); return; }
         if (CanInsertStation(line, segment, target))
@@ -765,32 +651,7 @@ public partial class DemoBootstrap
             var cancel = Btn(p.transform, "CancelInsert", "取消", 25, 350, 20, 300, 66, Paper2, ClosePanel); TInk(cancel, Ink);
             return;
         }
-        if (useGrid && line != null && lines.Contains(line) && segment >= 0 && segment < line.st.Count - 1)
-        {
-            if (gridBlocked) { Toast("路径穿越裂谷/绝壁禁建区，未修改"); return; }
-            var origPts = (line.segWaypoints != null && segment < line.segWaypoints.Count && line.segWaypoints[segment] != null)
-                ? line.segWaypoints[segment].pts : null;
-            // 若玩家仅点击未实质改变任何拐点（例如新增的占位格点清理后与原列表一致），不覆盖原路径
-            CleanupRedundantWaypoints(committedWps, Pos(line.st[segment]), Pos(line.st[segment + 1]));
-            bool unchanged = (origPts == null ? committedWps.Count == 0 : origPts.Count == committedWps.Count);
-            if (unchanged && origPts != null)
-            {
-                for (int i = 0; i < origPts.Count; i++)
-                    if (Vector2.Distance(origPts[i], committedWps[i]) > 2f) { unchanged = false; break; }
-            }
-            if (unchanged) return;
-            EvaluateSegmentWaypointPreview(line, segment, committedWps, out _, out int afterPct, out bool finalBlocked);
-            if (finalBlocked) { Toast("路径穿越裂谷/绝壁禁建区，未修改"); return; }
-            BeginUndo("调整点阵拐点");
-            SyncLineWaypointsCount(line);
-            line.segWaypoints[segment].pts.Clear();
-            line.segWaypoints[segment].pts.AddRange(committedWps);
-            CreateLineVisuals(); RecalcIncome(); RefreshHUD();
-            EndUndo();
-            Toast($"已平滑整线（{committedWps.Count}拐点）  当前段地形惩罚 +{afterPct}%");
-            return;
-        }
-        Toast("请拖到本区域内星港或安全点阵格点");
+        Toast("请拖到本区域内可用星港");
     }
     void SplitWaypointsForInsertedStation(
         Line line, int segment, Vector2 pa, Vector2 pb, Vector2 targetPos,
@@ -798,38 +659,8 @@ public partial class DemoBootstrap
     {
         leftWps = new List<Vector2>();
         rightWps = new List<Vector2>();
-        var oldPts = (line != null && line.segWaypoints != null && segment >= 0 && segment < line.segWaypoints.Count && line.segWaypoints[segment] != null)
-            ? line.segWaypoints[segment].pts
-            : null;
-
-        if (oldPts != null && oldPts.Count > 0)
-        {
-            // 计算插入站点离原控制点链哪一段最近，将原拐点保留拆分给前后两段
-            var chain = new List<Vector2>(oldPts.Count + 2) { pa };
-            chain.AddRange(oldPts);
-            chain.Add(pb);
-            int splitSub = 0;
-            float bestD = float.MaxValue;
-            for (int k = 0; k < chain.Count - 1; k++)
-            {
-                float d = DistToSeg(targetPos, chain[k], chain[k + 1]);
-                if (d < bestD) { bestD = d; splitSub = k; }
-            }
-            for (int k = 0; k < oldPts.Count; k++)
-            {
-                if (Vector2.Distance(oldPts[k], targetPos) < 12f) continue;
-                if (k < splitSub) leftWps.Add(oldPts[k]);
-                else rightWps.Add(oldPts[k]);
-            }
-        }
-
-        if (autoRouteEnabled)
-        {
-            if (leftWps.Count == 0 && TerrainField.IsSegmentBlocked(currentRegion, pa, targetPos))
-                TerrainField.FindShortestGridWaypoints(currentRegion, pa, targetPos, leftWps);
-            if (rightWps.Count == 0 && TerrainField.IsSegmentBlocked(currentRegion, targetPos, pb))
-                TerrainField.FindShortestGridWaypoints(currentRegion, targetPos, pb, rightWps);
-        }
+        TerrainField.FindShortestGridWaypoints(currentRegion, pa, targetPos, leftWps);
+        TerrainField.FindShortestGridWaypoints(currentRegion, targetPos, pb, rightWps);
     }
 
     void CommitLineInsertion(Line line, int segment, int target)
@@ -837,12 +668,25 @@ public partial class DemoBootstrap
         if (!CanInsertStation(line, segment, target)) { ClosePanel(true); Toast("航线或星港已变化，请重新操作"); return; }
         int cost = InsertStationCost(line, segment, target);
         if (!IsInEventSandbox() && coins < cost) { Toast("金币不足：还差 ¥" + FormatShortfall(cost - coins)); return; }
-        BeginUndo("插入途经站"); ClosePanel(true);
-        SyncLineWaypointsCount(line);
         Vector2 pa = Pos(line.st[segment]);
         Vector2 pb = Pos(line.st[segment + 1]);
         Vector2 pt = Pos(target);
         SplitWaypointsForInsertedStation(line, segment, pa, pb, pt, out var leftWps, out var rightWps);
+        if (!IsInEventSandbox())
+        {
+            if (!TerrainField.FindShortestGridWaypoints(currentRegion, pa, pt, leftWps) ||
+                !TerrainField.FindShortestGridWaypoints(currentRegion, pt, pb, rightWps))
+            { Toast("无法找到绕开禁建区的可行路径"); return; }
+            scratchInsertWps.Clear(); scratchInsertWps.AddRange(leftWps); scratchInsertWps.Add(pt); scratchInsertWps.AddRange(rightWps);
+            int first = segment, last = segment;
+            while (first > 0 && SegmentRegion(line.st[first - 1], line.st[first]) == currentRegion) first--;
+            while (last + 1 < line.st.Count - 1 && SegmentRegion(line.st[last + 1], line.st[last + 2]) == currentRegion) last++;
+            FillRegionSpanPolyline(line, first, last, currentRegion, scratchPolyline, scratchSubSegIndices, segment, scratchInsertWps);
+            TerrainField.EvaluatePolyline(currentRegion, scratchPolyline, out var terrain);
+            if (terrain.blocked) { Toast("平滑路线穿越禁建区，无法插入"); return; }
+        }
+        BeginUndo("插入途经站"); ClosePanel(true);
+        SyncLineWaypointsCount(line);
         if (!IsInEventSandbox()) coins -= cost; line.st.Insert(segment + 1, target);
         if (segment >= 0 && segment < line.segWaypoints.Count)
         {
@@ -949,11 +793,11 @@ public partial class DemoBootstrap
             }
         }
         coins -= cost; line.st = path; SyncLineWaypointsCount(line);
-        if (autoRouteEnabled && line.segWaypoints.Count > 0)
+        if (line.segWaypoints.Count > 0)
         {
             int mergedSeg = (wasLoop && idx == 0) ? line.segWaypoints.Count - 1 : idx - 1;
             if (mergedSeg >= 0 && mergedSeg < line.segWaypoints.Count
-                && TerrainField.IsSegmentBlocked(currentRegion, Pos(previous), Pos(next)))
+               )
             {
                 TerrainField.FindShortestGridWaypoints(currentRegion, Pos(previous), Pos(next), line.segWaypoints[mergedSeg].pts);
             }
@@ -961,37 +805,10 @@ public partial class DemoBootstrap
         CreateLineVisuals(); SyncMainLinesToSandbox(); if (IsInEventSandbox()) SaveSandboxStorage(); RefreshStationDots(); RecalcIncome(); RefreshHUD(); EndUndo();
         Toast("已从 " + line.name + " 移除 " + StationDisplayName(station, currentRegion));
     }
-    void RefreshInsertWaypointHandles()
-    {
-        for (int i = 0; i < insertWpHandles.Count; i++)
-            if (insertWpHandles[i]) Destroy(insertWpHandles[i]);
-        insertWpHandles.Clear();
-        if (!lineInsertActive || previewLayer == null || spriteRing == null) return;
-
-        float size = 26f * overlayZoom;
-        Vector2 centeredPivot = new Vector2(0.5f, 0.5f);
-        // 当前拖动的拐点：亮金色并融入线色突出；其余：半透明白圆环
-        Color activeColor = new Color(1f, 0.83f, 0.24f, 1f);
-        if (insertingLine != null) activeColor = Color.Lerp(activeColor, insertingLine.color, 0.30f);
-        activeColor.a = 1f;
-        Color idleColor = new Color(1f, 1f, 1f, 0.55f);
-
-        for (int i = 0; i < insertTempWaypoints.Count; i++)
-        {
-            var go = Rect("InsertWpHandle_" + i, previewLayer, insertTempWaypoints[i].x, insertTempWaypoints[i].y, size, size);
-            go.GetComponent<RectTransform>().pivot = centeredPivot;
-            var img = Img(go, i == insertEditWpIndex ? activeColor : idleColor, spriteRing);
-            img.raycastTarget = false;
-            insertWpHandles.Add(go);
-        }
-    }
-
     void CancelLineInsert()
     {
         lineInsertActive = false; insertingLine = null; insertingSegment = insertTarget = -1;
-        insertEditWpIndex = -1; insertTempWaypoints.Clear();
-        insertHasGridPoint = false; insertGridBlocked = false;
-        SetDotGridHighlight(false);
+        cachedInsertTarget = -1;
         // 恢复预览时被淡化的原线透明度（poly 可能已被 CreateLineVisuals 重建，用隐式 bool 规避悬空引用）
         if (insertDimmedPoly)
         {
@@ -1000,12 +817,8 @@ public partial class DemoBootstrap
             insertDimmedPoly = null;
         }
         if (insertPreviewPoly) Destroy(insertPreviewPoly.gameObject);
-        if (insertPreviewA) Destroy(insertPreviewA.gameObject); if (insertPreviewB) Destroy(insertPreviewB.gameObject);
         if (insertBadge) Destroy(insertBadge);
-        for (int i = 0; i < insertWpHandles.Count; i++)
-            if (insertWpHandles[i]) Destroy(insertWpHandles[i]);
-        insertWpHandles.Clear();
-        insertPreviewPoly = null; insertPreviewA = insertPreviewB = null; insertBadge = null; insertBadgeText = null;
+        insertPreviewPoly = null; insertBadge = null; insertBadgeText = null;
     }
     public void ForwardLinePanStart(PointerEventData e) { if (mapWheelZoom) mapWheelZoom.OnBeginDrag(e); }
     public void ForwardLinePan(PointerEventData e) { if (mapWheelZoom) mapWheelZoom.OnDrag(e); }

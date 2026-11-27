@@ -1101,21 +1101,15 @@ public partial class DemoBootstrap
     {
         if (!dragCostBadge || draft.Count == 0) return;
         Vector2 current = Pos(draft[draft.Count - 1]);
-        Vector2 anchorStart = activeSegWaypoints.Count > 0 ? activeSegWaypoints[activeSegWaypoints.Count - 1] : current;
         scratchControlPts.Clear();
         scratchControlPts.Add(current);
-        for (int i = 0; i < activeSegWaypoints.Count; i++) scratchControlPts.Add(activeSegWaypoints[i]);
-        bool autoOk = true;
-        if (autoRouteEnabled && Vector2.Distance(anchorStart, point) >= 48f)
-        {
-            autoOk = GetCachedAutoRouteWaypoints(anchorStart, point, scratchAutoWaypoints);
-            for (int i = 0; i < scratchAutoWaypoints.Count; i++) scratchControlPts.Add(scratchAutoWaypoints[i]);
-        }
+        bool autoOk = GetCachedAutoRouteWaypoints(current, point, scratchAutoWaypoints);
+        scratchControlPts.AddRange(scratchAutoWaypoints);
         scratchControlPts.Add(point);
         TerrainField.SampleCatmullRomPolyline(scratchControlPts, false, scratchPolyline);
         int previewCost = EvaluatePolylineTrackCost(currentRegion, scratchPolyline, TrackBuildCostFactor(), out var previewTr);
-        bool blockedNow = !autoOk || (previewTr.blocked && !autoRouteEnabled);
-        bool preview = !IsLoop(draft) && (previewTr.distance > 24f || activeSegWaypoints.Count > 0);
+        bool blockedNow = !autoOk || (!TerrainField.CanCrossHazard && previewTr.blocked);
+        bool preview = !IsLoop(draft) && previewTr.distance > 24f;
         int value = draftCost + (preview ? previewCost : 0);
         if (draftCost != dragCostLastCommitted) { dragCostLastCommitted = draftCost; dragCostPulse = 0.22f; }
         dragCostDisplayed = Mathf.Lerp(dragCostDisplayed, value, 1f - Mathf.Exp(-18f * dt));
@@ -1152,7 +1146,7 @@ public partial class DemoBootstrap
             if (IsInEventSandbox()) { }
             else if (preview && blockedNow)
             {
-                dragCostSubText.text = "右键 / 空格在点阵落拐点绕行";
+                dragCostSubText.text = "无法找到可行路线";
                 dragCostSubText.color = Vermilion;
             }
             else if (hoverStation >= 0 && dragCostAddedPassengers > 0)
@@ -1162,11 +1156,8 @@ public partial class DemoBootstrap
             }
             else if (preview)
             {
-                dragCostSubText.text = activeSegWaypoints.Count > 0
-                    ? $"已落 {activeSegWaypoints.Count} 个拐点（Backspace 撤销）"
-                    : (autoRouteEnabled && scratchAutoWaypoints.Count > 0
-                        ? "已自动规划最近可行绕行路线"
-                        : "拖向星港，右键/空格可吸附点阵落拐点");
+                dragCostSubText.text = scratchAutoWaypoints.Count > 0
+                    ? "已自动规划可行路线" : "拖向星港";
                 dragCostSubText.color = draftPreviewNeed >= 0.72f ? Vermilion : InkSoft;
             }
             else
@@ -1378,7 +1369,6 @@ public partial class DemoBootstrap
         RedrawDraft();
         if (previewImg) { previewImg.color = draftPreviewColor; previewImg.enabled = false; previewImg.gameObject.SetActive(true); }
         if (dragTip) { dragTip.color = draftPreviewColor; dragTip.gameObject.SetActive(true); }
-        SetDotGridHighlight(true);
         UpdateRings();
         Haptic.Vibrate(22); PlayTone(false);
     }
@@ -1386,7 +1376,6 @@ public partial class DemoBootstrap
     {
         if (!dragging) return;
         dragging = false; hoverStation = -1;
-        SetDotGridHighlight(false);
         ClearAutoPreviewSegs();
         if (dragCostBadge) dragCostBadge.SetActive(false);
         if (previewImg) previewImg.gameObject.SetActive(false);
@@ -1398,7 +1387,6 @@ public partial class DemoBootstrap
     void CancelDraft()
     {
         draft.Clear(); draftSegNeeds.Clear(); draftCost = 0;
-        SetDotGridHighlight(false);
         ClearDraftWaypoints();
         if (dragCostBadge) dragCostBadge.SetActive(false);
         ClearDraftSegs(); ResetBuildVisuals();

@@ -533,7 +533,6 @@ public partial class DemoBootstrap : MonoBehaviour
         BuildSceneryViews();
         BuildTopBar();
         BuildZoomNotice();
-        BuildAutoRouteToggle();
         BuildLeftRail();
         BuildStationFilterButton();
         BuildLeftReminderEntries();
@@ -705,7 +704,6 @@ public partial class DemoBootstrap : MonoBehaviour
 
         lineLayer = Rect("Lines", mapRect, 0, 0, W, H).GetComponent<RectTransform>();
         AttachSubCanvas(lineLayer.gameObject, true);
-        InitDotGridLayer();
         odArcLayer = Rect("OdArcs", mapRect, 0, 0, W, H).GetComponent<RectTransform>();
         AttachSubCanvas(odArcLayer.gameObject, false);
         previewLayer = Rect("Preview", mapRect, 0, 0, W, H).GetComponent<RectTransform>();
@@ -1707,43 +1705,28 @@ public partial class DemoBootstrap : MonoBehaviour
                 ShowConnectHint("该星港已在当前草稿中，从另一端连接试试");
             return false;
         }
-        Vector2 lastAnchor = activeSegWaypoints.Count > 0 ? activeSegWaypoints[activeSegWaypoints.Count - 1] : Pos(a);
         scratchControlPts.Clear();
         scratchControlPts.Add(Pos(a));
-        for (int i = 0; i < activeSegWaypoints.Count; i++) scratchControlPts.Add(activeSegWaypoints[i]);
-        if (autoRouteEnabled)
+        if (!TerrainField.FindShortestGridWaypoints(currentRegion, Pos(a), Pos(b), scratchAutoWaypoints))
         {
-            if (!TerrainField.FindShortestGridWaypoints(currentRegion, lastAnchor, Pos(b), scratchAutoWaypoints))
-            {
-                ShowConnectHint("无法找到绕开禁建区的可行路径");
-                return false;
-            }
-            if (scratchAutoWaypoints.Count > 0)
-            {
-                for (int i = 0; i < scratchAutoWaypoints.Count; i++) scratchControlPts.Add(scratchAutoWaypoints[i]);
-            }
+            ShowConnectHint("无法找到绕开禁建区的可行路径");
+            return false;
         }
+        scratchControlPts.AddRange(scratchAutoWaypoints);
         scratchControlPts.Add(Pos(b));
 
         TerrainField.SampleCatmullRomPolyline(scratchControlPts, false, scratchPolyline);
         TerrainField.EvaluatePolyline(currentRegion, scratchPolyline, out var tr);
         if (tr.blocked)
         {
-            // 若仅因平滑切角轻微擦进禁建区，尝试回退到未平滑控制点校验；若仍通不过再阻断
-            TerrainField.EvaluatePolyline(currentRegion, scratchControlPts, out var rawTr);
-            if (rawTr.blocked)
-            {
-                ShowConnectHint("前方穿越裂谷/绝壁禁建区，请在点阵落拐点（右键/空格）绕行");
-                return false;
-            }
+            ShowConnectHint("平滑路线穿越禁建区，无法连接");
+            return false;
         }
 
         var committedWp = new List<Vector2>();
         for (int i = 1; i < scratchControlPts.Count - 1; i++) committedWp.Add(scratchControlPts[i]);
         draftSegWaypoints.Add(committedWp);
-        activeSegWaypoints.Clear();
         InvalidateAutoRouteCache();
-        ClearActiveWaypointSegs();
         ClearAutoPreviewSegs();
         draft.Add(b); draftCost = DraftCostOf(draft);
         TriggerHaptic(12); PlaySnapSfx();
@@ -2375,7 +2358,6 @@ public partial class DemoBootstrap : MonoBehaviour
     {
         foreach (var g in draftSegs) if (g) Destroy(g);
         draftSegs.Clear();
-        ClearActiveWaypointSegs();
     }
     void AddDraftSeg(int a, int b, int segIdx = -1, bool animate = false)
     {
@@ -2405,7 +2387,7 @@ public partial class DemoBootstrap : MonoBehaviour
     void RedrawDraft()
     {
         ClearDraftSegs();
-        if (draft.Count < 2) { RedrawActiveWaypointSegs(); return; }
+        if (draft.Count < 2) return;
         bool hasAnyWp = false;
         for (int i = 0; i < draftSegWaypoints.Count; i++)
             if (draftSegWaypoints[i] != null && draftSegWaypoints[i].Count > 0) { hasAnyWp = true; break; }
@@ -2423,7 +2405,6 @@ public partial class DemoBootstrap : MonoBehaviour
         {
             for (int i = 0; i < draft.Count - 1; i++) AddDraftSeg(draft[i], draft[i + 1], i, i == draft.Count - 2);
         }
-        RedrawActiveWaypointSegs();
     }
 
     // ---------- line visuals ----------
@@ -2942,16 +2923,8 @@ public partial class DemoBootstrap : MonoBehaviour
             int hov = near >= 0 && !draft.Contains(near) && !IsLoop(draft) ? near : -1;
             if (!backtracked && near >= 0 && near != dragFrom && IsLoop(draft))
                 ShowConnectHint("环线已闭合，松手确认开通（移回上一站可撤销闭合）");
-            Vector2 snappedGrid = TerrainField.SnapToGrid(local, currentRegion);
-            if (!backtracked && hov < 0 && !(IsLoop(draft) && near == draft[0]))
-            {
-                if (Input.GetMouseButtonDown(1) || Input.GetKeyDown(KeyCode.Space))
-                    TryAddActiveWaypoint(snappedGrid);
-                else if (Input.GetKeyDown(KeyCode.Backspace))
-                    TryPopActiveWaypoint();
-            }
-            Vector2 end = backtracked ? Pos(dragFrom) : (hov >= 0 ? Pos(hov) : (IsLoop(draft) && near == draft[0] ? Pos(draft[0]) : snappedGrid));
-            var p1 = activeSegWaypoints.Count > 0 ? activeSegWaypoints[activeSegWaypoints.Count - 1] : Pos(dragFrom);
+            Vector2 end = backtracked ? Pos(dragFrom) : (hov >= 0 ? Pos(hov) : (IsLoop(draft) && near == draft[0] ? Pos(draft[0]) : local));
+            var p1 = Pos(dragFrom);
             var d = end - p1;
             previewImg.rectTransform.anchoredPosition = p1;
             previewImg.rectTransform.sizeDelta = new Vector2(Mathf.Max(1, d.magnitude), 14.5f * overlayZoom);
@@ -3146,7 +3119,6 @@ public partial class DemoBootstrap : MonoBehaviour
             draftSegNeeds.RemoveRange(keepSegs, draftSegNeeds.Count - keepSegs);
         if (draftSegWaypoints.Count > keepSegs)
             draftSegWaypoints.RemoveRange(keepSegs, draftSegWaypoints.Count - keepSegs);
-        activeSegWaypoints.Clear();
         dragFrom = station; hoverStation = -1;
         draftCost = DraftCostOf(draft);
         PrepareDraftNeedField(station, draft);

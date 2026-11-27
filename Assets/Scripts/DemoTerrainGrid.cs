@@ -15,16 +15,7 @@ public partial class DemoBootstrap
         public List<Vector2> pts = new List<Vector2>();
     }
 
-    DotGridGraphic dotGridGraphic;
-    bool dotGridHighlighted;
-    readonly Dictionary<string, GameObject> regionHazardOverlays = new Dictionary<string, GameObject>(StringComparer.Ordinal);
-    bool autoRouteEnabled = true; // 默认开启：自动寻找两站点间最近可行路线
-    GameObject autoRouteBtn;
-    Image autoRouteBtnBg;
-    Text autoRouteBtnTxt;
-
     readonly List<List<Vector2>> draftSegWaypoints = new List<List<Vector2>>();
-    readonly List<Vector2> activeSegWaypoints = new List<Vector2>();
     LinePolylineGraphic activePreviewPoly;
     readonly List<Vector2> scratchControlPts = new List<Vector2>(32);
     readonly List<int> scratchCtrlSegIndices = new List<int>(32);
@@ -38,67 +29,6 @@ public partial class DemoBootstrap
     Vector2 cachedAutoToGrid = new Vector2(float.NaN, float.NaN);
     bool cachedAutoFound = true;
     readonly List<Vector2> cachedAutoWaypoints = new List<Vector2>(16);
-
-    void InitDotGridLayer()
-    {
-        if (!mapRect || dotGridGraphic != null) return;
-        var go = Rect("DotGrid", mapRect, 0, 0, W, H);
-        dotGridGraphic = go.AddComponent<DotGridGraphic>();
-        dotGridGraphic.raycastTarget = false;
-        dotGridGraphic.dotRadius = 2.45f;
-        dotGridGraphic.SetActiveHighlight(false);
-        if (lineLayer) go.transform.SetSiblingIndex(lineLayer.GetSiblingIndex());
-        SyncTerrainAndGridForRegion(currentRegion);
-        go.SetActive(false);
-    }
-
-    void SetDotGridHighlight(bool active)
-    {
-        dotGridHighlighted = active;
-        if (dotGridGraphic)
-        {
-            dotGridGraphic.gameObject.SetActive(active);
-            if (active) dotGridGraphic.SetActiveHighlight(true);
-        }
-        foreach (var kv in regionHazardOverlays)
-        {
-            if (kv.Value) kv.Value.SetActive(active && kv.Key == currentRegion);
-        }
-    }
-
-    void BuildAutoRouteToggle()
-    {
-        if (!root || autoRouteBtn != null) return;
-        GetSafeMarginsInRoot(out float safeL, out _, out _, out float safeB);
-        const float size = 78f;
-        float x = safeL + 16f;
-        float y = safeB + 190f;
-        autoRouteBtn = Rect("AutoRouteToggle", root, x, y, size, size);
-        autoRouteBtnBg = Img(autoRouteBtn, Indigo, spriteRound);
-        SoftShadow(autoRouteBtn);
-        autoRouteBtnTxt = Txt(autoRouteBtn.transform, "绕障\n开", 20, Color.white, 6, 6, size - 12f, size - 12f, TextAnchor.MiddleCenter);
-        autoRouteBtnTxt.raycastTarget = false;
-        var btn = autoRouteBtn.AddComponent<Button>();
-        btn.onClick.AddListener(ToggleAutoRoute);
-        RefreshAutoRouteToggleVisual();
-    }
-
-    void ToggleAutoRoute()
-    {
-        autoRouteEnabled = !autoRouteEnabled;
-        InvalidateAutoRouteCache();
-        RefreshAutoRouteToggleVisual();
-        PlayTone(autoRouteEnabled);
-        Toast(autoRouteEnabled ? "已开启：自动寻找最近可行路线" : "已关闭：纯手动点阵吸附开线");
-    }
-
-    void RefreshAutoRouteToggleVisual()
-    {
-        if (!autoRouteBtnBg || !autoRouteBtnTxt) return;
-        autoRouteBtnBg.color = autoRouteEnabled ? Indigo : new Color(0.92f, 0.90f, 0.86f, 0.95f);
-        autoRouteBtnTxt.text = autoRouteEnabled ? "绕障\n开" : "绕障\n关";
-        autoRouteBtnTxt.color = autoRouteEnabled ? Color.white : Ink;
-    }
 
     void InvalidateAutoRouteCache()
     {
@@ -125,47 +55,20 @@ public partial class DemoBootstrap
         TerrainField.PreloadRegion(regionId);
         SyncTerrainTechState();
         InvalidateAutoRouteCache();
-        if (!dotGridGraphic) return;
 
-        bool darkTheme = currentTheme == 1;
-        Color normalCol = darkTheme
-            ? new Color(0.75f, 0.94f, 1.00f, 0.72f)
-            : new Color(0.96f, 0.98f, 1.00f, 0.76f);
-        Color steepCol = new Color(1.00f, 0.74f, 0.24f, 0.88f);
-        Color blockedCol = new Color(1.00f, 0.30f, 0.26f, 0.95f);
-        dotGridGraphic.Configure(regionId, TerrainField.DefaultGridSpacing, normalCol, steepCol, blockedCol);
-        dotGridGraphic.gameObject.SetActive(dotGridHighlighted);
-        if (dotGridHighlighted) dotGridGraphic.SetActiveHighlight(true);
-        foreach (var kv in regionHazardOverlays)
-        {
-            if (kv.Value) kv.Value.SetActive(dotGridHighlighted && kv.Key == regionId);
-        }
     }
 
     void ClearDraftWaypoints()
     {
         draftSegWaypoints.Clear();
-        activeSegWaypoints.Clear();
         InvalidateAutoRouteCache();
-        ClearActiveWaypointSegs();
         ClearAutoPreviewSegs();
-    }
-
-    void ClearActiveWaypointSegs()
-    {
-        if (activePreviewPoly && activePreviewPoly.gameObject.activeSelf)
-            activePreviewPoly.gameObject.SetActive(false);
     }
 
     void ClearAutoPreviewSegs()
     {
         if (activePreviewPoly && activePreviewPoly.gameObject.activeSelf)
             activePreviewPoly.gameObject.SetActive(false);
-    }
-
-    void RedrawActiveWaypointSegs()
-    {
-        // 统一由 UpdateActiveDrawPreview 每帧合并绘制，无需独立对象
     }
 
     void EnsureActivePreviewPoly()
@@ -180,11 +83,11 @@ public partial class DemoBootstrap
     bool GetCachedAutoRouteWaypoints(Vector2 fromPos, Vector2 toPos, List<Vector2> outWaypoints)
     {
         outWaypoints.Clear();
-        if (!autoRouteEnabled) return !TerrainField.IsSegmentBlocked(currentRegion, fromPos, toPos);
 
+        Vector2 fromSnapped = TerrainField.SnapToGrid(fromPos, currentRegion);
         Vector2 toSnapped = TerrainField.SnapToGrid(toPos, currentRegion);
         if (cachedAutoRegion == currentRegion &&
-            (cachedAutoFrom - fromPos).sqrMagnitude < 1f &&
+            (cachedAutoFrom - fromSnapped).sqrMagnitude < 1f &&
             (cachedAutoToGrid - toSnapped).sqrMagnitude < 1f)
         {
             outWaypoints.AddRange(cachedAutoWaypoints);
@@ -192,7 +95,7 @@ public partial class DemoBootstrap
         }
 
         cachedAutoRegion = currentRegion;
-        cachedAutoFrom = fromPos;
+        cachedAutoFrom = fromSnapped;
         cachedAutoToGrid = toSnapped;
         cachedAutoFound = TerrainField.FindShortestGridWaypoints(currentRegion, fromPos, toPos, cachedAutoWaypoints);
         outWaypoints.AddRange(cachedAutoWaypoints);
@@ -215,8 +118,7 @@ public partial class DemoBootstrap
 
         scratchAutoWaypoints.Clear();
         bool ok = true;
-        if (autoRouteEnabled && Vector2.Distance(p1, end) >= 48f)
-            ok = GetCachedAutoRouteWaypoints(p1, end, scratchAutoWaypoints);
+        ok = GetCachedAutoRouteWaypoints(p1, end, scratchAutoWaypoints);
 
         scratchControlPts.Clear();
         scratchCtrlSegIndices.Clear();
@@ -240,12 +142,6 @@ public partial class DemoBootstrap
             scratchCtrlSegIndices.Add(0);
         }
 
-        Vector2 segStart = Pos(draft[draft.Count - 1]);
-        for (int i = 0; i < activeSegWaypoints.Count; i++)
-        {
-            scratchControlPts.Add(activeSegWaypoints[i]);
-            scratchCtrlSegIndices.Add(1);
-        }
         if (scratchAutoWaypoints.Count > 0)
         {
             for (int i = 0; i < scratchAutoWaypoints.Count; i++)
@@ -308,10 +204,9 @@ public partial class DemoBootstrap
         TerrainField.SampleCatmullRomPolyline(scratchControlPts, false, outPts);
     }
 
-    readonly List<Vector2> scratchSegPolyTmp = new List<Vector2>(64);
 
     /// <summary>
-    /// 逐段独立展开同一区域内连续多段的平滑折线：每两站之间仅根据本段锚点独立平滑，新增或改动某段绝不影响原有段。零 GC。
+    /// 同一区域的连续控制点共同平滑，并保留每个子段对应的逻辑段索引。
     /// </summary>
     void FillRegionSpanPolyline(
         Line line,
@@ -343,32 +238,21 @@ public partial class DemoBootstrap
             return;
         }
 
+        scratchControlPts.Clear();
+        scratchCtrlSegIndices.Clear();
+        scratchControlPts.Add(PosInRegion(line.st[segStart], region));
         for (int s = segStart; s <= segEndInclusive; s++)
         {
-            scratchControlPts.Clear();
-            scratchControlPts.Add(PosInRegion(line.st[s], region));
-
-            IReadOnlyList<Vector2> wp = null;
-            if (s == overrideSegIdx && overrideWaypoints != null)
-                wp = overrideWaypoints;
-            else if (line.segWaypoints != null && s < line.segWaypoints.Count && line.segWaypoints[s] != null)
-                wp = line.segWaypoints[s].pts;
-
+            IReadOnlyList<Vector2> wp = s == overrideSegIdx && overrideWaypoints != null
+                ? overrideWaypoints
+                : (line.segWaypoints != null && s < line.segWaypoints.Count && line.segWaypoints[s] != null ? line.segWaypoints[s].pts : null);
             if (wp != null)
-                for (int i = 0; i < wp.Count; i++) scratchControlPts.Add(wp[i]);
-
+                for (int i = 0; i < wp.Count; i++) { scratchControlPts.Add(wp[i]); scratchCtrlSegIndices.Add(s); }
             scratchControlPts.Add(PosInRegion(line.st[s + 1], region));
-            TerrainField.SampleCatmullRomPolyline(scratchControlPts, false, scratchSegPolyTmp);
-            if (scratchSegPolyTmp.Count < 2) continue;
-
-            int startIdx = outPts.Count == 0 ? 0 : 1;
-            for (int p = startIdx; p < scratchSegPolyTmp.Count; p++)
-            {
-                if (outPts.Count > 0 && outSubSegIndices != null)
-                    outSubSegIndices.Add(s);
-                outPts.Add(scratchSegPolyTmp[p]);
-            }
+            scratchCtrlSegIndices.Add(s);
         }
+        bool loop = segStart == 0 && segEndInclusive == line.st.Count - 2 && IsLoop(line.st);
+        TerrainField.SampleCatmullRomPolyline(scratchControlPts, loop, outPts, outSubSegIndices, scratchCtrlSegIndices);
     }
 
     /// <summary>
@@ -435,8 +319,13 @@ public partial class DemoBootstrap
     {
         scratchPolyline.Clear();
         string reg = SegmentRegion(a, b) ?? currentRegion;
-        scratchPolyline.Add(PosInRegion(a, reg));
-        scratchPolyline.Add(PosInRegion(b, reg));
+        Vector2 from = PosInRegion(a, reg), to = PosInRegion(b, reg);
+        scratchControlPts.Clear();
+        scratchControlPts.Add(from);
+        TerrainField.FindShortestGridWaypoints(reg, from, to, scratchAutoWaypoints);
+        scratchControlPts.AddRange(scratchAutoWaypoints);
+        scratchControlPts.Add(to);
+        TerrainField.SampleCatmullRomPolyline(scratchControlPts, false, scratchPolyline);
         return EvaluatePolylineTrackCost(reg, scratchPolyline, trackFactor, out tr);
     }
 
@@ -448,61 +337,6 @@ public partial class DemoBootstrap
         string reg = SegmentRegion(line.st[segIdx], line.st[segIdx + 1]) ?? currentRegion;
         FillLineSegmentPolyline(line, segIdx, reg, scratchPolyline);
         return EvaluatePolylineTrackCost(reg, scratchPolyline, trackFactor, out tr);
-    }
-
-    bool TryAddActiveWaypoint(Vector2 snappedPos)
-    {
-        if (IsInEventSandbox()) return false;
-        if (!dragging || draft.Count == 0 || IsLoop(draft)) return false;
-        if (TerrainField.IsBlocked(currentRegion, snappedPos))
-        {
-            ShowConnectHint("该点位于裂谷/绝壁禁建区，请选择周围点阵");
-            return false;
-        }
-        Vector2 prev = activeSegWaypoints.Count > 0
-            ? activeSegWaypoints[activeSegWaypoints.Count - 1]
-            : Pos(draft[draft.Count - 1]);
-        if (Vector2.Distance(prev, snappedPos) < 10f) return false;
-
-        if (!autoRouteEnabled && TerrainField.IsSegmentBlocked(currentRegion, prev, snappedPos))
-        {
-            ShowConnectHint("前方穿越禁建天堑，请先在绕行侧点阵落拐点");
-            return false;
-        }
-        if (activeSegWaypoints.Count >= 16)
-        {
-            ShowConnectHint("单段最多添加 16 个拐点");
-            return false;
-        }
-
-        if (autoRouteEnabled && TerrainField.IsSegmentBlocked(currentRegion, prev, snappedPos))
-        {
-            if (!TerrainField.FindShortestGridWaypoints(currentRegion, prev, snappedPos, scratchAutoWaypoints))
-            {
-                ShowConnectHint("无法找到绕开禁建区的可行路径");
-                return false;
-            }
-            for (int i = 0; i < scratchAutoWaypoints.Count && activeSegWaypoints.Count < 16; i++)
-                activeSegWaypoints.Add(scratchAutoWaypoints[i]);
-        }
-
-        activeSegWaypoints.Add(snappedPos);
-        InvalidateAutoRouteCache();
-        RedrawActiveWaypointSegs();
-        TriggerHaptic(8);
-        PlaySnapSfx();
-        return true;
-    }
-
-    bool TryPopActiveWaypoint()
-    {
-        if (IsInEventSandbox()) return false;
-        if (activeSegWaypoints.Count == 0) return false;
-        activeSegWaypoints.RemoveAt(activeSegWaypoints.Count - 1);
-        InvalidateAutoRouteCache();
-        RedrawActiveWaypointSegs();
-        TriggerHaptic(6);
-        return true;
     }
 
     static List<SegmentWaypoints> CloneWaypointsList(List<SegmentWaypoints> src)
