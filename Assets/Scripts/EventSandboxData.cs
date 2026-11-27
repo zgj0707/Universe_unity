@@ -51,12 +51,14 @@ public partial class DemoBootstrap
         public float eventClock = 90f;
         public int tokens;
         public long progress;
+        public long totalDelivered;
         public int storyStage;
         public int cycleCount = 1;
         public int activeBranch = -1;
         public int activeDirective; // 0: 稳健均衡, 1: 全力加车, 2: 远郊补贴
         public List<string> treeNodes = new List<string>();
         public List<string> ownedVehicles = new List<string>();
+        public int ashRosterVersion;
         public List<int> ownedSkins = new List<int>();
         public List<string> achievements = new List<string>();
         public List<string> claimed = new List<string>();
@@ -64,6 +66,9 @@ public partial class DemoBootstrap
         public List<int> stationLevels = new List<int>();
         public List<int> stationPop = new List<int>();
         public int missedPop;
+        public float ashDelayHours, ashTokenCredit;
+        public List<int> ashCountedFallenStations = new List<int>();
+        public bool ashFallenMaskInitialized;
         public List<int> ashClearedStations = new List<int>();
         public double ashCycleRewards;
         public long extraA;
@@ -97,10 +102,10 @@ public partial class DemoBootstrap
             lineLimit = 12,
             vehicles = new[]
             {
-                new EventVehicleDef { key = "veh_ash_scavenger", name = "「老伙计」改装篷车", desc = "车队的老伙伴，穿过老城街巷总是稳稳当当", costTokens = 0, skinFallbackIndex = 12, capMult = 1.0f, speedMult = 1.0f },
-                new EventVehicleDef { key = "veh_ash_iron", name = "「铁壁」防风护航车", desc = "装上双层防风板，运力 +25%，还能多撑一阵沙尘", costTokens = 14, skinFallbackIndex = 13, capMult = 1.25f, speedMult = 1.05f, extraImmuneDays = 1 },
-                new EventVehicleDef { key = "veh_ash_dove", name = "「白鸽」医疗专列", desc = "护工和急救舱随车出发，转运人数额外 +20%", costTokens = 16, skinFallbackIndex = 10, capMult = 1.15f, speedMult = 1.10f, deliveredBonus = 0.20f },
-                new EventVehicleDef { key = "veh_ash_ark", name = "「晨曦号」避风旗舰", desc = "密封的双层车厢能多载些人，运力 +60%，跑得也快", costTokens = 26, skinFallbackIndex = 2, capMult = 1.6f, speedMult = 1.25f, extraImmuneDays = 2 }
+                new EventVehicleDef { key = "veh_ash_scavenger", name = "「老伙计」改装篷车", desc = "车队的老伙伴，穿过老城街巷总是稳稳当当", costTokens = 5, skinFallbackIndex = 12, capMult = 1.0f, speedMult = 1.0f },
+                new EventVehicleDef { key = "veh_ash_iron", name = "「铁壁」防风护航车", desc = "装上双层防风板，运力 +25%，还能多撑一阵沙尘", costTokens = 8, skinFallbackIndex = 13, capMult = 1.25f, speedMult = 1.05f, extraImmuneDays = 1 },
+                new EventVehicleDef { key = "veh_ash_dove", name = "「白鸽」医疗专列", desc = "护工和急救舱随车出发，转运人数额外 +20%", costTokens = 9, skinFallbackIndex = 10, capMult = 1.15f, speedMult = 1.10f, deliveredBonus = 0.20f },
+                new EventVehicleDef { key = "veh_ash_ark", name = "「晨曦号」避风旗舰", desc = "密封的双层车厢能多载些人，运力 +60%，跑得也快", costTokens = 12, skinFallbackIndex = 2, capMult = 1.6f, speedMult = 1.25f, extraImmuneDays = 2 }
             }
         },
         new EventSpec
@@ -335,8 +340,14 @@ public partial class DemoBootstrap
             var e = eventSandboxes[i];
             if (e != null && e.id == eventId)
             {
+                if (e.totalDelivered < e.progress) e.totalDelivered = e.progress;
                 if (e.ownedVehicles == null) e.ownedVehicles = new List<string>();
-                if (e.ownedVehicles.Count == 0) e.ownedVehicles.Add(eventId == EventIdAshDome ? "veh_ash_scavenger" : "veh_neon_firefly");
+                if (e.ownedVehicles.Count == 0) { e.ownedVehicles.Add(eventId == EventIdAshDome ? "veh_ash_scavenger" : "veh_neon_firefly"); if (eventId == EventIdAshDome) e.ownedVehicles.Add("veh_ash_scavenger"); }
+                if (eventId == EventIdAshDome && e.ashRosterVersion == 0) {
+                    int starters = 0; foreach (var key in e.ownedVehicles) if (key == "veh_ash_scavenger") starters++;
+                    while (starters++ < 2) e.ownedVehicles.Add("veh_ash_scavenger");
+                    e.ashRosterVersion = 1;
+                }
                 if (e.ownedSkins == null) e.ownedSkins = new List<int>();
                 return e;
             }
@@ -350,10 +361,10 @@ public partial class DemoBootstrap
             eventClock = eventId == EventIdNeonNight ? (GameDaySeconds * 0.30f) : 90f,
             cycleCount = 1,
             activeBranch = -1,
-            tokens = 8,
+            tokens = eventId == EventIdAshDome ? 0 : 8,
             extraA = eventId == EventIdNeonNight ? 450 : 1
         };
-        if (eventId == EventIdAshDome) { fresh.ownedVehicles.Add("veh_ash_scavenger"); EnsureAshStationPopInitialized(fresh); }
+        if (eventId == EventIdAshDome) { fresh.ownedVehicles.Add("veh_ash_scavenger"); fresh.ownedVehicles.Add("veh_ash_scavenger"); fresh.ashRosterVersion = 1; EnsureAshStationPopInitialized(fresh); }
         else if (eventId == EventIdNeonNight) fresh.ownedVehicles.Add("veh_neon_firefly");
         eventSandboxes.Add(fresh);
         return fresh;

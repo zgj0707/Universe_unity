@@ -80,7 +80,7 @@ public partial class DemoBootstrap
     [Serializable] sealed class SavedStation { public string key, customName; public int level, trafficEvent; public bool built, closed; public float riderBonus; public int facLevel; }
     [Serializable] sealed class SavedScenery { public string key; public bool found, unlocked; }
     [Serializable] sealed class SavedLine { public int id, trains, todayRevenue; public int skin = -1; public bool baseRemoved; public string name; public Color color; public List<string> stations; public List<SegmentWaypoints> segWaypoints; public int[] dispatch; public float fare, todayGross, todayMaintenance, todayTrack; public List<int> recent; }
-    [Serializable] sealed class SavedVehicle { public int node, lineId; }
+    [Serializable] sealed class SavedVehicle { public int node, lineId, skinId; }
     [Serializable] sealed class SavedFrozenLine { public int lineId; public float[] revenue, demand, served, peak; public bool[] valid; }
     [Serializable] sealed class SaveData {
         public int version=1, day, speed, nextId, dailyBaseline, theme; public double coins; public float diamonds, rp, clock, researchClock;
@@ -88,6 +88,7 @@ public partial class DemoBootstrap
         public List<SavedStation> stations = new List<SavedStation>(); public List<SavedScenery> scenery = new List<SavedScenery>();
         public List<SavedLine> lines = new List<SavedLine>(); public List<SavedVehicle> vehicles = new List<SavedVehicle>();
         public List<string> tech = new List<string>(), story = new List<string>(); public List<int> skins = new List<int>();
+        public int activeTrainSkin; public List<int> trainSkins = new List<int>();
         public List<int> themes = new List<int>();
         public List<string> adKeys = new List<string>(); public List<int> adCounts = new List<int>();
         public List<int> trialThemes = new List<int>(); public List<long> trialEnds = new List<long>();
@@ -251,9 +252,13 @@ public partial class DemoBootstrap
         techDone.Clear(); techDone.AddRange(data.tech);
         researchVehicles.Clear(); foreach(var item in data.vehicles)
             if (item != null && item.node >= 0 && item.node < LocoNames.Length)
-                researchVehicles.Add(new ResearchVehicle { node=item.node, lineId=restoredLines.Exists(l => l.id == item.lineId) ? item.lineId : 0 });
+                researchVehicles.Add(new ResearchVehicle { node=item.node, lineId=restoredLines.Exists(l => l.id == item.lineId) ? item.lineId : 0, skinId=item.skinId });
         foreach (var l in restoredLines) SyncLineFleet(l);
         storySeen.Clear(); foreach(var item in data.story) storySeen.Add(item); ownedLineSkins.Clear(); foreach(int item in data.skins) ownedLineSkins.Add(item);
+        ownedTrainSkins.Clear(); ownedTrainSkins.Add(0);
+        if (data.trainSkins != null) foreach (int item in data.trainSkins) if (item >= 0 && item < MainTrainSkinCount) ownedTrainSkins.Add(item);
+        foreach (var v in researchVehicles)
+            if (v.skinId < 0 || v.skinId >= MainTrainSkinCount || !ownedTrainSkins.Contains(v.skinId) || (v.skinId != 0 && v.node != MainTrainSkins[v.skinId].locoNode)) v.skinId = 0;
         ownedThemes.Clear(); ownedThemes.Add(0);
         if (data.themes != null) foreach (int item in data.themes) if (item >= 0 && item < Themes.Length) ownedThemes.Add(item);
         adWatchCounts.Clear();
@@ -362,9 +367,10 @@ public partial class DemoBootstrap
         foreach(var s in stations) data.stations.Add(new SavedStation { key=StationSaveKey(s), customName=string.IsNullOrEmpty(s.customName) ? "" : s.customName, level=s.level, trafficEvent=s.trafficEvent, built=s.built, closed=s.closed, riderBonus=s.riderBonus, facLevel=s.facLevel });
         foreach(var s in sceneries) data.scenery.Add(new SavedScenery { key=ScenerySaveKey(s), found=s.found, unlocked=s.unlocked });
         foreach(var l in lines) { var record=new SavedLine { id=l.id, name=l.name, color=l.color, skin=l.skin, trains=l.trains, baseRemoved=!l.hasBaseTrain, dispatch=(int[])l.dispatch.Clone(), fare=l.fare, todayGross=l.todayGross, todayMaintenance=l.todayMaintenance, todayTrack=l.todayTrack, todayRevenue=l.todayRevenue, recent=new List<int>(l.recent), stations=new List<string>(), segWaypoints=CloneWaypointsList(l.segWaypoints) }; foreach(int i in l.st) record.stations.Add(StationSaveKey(stations[i])); data.lines.Add(record); }
-        foreach(var v in researchVehicles) data.vehicles.Add(new SavedVehicle { node=v.node, lineId=v.lineId });
+        foreach(var v in researchVehicles) data.vehicles.Add(new SavedVehicle { node=v.node, lineId=v.lineId, skinId=v.skinId });
         data.tech.AddRange(techDone); data.story.AddRange(storySeen); data.skins.AddRange(ownedLineSkins);
         foreach (var ur in unlockedRegions) data.unlockedRegions.Add(ur);
+        data.trainSkins.AddRange(ownedTrainSkins);
         data.themes.AddRange(ownedThemes);
         foreach (var kv in adWatchCounts) { data.adKeys.Add(kv.Key); data.adCounts.Add(kv.Value); }
         foreach (var kv in themeTrialUntil) { data.trialThemes.Add(kv.Key); data.trialEnds.Add(kv.Value); }

@@ -685,13 +685,28 @@ public partial class DemoBootstrap
                 tag += "  " + (ashFallenStations.Contains(index) ? "已封控失联" : evtSt.stationPop[index] == 0 ? "已全部撤空" : $"待撤离人数：{evtSt.stationPop[index]} 人");
             int cost = 2 + evtStation.level;
             Vector2 sandboxAnchor = root.InverseTransformPoint(mapRect.TransformPoint(Pos(index)));
-            var panel = OpenBubble(evtStation.name, 420, 548, sandboxAnchor);
-            Txt(panel.transform, tag + "  等级 " + evtStation.level + " / 5", 25, Ink, 28, 320, 492, 40, TextAnchor.MiddleLeft);
-            var routes = Txt(panel.transform, "连接线路：" + (connected.Count > 0 ? string.Join("、", connected) : "暂无"), 21, InkSoft, 28, 245, 492, 70, TextAnchor.UpperLeft);
+            bool ash = activeSandboxEventId == EventIdAshDome;
+            float extraHeight = ash ? 80f : 0f;
+            var panel = OpenBubble(evtStation.name, 420 + extraHeight, 548, sandboxAnchor);
+            Txt(panel.transform, ash ? tag : tag + "  等级 " + evtStation.level + " / 5", 25, Ink, 28, 320 + extraHeight, 492, 40, TextAnchor.MiddleLeft);
+            if (ash)
+            {
+                string metrics;
+                if (stationDef.isSpecialA)
+                {
+                    metrics = "避风港";
+                }
+                else if (stationDef.isSpecialB) metrics = "禁区无法转运";
+                else metrics = $"预计每小时转出：{Mathf.RoundToInt(GetAshStationHourlyOutflow(index))} 人\n距离沙暴封控：约 {Mathf.CeilToInt(GetAshStationUrgencyHours(index))} 小时";
+                var metricText = Txt(panel.transform, metrics, 21, InkSoft, 28, 315, 492, 72, TextAnchor.MiddleLeft);
+                metricText.lineSpacing = 1.08f; metricText.verticalOverflow = VerticalWrapMode.Truncate;
+            }
+            var routes = Txt(panel.transform, "连接线路：" + (connected.Count > 0 ? string.Join("、", connected) : "暂无"), 21, InkSoft, 28, ash ? 240 : 245, 492, ash ? 60 : 70, TextAnchor.UpperLeft);
             routes.horizontalOverflow = HorizontalWrapMode.Wrap;
-            Txt(panel.transform, $"当前{spec.tokenName}：{evtSt.tokens}", 22, Indigo, 28, 205, 492, 36, TextAnchor.MiddleLeft);
+            routes.verticalOverflow = VerticalWrapMode.Truncate; routes.lineSpacing = 1.08f;
+            Txt(panel.transform, $"当前{spec.tokenName}：{evtSt.tokens}", 22, Indigo, 28, ash ? 190 : 200, 492, 36, TextAnchor.MiddleLeft);
             if (AshCycleCompleted()) return;
-            TInk(Btn(panel.transform, "UpgradeStation", evtStation.level >= 5 ? "已满级" : $"升级  {cost} {spec.tokenName}", 23, 28, 112, 492, 74, Matcha, () => {
+            if (!ash) TInk(Btn(panel.transform, "UpgradeStation", evtStation.level >= 5 ? "已满级" : $"升级  {cost} {spec.tokenName}", 23, 28, 112, 492, 74, Matcha, () => {
                 if (evtStation.level >= 5) { Toast("站点已满级"); return; }
                 if (evtSt.tokens < cost) { Toast(spec.tokenName + "不足"); return; }
                 evtSt.tokens -= cost; evtStation.level++;
@@ -1248,10 +1263,13 @@ public partial class DemoBootstrap
     {
         if (stationOpen == null || stationOpen.Length != stations.Count) stationOpen = new bool[stations.Count];
         for (int i = 0; i < stationOpen.Length; i++) stationOpen[i] = stations[i].built && !stations[i].closed;
-        foreach (var kv in stationImgs)
+        if (!IsInEventSandbox())
         {
-            if (stations[kv.Key].portal) continue;
-            kv.Value.color = stationOpen[kv.Key] ? Gold : Color.white;
+            foreach (var kv in stationImgs)
+            {
+                if (stations[kv.Key].portal) continue;
+                kv.Value.color = stationOpen[kv.Key] ? Gold : Color.white;
+            }
         }
         UpdateRegionalMarkers(true);
     }

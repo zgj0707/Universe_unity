@@ -64,6 +64,7 @@ public partial class DemoBootstrap
         layout.home = home.GetComponent<RectTransform>();
         layout.title = heading.rectTransform;
         layout.help = helpRect;
+        layout.Refresh();
         EnsurePreviewBannerOnTop();
         if (!isRefresh)
         {
@@ -106,7 +107,7 @@ public partial class DemoBootstrap
             FitSingleLine(coinLbl, 29);
         }
 
-        if (layout) layout.coinBadge = rt;
+        if (layout) { layout.coinBadge = rt; layout.Refresh(); }
     }
 
     void AttachPopupCurrencyChip(GameObject popup, float w, float h, bool showRp = false)
@@ -625,22 +626,23 @@ public partial class DemoBootstrap
         {
             if (shopCategory == 0) BuildFleetCollection(pg.transform, 2);
             else if (shopCategory == 1) BuildShopLiveries(pg.transform);
-            else BuildShopThemes(pg.transform);
+            else if (shopCategory == 2) BuildShopThemes(pg.transform);
+            else BuildShopTrainSkins(pg.transform);
             BuildShopSidebar(pg.transform);
         }
         BuildFleetNavigation(pg.transform, tab);
     }
     void BuildShopSidebar(Transform page)
     {
-        var rail = Rect("ShopSidebar", page, 28, PgH - 550, 136, 304);
+        var rail = Rect("ShopSidebar", page, 28, PgH - 648, 136, 402);
         Rounded(rail, CardBg); SoftShadow(rail);
-        string[] cats = { "星舰", "涂装", "风格" };
+        string[] cats = { "星舰", "涂装", "风格", "车皮" };
         Color activeBg = new Color(Matcha.r, Matcha.g, Matcha.b, 0.25f);
         for (int i = 0; i < cats.Length; i++)
         {
             int cat = i;
             bool selected = shopCategory == i;
-            var btn = Btn(rail.transform, "ShopCat" + i, cats[i], 25, 6, 206 - i * 98, 124, 88,
+            var btn = Btn(rail.transform, "ShopCat" + i, cats[i], 25, 6, 304 - i * 98, 124, 88,
                 selected ? activeBg : new Color(Paper2.r, Paper2.g, Paper2.b, 0.72f),
                 () => { shopCategory = cat; OpenFleetTab(2); });
             TInk(btn, selected ? Ink : InkSoft);
@@ -1675,6 +1677,125 @@ public partial class DemoBootstrap
                 OpenFleetTab(2);
             });
             TInk(row, Ink);
+        }
+    }
+
+    void AddTrainSkinArt(Transform parent, MainTrainSkinSpec spec, float x, float y, float width, float height, bool modelFallback)
+    {
+        var frame = Rect("SkinArt", parent, x, y, width, height);
+        var texture = Resources.Load<Texture2D>(spec.previewArt);
+        if (texture == null && modelFallback) texture = Resources.Load<Texture2D>("Research/Train/" + LocoArt[spec.locoNode]);
+        if (texture == null) { Img(frame, spec.hull).raycastTarget = false; return; }
+        var raw = Rect("Preview", frame.transform, 0, 0, width, height).AddComponent<RawImage>();
+        raw.texture = texture; raw.raycastTarget = false;
+        var fit = raw.gameObject.AddComponent<AspectRatioFitter>();
+        fit.aspectMode = AspectRatioFitter.AspectMode.FitInParent;
+        fit.aspectRatio = (float)texture.width / texture.height;
+    }
+
+    void BuildShopTrainSkins(Transform page)
+    {
+        Txt(page, "主线车皮  纯外观，不影响属性", 23, InkSoft, 178, PgH - 235, 860, 38, TextAnchor.MiddleLeft);
+        var content = FleetScroll(page, 172, PgH - 255, (MainTrainSkinCount - 1) * 174f + 24, 150f, scrollKey: "shop:trainskins");
+        float height = content.sizeDelta.y, width = content.sizeDelta.x;
+        for (int i = 1; i < MainTrainSkinCount; i++)
+        {
+            int id = i; var spec = MainTrainSkins[i]; bool owned = ownedTrainSkins.Contains(i);
+            var card = Rect("TrainSkin" + i, content, 0, height - 164 - (i - 1) * 174, width, 158);
+            Rounded(card, CardBg); SoftShadow(card);
+            AddTrainSkinArt(card.transform, spec, 16, 28, 132, 100, false);
+            Txt(card.transform, spec.name, 25, Ink, 160, 114, width - 390, 34, TextAnchor.MiddleLeft);
+            Txt(card.transform, "适用车型：" + LocoNames[spec.locoNode], 19, Ink, 160, 78, width - 390, 30, TextAnchor.MiddleLeft);
+            Txt(card.transform, owned ? "已解锁" : spec.source, 18, InkSoft, 160, 14, width - 390, 60, TextAnchor.MiddleLeft);
+            TInk(Btn(card.transform, "Preview", "预览 / 装配", 21, width - 210, 42, 186, 72, Matcha, () => OpenTrainSkinPreviewPopup(id)), Color.white);
+        }
+    }
+
+    void OpenPureImagePreview(string title, string resourcePath)
+    {
+        OpenPureImagePreview(title, Resources.Load<Texture2D>(resourcePath));
+    }
+
+    void OpenPureImagePreview(string title, Texture2D tex)
+    {
+        CloseLineBubble();
+        ClosePanel(true);
+        float pw = 960f, ph = 540f;
+        if (tex != null) ph = Mathf.Clamp(Mathf.Round(pw * tex.height / Mathf.Max(1f, (float)tex.width)), 420f, 720f);
+        GetSafeMarginsInRoot(out float safeL, out float safeR, out float safeT, out float safeB);
+        float safeW = Mathf.Max(320f, RootW - safeL - safeR);
+        float safeH = Mathf.Max(420f, RootH - safeT - safeB);
+        float scale = Mathf.Min(1f, (safeW - 36f) / pw, (safeH - 36f) / ph);
+
+        scrim = Rect("PreviewScrim", root, 0f, 0f, RootW, RootH);
+        var srt = scrim.GetComponent<RectTransform>();
+        srt.anchorMin = Vector2.zero; srt.anchorMax = Vector2.one;
+        srt.offsetMin = Vector2.zero; srt.offsetMax = Vector2.zero;
+        var bg = Img(scrim, new Color(0.12f, 0.10f, 0.09f, 0.30f));
+        var dismiss = scrim.AddComponent<Button>();
+        dismiss.targetGraphic = bg; dismiss.transition = Selectable.Transition.None;
+        dismiss.onClick.AddListener(() => ClosePanel(true));
+
+        activePanel = Rect("PureImagePreview", root, 0f, 0f, pw, ph);
+        var rt = activePanel.GetComponent<RectTransform>();
+        rt.pivot = new Vector2(0.5f, 0.5f);
+        rt.anchoredPosition = new Vector2(safeL + safeW * 0.5f, safeB + safeH * 0.5f);
+        rt.localScale = Vector3.one * scale;
+        Rounded(activePanel, Color.white); SoftShadow(activePanel);
+        var clip = Rect("ImageClip", activePanel.transform, 0f, 0f, pw, ph);
+        Rounded(clip, Color.white);
+        var mask = clip.AddComponent<Mask>(); mask.showMaskGraphic = false;
+        var image = Rect("Art", clip.transform, 0f, 0f, pw, ph);
+        var artRt = image.GetComponent<RectTransform>();
+        artRt.anchorMin = Vector2.zero; artRt.anchorMax = Vector2.one;
+        artRt.offsetMin = Vector2.zero; artRt.offsetMax = Vector2.zero;
+        var art = image.AddComponent<RawImage>(); art.texture = tex; art.raycastTarget = false;
+        var subtitle = Rect("Subtitle", clip.transform, 0f, 0f, pw, 76f);
+        Img(subtitle, new Color(0.06f, 0.05f, 0.04f, 0.64f)).raycastTarget = false;
+        Txt(subtitle.transform, title, 30, Color.white, 0f, 0f, pw, 76f, TextAnchor.MiddleCenter).raycastTarget = false;
+        TInk(Btn(activePanel.transform, "Close", "×", 28, pw - 60f, ph - 60f, 48f, 48f,
+            new Color(0.10f, 0.09f, 0.08f, 0.50f), () => ClosePanel(true)), Color.white);
+        activePanelKey = "pure_image_preview";
+        panelOpenedFrame = Time.frameCount + 1;
+        if (toastGo) toastGo.transform.SetAsLastSibling();
+    }
+
+    void OpenTrainSkinPreviewPopup(int skinId, bool purePreview = false)
+    {
+        if (skinId <= 0 || skinId >= MainTrainSkinCount) return;
+        var spec = MainTrainSkins[skinId]; bool owned = ownedTrainSkins.Contains(skinId);
+        if (purePreview || IsInEventSandbox() || !owned)
+        {
+            var tex = Resources.Load<Texture2D>(spec.previewArt);
+            if (tex == null) tex = Resources.Load<Texture2D>("Research/Train/" + LocoArt[spec.locoNode]);
+            OpenPureImagePreview(spec.name, tex);
+            return;
+        }
+        var bubble = OpenPopup(spec.name, 1120, 820, "train_skin_preview");
+        AddTrainSkinArt(bubble.transform, spec, 90, 680, 640, 360, true);
+        TInk(Btn(bubble.transform, "ApplyAll", "应用到全部「" + LocoNames[spec.locoNode] + "」", 19, 40, 550, 450, 68, Matcha, () => { ApplyTrainSkinToAllOfModel(skinId); OpenTrainSkinPreviewPopup(skinId); }), Color.white);
+        TInk(Btn(bubble.transform, "RestoreAll", "全部恢复原皮", 20, 505, 550, 275, 68, Indigo, () => { RestoreOriginalSkinForAllOfModel(spec.locoNode); OpenTrainSkinPreviewPopup(skinId); }), Color.white);
+        var vehicles = researchVehicles.FindAll(v => v.node == spec.locoNode);
+        if (vehicles.Count == 0)
+        {
+            var note = Txt(bubble.transform, "尚未购置「" + LocoNames[spec.locoNode] + "」，可在星舰商店购置后换装", 21, InkSoft, 40, 420, 740, 100, TextAnchor.MiddleLeft);
+            note.horizontalOverflow = HorizontalWrapMode.Wrap;
+            return;
+        }
+        var view = Rect("VehicleViewport", bubble.transform, 40, 60, 740, 470);
+        Img(view, new Color(1, 1, 1, 0.01f)); var mask = view.AddComponent<Mask>(); mask.showMaskGraphic = false;
+        var scroll = view.AddComponent<ScrollRect>(); scroll.horizontal = false; scroll.vertical = true; scroll.scrollSensitivity = 90f; scroll.viewport = view.GetComponent<RectTransform>();
+        float h = Mathf.Max(470, vehicles.Count * 90f);
+        var list = Rect("Vehicles", view.transform, 0, 0, 740, h);
+        var rt = list.GetComponent<RectTransform>(); rt.anchorMin = rt.anchorMax = new Vector2(0, 1); rt.pivot = new Vector2(0, 1); rt.anchoredPosition = Vector2.zero; scroll.content = rt;
+        for (int i = 0; i < vehicles.Count; i++)
+        {
+            var vehicle = vehicles[i]; var line = lines.Find(l => l.id == vehicle.lineId);
+            var row = Rect("Vehicle" + i, list.transform, 0, h - (i + 1) * 90, 740, 82); Rounded(row, Paper2);
+            string status = vehicle.skinId > 0 && vehicle.skinId < MainTrainSkinCount ? MainTrainSkins[vehicle.skinId].name : "原皮";
+            Txt(row.transform, "#" + (i + 1) + (line != null ? " 正在运行：" + line.name : " 车库待命") + "\n当前：" + status, 19, Ink, 16, 4, 490, 74, TextAnchor.MiddleLeft);
+            bool equipped = vehicle.skinId == skinId;
+            TInk(Btn(row.transform, "Apply", equipped ? "恢复原皮" : "穿上此皮", 20, 515, 10, 205, 62, equipped ? Indigo : Matcha, () => { ApplyTrainSkinToSingleVehicle(vehicle, equipped ? 0 : skinId); OpenTrainSkinPreviewPopup(skinId); }), Color.white);
         }
     }
 

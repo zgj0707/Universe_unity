@@ -90,6 +90,7 @@ public partial class DemoBootstrap : MonoBehaviour
     List<Line> lines = new List<Line>();
     Dictionary<int, Image> stationImgs = new Dictionary<int, Image>();
     readonly Dictionary<int, Text> stationLabels = new Dictionary<int, Text>();
+    readonly Dictionary<int, RectTransform> stationLabelPills = new Dictionary<int, RectTransform>();
     readonly Dictionary<int, Text> stationDestinations = new Dictionary<int, Text>();
     readonly Dictionary<int, Image> stationLeaders = new Dictionary<int, Image>();
     readonly Dictionary<int, Image> pressRings = new Dictionary<int, Image>();
@@ -607,8 +608,8 @@ public partial class DemoBootstrap : MonoBehaviour
         var coinIcon = Rect("Icon", coinRing.transform, 4, 4, 48, 48); Img(coinIcon, Gold, spriteCircle).raycastTarget = false;
         coinTxt = Txt(c1.transform, FormatCoins(coins), 42, Ink, 78, 44, 224, 42, TextAnchor.MiddleLeft);
         coinTxt.resizeTextForBestFit = true; coinTxt.resizeTextMinSize = 22; coinTxt.resizeTextMaxSize = ScaledFontSize(42, 1.15f); coinTxt.horizontalOverflow = HorizontalWrapMode.Overflow; coinTxt.verticalOverflow = VerticalWrapMode.Truncate; coinTxt.raycastTarget = false;
-        incomeTxt = Txt(c1.transform, "预计日利润 +240", 24, InkSoft, 78, 8, 232, 34, TextAnchor.MiddleLeft);
-        incomeTxt.resizeTextForBestFit = true; incomeTxt.resizeTextMinSize = 18; incomeTxt.resizeTextMaxSize = ScaledFontSize(25, 1.15f); incomeTxt.horizontalOverflow = HorizontalWrapMode.Overflow; incomeTxt.verticalOverflow = VerticalWrapMode.Truncate; incomeTxt.raycastTarget = false;
+        incomeTxt = Txt(c1.transform, "+240/日", 24, InkSoft, 78, 8, 232, 34, TextAnchor.MiddleLeft);
+        incomeTxt.resizeTextForBestFit = true; incomeTxt.resizeTextMinSize = 14; incomeTxt.resizeTextMaxSize = ScaledFontSize(25, 1.15f); incomeTxt.horizontalOverflow = HorizontalWrapMode.Wrap; incomeTxt.verticalOverflow = VerticalWrapMode.Truncate; incomeTxt.raycastTarget = false;
 
         var cap = Rect("Cap", bar.transform, 354, 26, 400, 162); Rounded(cap, CardBg); SoftShadow(cap);
         topBarCapRt = cap.GetComponent<RectTransform>();
@@ -877,12 +878,24 @@ public partial class DemoBootstrap : MonoBehaviour
             var sp = go.AddComponent<StationPress>(); sp.index = i; sp.boot = this;
             var label = Txt(go.transform, StationDisplayName(i, currentRegion), superHub ? 26 : s.portal ? 24 : 26, superHub ? new Color(1.00f, 0.94f, 0.72f, 1f) : Color.white, -104, -48, 240, 38, TextAnchor.MiddleCenter);
             label.font = stationFont;
-            TextShadow(label, new Color(0f, 0f, 0f, 0.55f));
+            if (!IsInEventSandbox()) TextShadow(label, new Color(0f, 0f, 0f, 0.55f));
             if (s.county) { label.resizeTextForBestFit = true; label.resizeTextMinSize = 17; label.resizeTextMaxSize = 26; label.horizontalOverflow = HorizontalWrapMode.Overflow; label.verticalOverflow = VerticalWrapMode.Truncate; }
+            if (IsInEventSandbox())
+            {
+                var pillGo = Rect("NamePill", go.transform, 0, 0, 64, 28);
+                var pillImage = Img(pillGo, new Color(0.985f, 0.975f, 0.950f, 0.88f), spriteRound);
+                pillImage.type = Image.Type.Sliced;
+                pillImage.raycastTarget = false;
+                pillGo.transform.SetSiblingIndex(label.transform.GetSiblingIndex());
+                stationLabelPills[i] = pillGo.GetComponent<RectTransform>();
+                label.color = Ink;
+                label.verticalOverflow = VerticalWrapMode.Overflow;
+                label.lineSpacing = 1.02f;
+            }
             stationLabels[i] = label;
             var leader = Img(Rect("NameLeader", go.transform, 0, 0, 1, 2), new Color(1f, 1f, 1f, 0.40f), spriteWhite);
             leader.raycastTarget = false; leader.gameObject.SetActive(false); stationLeaders[i] = leader;
-            if (s.portal)
+            if (s.portal && !IsInEventSandbox())
             {
                 var pl = Txt(go.transform, PortalSubtitle(s, currentRegion), superHub ? 22 : 21, superHub ? new Color(1.00f, 0.88f, 0.42f, 1.00f) : new Color(1.00f, 0.92f, 0.62f, 1.00f), -100, -80, 240, 30, TextAnchor.MiddleCenter);
                 pl.font = stationFont;
@@ -910,8 +923,8 @@ public partial class DemoBootstrap : MonoBehaviour
             var s = stations[i];
             if (stationLabels.TryGetValue(i, out var label) && label)
             {
-                int baseSize = s.portal ? 22 : 24;
-                int targetSize = Mathf.Clamp(Mathf.RoundToInt(baseSize * labelScale), 16, 52);
+                int baseSize = IsInEventSandbox() ? (s.portal ? 22 : 20) : (s.portal ? 22 : 24);
+                int targetSize = IsInEventSandbox() ? Mathf.Clamp(Mathf.RoundToInt(baseSize * Mathf.Clamp(labelScale, 0.95f, 1.32f)), 18, 28) : Mathf.Clamp(Mathf.RoundToInt(baseSize * labelScale), 16, 52);
                 label.fontSize = targetSize;
                 if (s.county)
                 {
@@ -931,6 +944,13 @@ public partial class DemoBootstrap : MonoBehaviour
     bool PlaceStationLabel(int i, List<Rect> occupied)
     {
         if (!stationLabels.TryGetValue(i, out var label) || !label) return false;
+        if (IsInEventSandbox() && activeSandboxEventId == EventIdAshDome && ShouldHideAshStationLabel(i))
+        {
+            label.gameObject.SetActive(false);
+            if (stationLabelPills.TryGetValue(i, out var hiddenPill) && hiddenPill) hiddenPill.gameObject.SetActive(false);
+            if (stationLeaders.TryGetValue(i, out var hiddenLead) && hiddenLead) hiddenLead.gameObject.SetActive(false);
+            return false;
+        }
         float scale = mapRect ? mapRect.localScale.x : 1f;
         float labelScale = Mathf.Min(2.05f, UiFontScale * StationZoomFontBoost(scale));
         float sizeMult = Mathf.Max(1f, labelScale);
@@ -939,11 +959,11 @@ public partial class DemoBootstrap : MonoBehaviour
         Vector2 center = pan + Pos(i) * scale;
         float subtitleWidth = stationDestinations.TryGetValue(i, out var subtitle) ? subtitle.preferredWidth + 14f : 0f;
         float width = Mathf.Clamp(Mathf.Max(label.preferredWidth + 14f, subtitleWidth), 56f, 220f * sizeMult);
-        float height = Mathf.Ceil(32f * sizeMult);
+        float height = Mathf.Ceil((activeSandboxEventId == EventIdAshDome ? 36f : 32f) * sizeMult);
         float destHeight = stationDestinations.ContainsKey(i) ? Mathf.Ceil(22f * sizeMult) : 0f;
         // 16 个候选位：前 8 个贴着圆点，后 8 个更远，用引导线连回
         var offsets = new List<Vector2> {
-            new Vector2(-width/2, -20f-height-destHeight), new Vector2(-width/2, 22f),
+            new Vector2(-width/2, -34f-height-destHeight), new Vector2(-width/2, 34f),
             new Vector2(27f, -height/2), new Vector2(-width-27f, -height/2),
             new Vector2(42f, 24f), new Vector2(-width-42f, 24f),
             new Vector2(42f, -24f-height-destHeight), new Vector2(-width-42f, -24f-height-destHeight),
@@ -988,6 +1008,15 @@ public partial class DemoBootstrap : MonoBehaviour
         Vector2 offset = offsets[chosen];
         var rt = label.rectTransform; rt.anchoredPosition = new Vector2(28 + offset.x, 28 + offset.y + destHeight);
         rt.sizeDelta = new Vector2(width, height);
+        if (stationLabelPills.TryGetValue(i, out var pill) && pill)
+        {
+            rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.anchoredPosition += new Vector2(width * 0.5f, height * 0.5f);
+            pill.anchorMin = rt.anchorMin; pill.anchorMax = rt.anchorMax; pill.pivot = rt.pivot;
+            pill.anchoredPosition = rt.anchoredPosition;
+            pill.sizeDelta = new Vector2(Mathf.Max(64f, label.preferredWidth + 20f), Mathf.Max(28f, label.preferredHeight + 10f));
+            pill.gameObject.SetActive(label.gameObject.activeSelf);
+        }
         if (stationDestinations.TryGetValue(i, out var destination))
         {
             destination.rectTransform.anchoredPosition = new Vector2(28 + offset.x, 28 + offset.y);
@@ -1016,6 +1045,12 @@ public partial class DemoBootstrap : MonoBehaviour
         labelRects.Clear();
         // 避开四周固定 HUD 按钮与栏位（左栏、右栏、顶栏、底栏）
         labelRects.Add(new Rect(0f, 430f, 132f, 750f));
+        if (IsInEventSandbox())
+        {
+            GetSafeMarginsInRoot(out float railSafeL, out _, out float railSafeT, out _);
+            float railTop = RootH - railSafeT - 312f;
+            labelRects.Add(new Rect(railSafeL + 16f, railTop - 232f, 116f, 334f));
+        }
         labelRects.Add(new Rect(946f, 740f, 134f, 490f));
         labelRects.Add(new Rect(0f, 1650f, 1080f, 270f));
         labelRects.Add(new Rect(0f, 0f, 1080f, 250f));
@@ -1757,7 +1792,8 @@ public partial class DemoBootstrap : MonoBehaviour
         foreach (var l in lines)
         {
             oldLines.TryGetValue(l.id, out var old);
-            string vk = old != null ? old.vehicleKey : (activeSandboxEventId == EventIdAshDome ? "veh_ash_scavenger" : "veh_neon_firefly");
+            string vk = old != null ? old.vehicleKey : (activeSandboxEventId == EventIdAshDome ? FindAshIdleVehicle(st, updated) : "veh_neon_firefly");
+            if (activeSandboxEventId == EventIdAshDome) l.trains = 1;
             updated.Add(new SavedEventLine { id = l.id, name = l.name, color = l.color,
                 stations = new List<int>(l.st), cars = Mathf.Max(1, l.trains), vehicleKey = vk,
                 skinIndex = old != null ? old.skinIndex : -1, dispatch = NormalizeSandboxDispatch(l.dispatch, l.trains) });
@@ -1777,6 +1813,7 @@ public partial class DemoBootstrap : MonoBehaviour
     }
     void CommitNewLine(List<int> snapshot, int cost)
     {
+        if (activeSandboxEventId == EventIdAshDome && GetAshFreeVehicles(GetOrCreateEventSandbox(EventIdAshDome)) < 1) { Toast(AshNoVehiclesToast); return; }
         if (RegionLineCount(currentRegion) >= LineLimit()) { Toast(currentRegion + "线路已达上限（" + LineLimit() + " 条）"); return; }
         BeginUndo("开通线路");
         ClosePanel(true);
@@ -2112,7 +2149,7 @@ public partial class DemoBootstrap : MonoBehaviour
             if (path != null && (PathTouchesRegion(l.st, currentRegion) || RegionLineCount(currentRegion) < LineLimit()))
                 opts.Add(new ConnectOpt { isNew = false, line = l, path = path });
         }
-        if (RegionLineCount(currentRegion) < LineLimit()) opts.Add(new ConnectOpt { isNew = true });
+        if (RegionLineCount(currentRegion) < LineLimit() && (activeSandboxEventId != EventIdAshDome || GetAshFreeVehicles(GetOrCreateEventSandbox(EventIdAshDome)) > 0)) opts.Add(new ConnectOpt { isNew = true });
         if (opts.Count == 0)
         {
             bool hasNonLoopFrom = false;
@@ -2123,7 +2160,8 @@ public partial class DemoBootstrap : MonoBehaviour
                 hasNonLoopFrom = true;
                 if (l.st[0] == from || l.st[l.st.Count - 1] == from) { isEndpoint = true; break; }
             }
-            if (hasNonLoopFrom && !isEndpoint)
+            if (activeSandboxEventId == EventIdAshDome && GetAshFreeVehicles(GetOrCreateEventSandbox(EventIdAshDome)) < 1) Toast(AshNoVehiclesToast);
+            else if (hasNonLoopFrom && !isEndpoint)
                 Toast("该站是航线中途站，请从航线另一端（首尾端点）连接试试");
             else if (hasNonLoopFrom)
                 Toast("延长方案与已有途经港冲突，请避开重合站点或从另一端连接试试");
@@ -2146,7 +2184,8 @@ public partial class DemoBootstrap : MonoBehaviour
         Text headingTxt = null;
         foreach (var t in p.GetComponentsInChildren<Text>(true))
             if (t.transform.parent == p.transform && t.text == title) { headingTxt = t; break; }
-        Txt(p.transform, "从 " + StationDisplayName(from, currentRegion) + " 起 · 新增 " + (UniqueCount(snapshot) - 1) + " 站 · " + (IsInEventSandbox() ? "沿街通车" : "造价 ¥" + cost), 22, InkSoft, 30, h - 114, 820, 30, TextAnchor.MiddleLeft);
+        string connectSeparator = IsInEventSandbox() ? "  " : " · ";
+        Txt(p.transform, "从 " + StationDisplayName(from, currentRegion) + " 起" + connectSeparator + "新增 " + (UniqueCount(snapshot) - 1) + " 站" + connectSeparator + (IsInEventSandbox() ? "沿街通车" : "造价 ¥" + cost), 22, InkSoft, 30, h - 114, 820, 30, TextAnchor.MiddleLeft);
         var view = Rect("OptionsViewport", p.transform, 24, 122, 872, viewHeight);
         bool needVScroll = opts.Count > 5;
         ScrollRect scroll = null;
@@ -2227,6 +2266,26 @@ public partial class DemoBootstrap : MonoBehaviour
             string route = opt.isNew
                 ? (nextLineId + " 号线" + routeSeparator + RouteEndpointsSummary(snapshot) + routeSeparator + UniqueCount(snapshot) + " 站")
                 : (RouteEndpointsSummary(opt.path ?? opt.line.st) + routeSeparator + "+" + (snapshot.Count - 1) + " 站");
+            if (activeSandboxEventId == EventIdAshDome)
+            {
+                var defs = GetSandboxStationDefs(activeSandboxEventId);
+                var reachable = new HashSet<int>();
+                for (int station = 0; station < defs.Length; station++)
+                    if (defs[station].isSpecialA) reachable.Add(station);
+                bool changed;
+                do
+                {
+                    changed = false;
+                    foreach (var existing in lines)
+                    {
+                        if (!existing.st.Exists(station => reachable.Contains(station))) continue;
+                        foreach (int station in existing.st) if (reachable.Add(station)) changed = true;
+                    }
+                } while (changed);
+                var resultingPath = opt.isNew ? snapshot : (opt.path ?? opt.line.st);
+                if (!resultingPath.Exists(station => reachable.Contains(station)))
+                    route += "  (暂未接通避风港，可作中转延伸)";
+            }
             routePrefixes[i] = route;
             int initGain = !IsInEventSandbox() && i == curSelected ? GetOrComputeGain(i) : 0;
             string initSuffix = IsInEventSandbox() ? "" : i == curSelected
@@ -2498,6 +2557,60 @@ public partial class DemoBootstrap : MonoBehaviour
         UpdateLineTrafficColors();
     }
 
+    sealed class MainTrainSkinSpec
+    {
+        public string name, description, source, previewArt;
+        public int locoNode;
+        public Color hull, wingTrim, cockpit, thruster;
+        public MainTrainSkinSpec(string n, string d, string s, int node, string art, Color h, Color w, Color c, Color t)
+        { name = n; description = d; source = s; locoNode = node; previewArt = art; hull = h; wingTrim = w; cockpit = c; thruster = t; }
+    }
+    static readonly MainTrainSkinSpec[] MainTrainSkins = {
+        new MainTrainSkinSpec("原厂星舰涂装", "主线出厂标准涂装", "默认自带", 0, "PageArt/art_craft_pioneer_2045", Color.white, Color.gray, Color.cyan, Color.cyan),
+        new MainTrainSkinSpec("老伙计 沙尘迷彩", "暖沙棕装甲配合琥珀警示灯（纯外观）", "赤尘撤离志 累计转运满 1,000 人解锁", 0, "PageArt/train_skin_1", new Color(.65f,.45f,.29f), new Color(.86f,.69f,.43f), new Color(1f,.75f,.25f), new Color(1f,.6f,.18f)),
+        new MainTrainSkinSpec("铁壁 重装护航", "深铁灰护板配合橙红防风条（纯外观）", "赤尘撤离志 累计转运满 2,000 人解锁", 3, "PageArt/train_skin_2", new Color(.27f,.30f,.33f), new Color(.9f,.3f,.16f), new Color(.8f,.9f,.95f), new Color(1f,.45f,.2f)),
+        new MainTrainSkinSpec("白鸽 医疗专列", "洁白车体配合松石医疗绿条（纯外观）", "赤尘撤离志 累计转运满 3,000 人解锁", 1, "PageArt/train_skin_3", new Color(.94f,.96f,.94f), new Color(.2f,.7f,.6f), new Color(.46f,.85f,.82f), new Color(.3f,.85f,.7f)),
+        new MainTrainSkinSpec("晨曦 赤金方舟", "赤金涂装配合深靛方舟纹（纯外观）", "赤尘撤离志 累计转运满 4,000 人解锁", 2, "PageArt/train_skin_4", new Color(.82f,.36f,.16f), new Color(.95f,.72f,.25f), new Color(.25f,.24f,.5f), new Color(1f,.76f,.32f)),
+        new MainTrainSkinSpec("紫星 霓虹夜行", "夜幕深紫配合霓虹粉光翼（纯外观）", "长夜车行 活动解锁", 5, "PageArt/train_skin_5", new Color(.24f,.13f,.4f), new Color(1f,.26f,.67f), new Color(.68f,.6f,1f), new Color(1f,.35f,.8f))
+    };
+    static int MainTrainSkinCount => MainTrainSkins.Length;
+    readonly HashSet<int> ownedTrainSkins = new HashSet<int> { 0 };
+
+    void UnlockMainTrainSkin(int skinId, bool toast = true)
+    {
+        if (skinId < 0 || skinId >= MainTrainSkinCount || !ownedTrainSkins.Add(skinId)) return;
+        if (toast) Toast("已解锁主线车皮「" + MainTrainSkins[skinId].name + "」");
+        SaveGame();
+    }
+    void ApplyTrainSkinToAllOfModel(int skinId)
+    {
+        if (skinId <= 0 || skinId >= MainTrainSkinCount || !ownedTrainSkins.Contains(skinId)) return;
+        foreach (var v in researchVehicles) if (v.node == MainTrainSkins[skinId].locoNode) v.skinId = skinId;
+        SaveGame(); RefreshMainTrainVisuals();
+    }
+    void ApplyTrainSkinToSingleVehicle(ResearchVehicle v, int skinId)
+    {
+        if (v == null || !researchVehicles.Contains(v) || skinId < 0 || skinId >= MainTrainSkinCount || !ownedTrainSkins.Contains(skinId) || (skinId != 0 && v.node != MainTrainSkins[skinId].locoNode)) return;
+        v.skinId = skinId; SaveGame(); RefreshMainTrainVisuals();
+    }
+    void RestoreOriginalSkinForAllOfModel(int locoNode)
+    {
+        foreach (var v in researchVehicles) if (v.node == locoNode) v.skinId = 0;
+        SaveGame(); RefreshMainTrainVisuals();
+    }
+    void RefreshMainTrainVisuals()
+    {
+        if (IsInEventSandbox()) return;
+        foreach (var line in lines)
+        {
+            if (!lineVisuals.TryGetValue(line.id, out var lv)) continue;
+            foreach (var train in lv.trains) if (train) { train.SetActive(false); Destroy(train); }
+            lv.trains.Clear(); lv.trainRts.Clear(); lv.trainActive.Clear(); lv.trainLastSt.Clear();
+            SyncLineTrainVisuals(line, lv);
+        }
+        trainsDirty = true;
+    }
+
     GameObject CreateTrainVisual(Line line, int carIndex)
     {
         int skin = GetLineSkin(line);
@@ -2513,6 +2626,19 @@ public partial class DemoBootstrap : MonoBehaviour
         cockpit.raycastTarget = false;
         var thruster = Img(Rect("Thruster", t.transform, 0, 10, 7, 8), new Color(0.45f, 0.92f, 1f, 0.95f), spriteCircle);
         thruster.raycastTarget = false;
+        ResearchVehicle assigned = null;
+        if (!IsInEventSandbox())
+        {
+            var vehicles = researchVehicles.FindAll(v => v.lineId == line.id);
+            if (vehicles.Count > 0) assigned = vehicles[carIndex < vehicles.Count ? carIndex : 0];
+        }
+        int vSkin = assigned != null ? assigned.skinId : 0;
+        if (vSkin > 0 && vSkin < MainTrainSkinCount && ownedTrainSkins.Contains(vSkin) && assigned.node == MainTrainSkins[vSkin].locoNode)
+        {
+            var cosmetic = MainTrainSkins[vSkin];
+            hull.color = cosmetic.hull; wingTrim.color = cosmetic.wingTrim;
+            cockpit.color = cosmetic.cockpit; thruster.color = cosmetic.thruster;
+        }
         return t;
     }
 
@@ -2675,7 +2801,7 @@ public partial class DemoBootstrap : MonoBehaviour
                 if (Mathf.Abs(mid.y - prev.y) < 38f * k && Mathf.Abs(mid.x - prev.x) < 120f * k)
                     mid += new Vector2(0f, (idx % 2 == 0 ? 40f : -40f) * k);
             placedBadges.Add(mid);
-            string badgeTxt = StationDisplayName(df.dest, currentRegion) + " · " + stateTag;
+            string badgeTxt = StationDisplayName(df.dest, currentRegion) + (IsInEventSandbox() ? "  " : " · ") + stateTag;
             float bw = Mathf.Clamp(badgeTxt.Length * 22f + 34f, 140f, 252f);
             var markerGo = Rect("OdBadge_" + idx, odArcLayer, mid.x - bw * 0.5f, mid.y - 21f, bw, 42f);
             var mrt = markerGo.GetComponent<RectTransform>();
@@ -3277,7 +3403,7 @@ public partial class DemoBootstrap : MonoBehaviour
         int gems = Mathf.FloorToInt(diamonds), pct = Mathf.RoundToInt(progress * 100);
         string coinStr = FormatCoins(coins);
         if (coinTxt && coinStr != lastHudCoinsText) { coinTxt.text = coinStr; lastHudCoinsText = coinStr; }
-        string incomeStr = "预计日利润 " + FormatSignedNumber(income);
+        string incomeStr = FormatSignedNumber(income) + "/日";
         if (incomeTxt && incomeStr != lastHudIncomeText) { incomeTxt.text = incomeStr; lastHudIncomeText = incomeStr; }
         if (diamondTxt && gems != lastHudDiamonds) { diamondTxt.text = gems.ToString(); lastHudDiamonds = gems; }
         if (pct != lastHudProgress) {

@@ -22,7 +22,7 @@ public static class UniverseVisualAudit
     static readonly List<string> Warnings = new List<string>();
     static DemoBootstrap Boot;
     static int Step = -1;
-    static int WaitFrames = 0;
+    static double LastStepTime;
 
     static UniverseVisualAudit()
     {
@@ -48,7 +48,7 @@ public static class UniverseVisualAudit
         Errors.Clear();
         Warnings.Clear();
         Step = -1;
-        WaitFrames = 0;
+        LastStepTime = 0;
         Boot = null;
 
         Application.logMessageReceived -= OnLog;
@@ -101,22 +101,18 @@ public static class UniverseVisualAudit
         {
             Boot = UnityEngine.Object.FindAnyObjectByType<DemoBootstrap>();
             if (Boot == null) return;
-            WaitFrames = 3;
+            LastStepTime = EditorApplication.timeSinceStartup;
             Step = 0;
             return;
         }
 
-        if (WaitFrames > 0)
-        {
-            WaitFrames--;
-            return;
-        }
+        if (EditorApplication.timeSinceStartup - LastStepTime < 0.45) return;
 
         try
         {
             RunStep(Step);
             Step++;
-            WaitFrames = 18;
+            LastStepTime = EditorApplication.timeSinceStartup;
         }
         catch (Exception ex)
         {
@@ -181,27 +177,34 @@ public static class UniverseVisualAudit
             case 10:
                 Capture("11_events_hub.png");
                 Invoke(Boot, "OpenEventSandbox", "ashdome");
-                Invoke(Boot, "ClosePanel", true);
-                Invoke(Boot, "OnClickSandboxStation", 1);
-                Invoke(Boot, "OnClickSandboxStation", 8);
-                Invoke(Boot, "OnClickSandboxStation", 15);
-                Invoke(Boot, "CommitSandboxDraftLine");
                 break;
             case 11:
-                Capture("12_event_ashdome.png");
-                Invoke(Boot, "OpenSandboxTreeScreen", "ashdome");
+                var existingAvg = GameObject.Find("SandboxAvg");
+                if (existingAvg) { existingAvg.SetActive(false); UnityEngine.Object.Destroy(existingAvg); }
+                Invoke(Boot, "OpenSandboxOnboardingStory", "ashdome", 0);
                 break;
             case 12:
-                Capture("14_event_tree.png");
-                Invoke(Boot, "ClosePage", true);
-                Invoke(Boot, "OpenEventSandbox", "neon");
+                Capture("12_event_ashdome_avg.png");
                 Invoke(Boot, "ClosePanel", true);
-                Invoke(Boot, "OnClickSandboxStation", 0);
-                Invoke(Boot, "OnClickSandboxStation", 14);
-                Invoke(Boot, "OnClickSandboxStation", 3);
-                Invoke(Boot, "CommitSandboxDraftLine");
+                var avgObj = GameObject.Find("SandboxAvg");
+                if (avgObj) UnityEngine.Object.Destroy(avgObj);
                 break;
             case 13:
+                Capture("12_event_ashdome_map.png");
+                Invoke(Boot, "ShowStationActions", 1);
+                break;
+            case 14:
+                Capture("12_event_ashdome_station.png");
+                Invoke(Boot, "ClosePanel", true);
+                Invoke(Boot, "OpenSandboxTreeScreen", "ashdome");
+                break;
+            case 15:
+                Capture("14_event_tree.png");
+                Invoke(Boot, "ClosePage", true);
+                Invoke(Boot, "CloseEventSandbox");
+                Invoke(Boot, "OpenEventSandbox", "neon");
+                break;
+            case 16:
                 Capture("13_event_neon.png");
                 Invoke(Boot, "CloseEventSandbox");
                 FinishAudit(Errors.Count > 0 ? 1 : 0);
@@ -248,6 +251,8 @@ public static class UniverseVisualAudit
             }
         }
 
+        Canvas.ForceUpdateCanvases();
+        foreach (var ph in UnityEngine.Object.FindObjectsByType<PageHeaderLayout>(FindObjectsInactive.Exclude, FindObjectsSortMode.None)) ph.Refresh();
         Canvas.ForceUpdateCanvases();
         cam.Render();
 

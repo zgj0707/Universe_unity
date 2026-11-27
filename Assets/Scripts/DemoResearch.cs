@@ -6,7 +6,7 @@ using UnityEngine.EventSystems;
 
 public partial class DemoBootstrap
 {
-    class ResearchVehicle { public int node; public int lineId; }
+    class ResearchVehicle { public int node; public int lineId; public int skinId; }
     class HistoryNode
     {
         public string key, name, description; public int column, depth, incomePercent, loco = -1;

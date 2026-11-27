@@ -29,6 +29,8 @@ public class PageHeaderLayout : MonoBehaviour
         Apply(true);
     }
 
+    public void Refresh() { Apply(true); }
+
     void OnEnable() { Apply(true); }
 
     void LateUpdate() { Apply(false); }
@@ -40,7 +42,7 @@ public class PageHeaderLayout : MonoBehaviour
         if (r.width < 1f || r.height < 1f) return;
 
         Rect safe = Screen.safeArea;
-        if (safe.width <= 0f || safe.height <= 0f)
+        if (Application.isBatchMode || safe.width <= 0f || safe.height <= 0f || safe.height < Screen.height * 0.5f || safe.yMax > Screen.height)
             safe = new Rect(0, 0, Screen.width, Screen.height);
 
         if (!force &&
@@ -58,13 +60,9 @@ public class PageHeaderLayout : MonoBehaviour
         lastPageSize = r.size;
         lastExtraCount = extraTopLeftTargets.Count;
 
-        Vector2 safeMin = r.min, safeMax = r.max;
-        if (RectTransformUtility.ScreenPointToLocalPointInRectangle(page, new Vector2(safe.xMin, safe.yMin), null, out var pMin) &&
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(page, new Vector2(safe.xMax, safe.yMax), null, out var pMax))
-        {
-            safeMin = pMin;
-            safeMax = pMax;
-        }
+        // Safe-area proportions are independent of page entrance scale and position.
+        Vector2 safeMin = r.min + Vector2.Scale(r.size, new Vector2(safe.xMin / Screen.width, safe.yMin / Screen.height));
+        Vector2 safeMax = r.min + Vector2.Scale(r.size, new Vector2(safe.xMax / Screen.width, safe.yMax / Screen.height));
 
         float sLeft = Mathf.Clamp(safeMin.x, r.xMin, Mathf.Max(r.xMin, r.xMax - 320f));
         float sRight = Mathf.Clamp(safeMax.x, Mathf.Min(r.xMax, sLeft + 320f), r.xMax);

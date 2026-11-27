@@ -18,7 +18,8 @@ public partial class DemoBootstrap
     readonly List<SandboxTaxiOrder> sandboxTaxiOrders = new List<SandboxTaxiOrder>();
     readonly HashSet<int> ashFallenStations = new HashSet<int>();
     float ashSandboxHourAccum;
-    int ashHalfDayDelayUsed;
+    readonly Dictionary<int, float> ashLineRate = new Dictionary<int, float>();
+    readonly Dictionary<int, float> ashStationOutflow = new Dictionary<int, float>();
     float neonSandboxOrderAccum;
     int neonTonightDone, neonTonightTimeout, neonStorySpawnMask;
     float sandboxCoinSaveTimer;
@@ -74,7 +75,7 @@ public partial class DemoBootstrap
         while (st.stationPop.Count < AshSandboxStations.Length)
         {
             var def = AshSandboxStations[st.stationPop.Count];
-            int[] populations = { 0, 680, 540, 460, 380, 300 };
+            int[] populations = { 0, 1100, 880, 720, 560, 420 };
             st.stationPop.Add(def.isSpecialA || def.isSpecialB ? 0 : populations[Mathf.Clamp(def.tierOrKind, 1, 5)]);
         }
     }
@@ -116,6 +117,12 @@ public partial class DemoBootstrap
         RefreshSandboxHudText();
     }
 
+    void SyncAshSkinMilestones(SavedEventSandbox st, bool toast = true)
+    {
+        for (int skinId = 1; skinId <= 4; skinId++)
+            if (st.totalDelivered >= skinId * 1000L) UnlockMainTrainSkin(skinId, toast);
+    }
+
     void OnSandboxDayAdvanced(string eventId, SavedEventSandbox st)
     {
         if (eventId == EventIdAshDome)
@@ -130,23 +137,7 @@ public partial class DemoBootstrap
                 OpenAshCompletionReportPopup();
                 return;
             }
-            int delayTokens = (HasSandboxTreeNode(EventIdAshDome, "ash_sci_1") ? 1 : 0)
-                + (HasSandboxTreeNode(EventIdAshDome, "ash_sci_2") ? 1 : 0)
-                + (HasSandboxTreeNode(EventIdAshDome, "ash_def_2b") ? 1 : 0)
-                + ((st.extraA & 0x2000) != 0 ? 1 : 0);
-            int layer = Mathf.Clamp((int)(st.extraA & 0xFF), 1, 7);
-            if (delayTokens > ashHalfDayDelayUsed)
-            {
-                ashHalfDayDelayUsed++;
-                Toast("冷却剂与水闸加固生效，今日沙尘圈层暂缓外扩");
-            }
-            else if (st.eventDay >= 2 && layer < 6)
-            {
-                layer++;
-                st.extraA = (st.extraA & ~0xFFL) | (uint)layer;
-                SyncAshFallenStations(st);
-                Toast($"阿卡迪亚老城第 {layer} 圈层进入重点转运状态");
-            }
+            SyncAshFallenStations(st);
             if (st.eventDay <= 7 && st.storyStage < st.eventDay)
                 AdvanceSandboxStoryTo(EventIdAshDome, st.eventDay);
         }
@@ -166,40 +157,68 @@ public partial class DemoBootstrap
         RequestSaveGame(1.0f);
     }
 
+    float AshElapsedHours(SavedEventSandbox st) => (st.eventDay - 1) * 24f + st.eventClock / GameDaySeconds * 24f;
+
+    float AshStormDelayHours(SavedEventSandbox st)
+    {
+        st.ashDelayHours = GetAshDelayHours() + ((st.extraA & 0x2000) != 0 ? 24f : 0f);
+        return st.ashDelayHours;
+    }
+
+    public float GetAshStationUrgencyHours(int idx)
+    {
+        if (idx < 0 || idx >= AshSandboxStations.Length || AshSandboxStations[idx].isSpecialB) return 0f;
+        var def = AshSandboxStations[idx];
+        if (def.isSpecialA) return float.PositiveInfinity;
+        var st = GetOrCreateEventSandbox(EventIdAshDome);
+        if (ashFallenStations.Contains(idx) || st.ashCountedFallenStations != null && st.ashCountedFallenStations.Contains(idx)) return 0f;
+        float vehicleHours = 0f;
+        foreach (var line in st.lines)
+        {
+            if (line == null || line.stations == null || line.stations.Count < 2 || !line.stations.Contains(idx)) continue;
+            var v = GetSandboxVehicleDef(EventIdAshDome, line.vehicleKey);
+            if (v != null) vehicleHours = Mathf.Max(vehicleHours, v.extraImmuneDays * 24f);
+        }
+        return Mathf.Max(0f, Mathf.Min(AshSandboxTotalDays * 24f, def.tierOrKind * 24f + AshStormDelayHours(st) + GetAshExtraImmuneDays() * 24f + vehicleHours) - AshElapsedHours(st));
+    }
+
     void SyncAshFallenStations(SavedEventSandbox st)
     {
         EnsureAshStationPopInitialized(st);
+        if (st.ashCountedFallenStations == null) st.ashCountedFallenStations = new List<int>();
+        // Old saves have already applied their line penalties; mark previously fallen stations once.
+        if (!st.ashFallenMaskInitialized)
+        {
+            int oldLayer = Mathf.Clamp((int)(st.extraA & 0xFF), 1, 7) - 1 - Mathf.FloorToInt(GetAshExtraImmuneDays());
+            if (st.eventDay > 1 && st.ashCountedFallenStations.Count == 0)
+                for (int i = 0; i < AshSandboxStations.Length; i++)
+                    if (!AshSandboxStations[i].isSpecialA && !AshSandboxStations[i].isSpecialB && AshSandboxStations[i].tierOrKind <= oldLayer)
+                        st.ashCountedFallenStations.Add(i);
+            st.ashFallenMaskInitialized = true;
+        }
         ashFallenStations.Clear();
-        int dangerLayer = Mathf.Clamp((int)(st.extraA & 0xFF), 1, 7);
-        int fallenLayer = dangerLayer - 1 - Mathf.FloorToInt(GetAshExtraImmuneDays());
+        int layer = Mathf.Clamp(1 + Mathf.FloorToInt(Mathf.Max(0f, AshElapsedHours(st) - AshStormDelayHours(st)) / 24f), 1, 6);
+        st.extraA = (st.extraA & ~0xFFL) | (uint)layer;
         for (int i = 0; i < AshSandboxStations.Length; i++)
         {
             var def = AshSandboxStations[i];
-            if (def.isSpecialB || (!def.isSpecialA && def.tierOrKind > 0 && (def.tierOrKind <= fallenLayer || (st.eventDay > AshSandboxTotalDays && !st.ashClearedStations.Contains(i)))))
-            {
-                ashFallenStations.Add(i);
-                if (!def.isSpecialB && st.stationPop[i] > 0)
-                {
-                    int rem = st.stationPop[i];
-                    st.missedPop += rem; st.stationPop[i] = 0;
-                    Toast($"{def.name} 已被沙暴封控，{rem} 名居民未能及时转运");
-                }
-            }
-        }
-        for (int li = 0; li < st.lines.Count; li++)
-        {
-            var l = st.lines[li];
-            for (int si = 0; si < l.stations.Count; si++)
-            {
-                if (ashFallenStations.Contains(l.stations[si]) && !AshSandboxStations[l.stations[si]].isSpecialB)
-                {
-                    st.extraB++;
-                    break;
-                }
-            }
+            if (def.isSpecialB) { ashFallenStations.Add(i); continue; }
+            if (def.isSpecialA) continue;
+            bool counted = st.ashCountedFallenStations.Contains(i);
+            if (!counted && GetAshStationUrgencyHours(i) > 0f && st.eventDay <= AshSandboxTotalDays) continue;
+            ashFallenStations.Add(i);
+            if (counted) continue;
+            st.ashCountedFallenStations.Add(i);
+            int rem = st.stationPop[i];
+            if (rem > 0) { st.missedPop += rem; st.stationPop[i] = 0; Toast($"{def.name} 已被沙暴封控，{rem} 名居民未能及时转运"); }
         }
         RebuildSandboxStationVisuals();
     }
+
+    public float GetAshLineHourlyRate(Line line)
+    { float value; return line != null && ashLineRate.TryGetValue(line.id, out value) ? value : 0f; }
+    public float GetAshStationHourlyOutflow(int idx)
+    { float value; return ashStationOutflow.TryGetValue(idx, out value) ? value : 0f; }
 
     float SandboxDirectiveCapMult(SavedEventSandbox st) => st.activeDirective == 1 ? 1.15f : 1.0f;
     float SandboxDirectiveCoinMult(SavedEventSandbox st) => st.activeDirective == 2 ? 1.25f : st.activeDirective == 0 ? 1.10f : 0.95f;
@@ -208,14 +227,15 @@ public partial class DemoBootstrap
     {
         if (line == null) return 0f;
         var v = GetSandboxVehicleDef(activeSandboxEventId, line.vehicleKey);
+        if (activeSandboxEventId == EventIdAshDome)
+            return 480f * Mathf.Max(1, line.cars) * (v != null ? v.capMult * v.speedMult * (1f + v.deliveredBonus) : 1f) * GetAshCapMult() * GetAshSpeedMult();
         float levels = 0f; int count = 0;
         var seen = new HashSet<int>();
         foreach (int i in line.stations)
             if (i >= 0 && i < stations.Count && seen.Add(i)) { levels += Mathf.Max(1, stations[i].level); count++; }
         float avg = count > 0 ? levels / count : 1f;
-        float tree = activeSandboxEventId == EventIdAshDome ? GetAshCapMult() : 1f;
         return 4000f * Mathf.Max(1, line.cars) * (v != null ? v.capMult * v.speedMult : 1f)
-            * (1f + (avg - 1f) * 0.25f) * tree * SandboxDirectiveCapMult(st) * ResearchFactor(ResearchEffect.Capacity);
+            * (1f + (avg - 1f) * 0.25f) * SandboxDirectiveCapMult(st) * ResearchFactor(ResearchEffect.Capacity);
     }
 
     SavedEventLine FindSandboxLine(Line line)
@@ -224,60 +244,108 @@ public partial class DemoBootstrap
         return GetOrCreateEventSandbox(activeSandboxEventId).lines.Find(x => x != null && x.id == line.id);
     }
 
+    float AshRouteEfficiency(SavedEventLine line)
+    {
+        float distance = 0f;
+        for (int i = 1; i < line.stations.Count; i++)
+        {
+            var path = FindSandboxStreetPath(EventIdAshDome, line.stations[i - 1], line.stations[i]);
+            for (int j = 1; j < path.Count; j++) distance += Vector2.Distance(path[j - 1], path[j]);
+            if (path.Count < 2 && line.stations[i - 1] >= 0 && line.stations[i - 1] < AshSandboxStations.Length && line.stations[i] >= 0 && line.stations[i] < AshSandboxStations.Length)
+            {
+                var a = AshSandboxStations[line.stations[i - 1]]; var b = AshSandboxStations[line.stations[i]];
+                distance += Vector2.Distance(SandboxUvToCanvas(a.u, a.v), SandboxUvToCanvas(b.u, b.v));
+            }
+        }
+        return Mathf.Clamp(420f / Mathf.Max(260f, distance), 0.52f, 1.15f);
+    }
+
+    void GrantAshTokens(SavedEventSandbox st, float amount)
+    {
+        st.ashTokenCredit += amount * GetAshTokenMult();
+        int whole = Mathf.FloorToInt(st.ashTokenCredit + 0.0001f);
+        st.tokens += whole; st.ashTokenCredit -= whole;
+    }
+
     void TickAshSandbox(SavedEventSandbox st, float hoursDelta)
     {
         if (st.eventDay > AshSandboxTotalDays) return;
         ashSandboxHourAccum += hoursDelta;
-        if (ashSandboxHourAccum < 1f) return;
         int hrs = Mathf.FloorToInt(ashSandboxHourAccum);
         ashSandboxHourAccum -= hrs;
-
         EnsureAshStationPopInitialized(st);
-        int rescued = 0;
+        float savedClock = st.eventClock;
         for (int hour = 0; hour < hrs; hour++)
         {
-            var intake = new int[AshSandboxStations.Length];
-            for (int i = 0; i < intake.Length; i++)
-                if (AshSandboxStations[i].isSpecialA)
-                    intake[i] = Mathf.FloorToInt((200f + (Mathf.Max(1, stations[i].level) - 1) * 50f) * GetAshRefugeCapMult());
+            st.eventClock = savedClock - (ashSandboxHourAccum + hrs - hour) * GameDaySeconds / 24f;
+            SyncAshFallenStations(st);
+            ashLineRate.Clear(); ashStationOutflow.Clear();
+            bool lastTrain = st.eventDay >= 6 && st.eventDay <= 7 && st.eventClock / GameDaySeconds * 24f >= 20f;
+            int rescued = 0;
+            // Direct routes first, then feed shared hubs; staged residents depart in a later hour.
+            var segments = new List<List<int>>(); var owners = new List<SavedEventLine>();
             foreach (var line in st.lines)
             {
                 if (line == null || line.stations == null || line.stations.Count < 2) continue;
-                var vehicle = GetSandboxVehicleDef(EventIdAshDome, line.vehicleKey);
-                int capacity = Mathf.FloorToInt(SandboxSavedLineCapacity(line, st) / 24f * (vehicle != null ? 1f + vehicle.deliveredBonus : 1f));
-                // A fallen or forbidden station breaks the route; only the segment containing a haven can evacuate.
-                int start = 0;
-                while (start < line.stations.Count && capacity > 0)
+                var seg = new List<int>();
+                foreach (int idx in line.stations)
                 {
-                    while (start < line.stations.Count && (line.stations[start] < 0 || line.stations[start] >= intake.Length || ashFallenStations.Contains(line.stations[start]))) start++;
-                    int end = start;
-                    while (end < line.stations.Count && line.stations[end] >= 0 && line.stations[end] < intake.Length && !ashFallenStations.Contains(line.stations[end])) end++;
-                    for (int j = start; j < end && capacity > 0; j++)
-                    {
-                        int origin = line.stations[j];
-                        if (AshSandboxStations[origin].isSpecialA || st.stationPop[origin] <= 0) continue;
-                        for (int k = start; k < end && capacity > 0 && st.stationPop[origin] > 0; k++)
-                        {
-                            int haven = line.stations[k];
-                            if (!AshSandboxStations[haven].isSpecialA || intake[haven] <= 0) continue;
-                            int moved = Mathf.Min(capacity, Mathf.Min(intake[haven], st.stationPop[origin]));
-                            capacity -= moved; intake[haven] -= moved; st.stationPop[origin] -= moved; rescued += moved;
-                            if (st.stationPop[origin] == 0) { if (!st.ashClearedStations.Contains(origin)) st.ashClearedStations.Add(origin); st.tokens++; Toast($"{AshSandboxStations[origin].name} 居民已全部安全撤离 (+1 火种券)"); }
-                        }
-                    }
-                    start = end + 1;
+                    if (idx < 0 || idx >= AshSandboxStations.Length || ashFallenStations.Contains(idx))
+                    { if (seg.Count > 1) { segments.Add(seg); owners.Add(line); } seg = new List<int>(); }
+                    else seg.Add(idx);
                 }
+                if (seg.Count > 1) { segments.Add(seg); owners.Add(line); }
             }
+            var remaining = new Dictionary<int, int>();
+            foreach (var line in st.lines)
+                if (line != null && line.stations != null && line.stations.Count >= 2)
+                {
+                    var v = GetSandboxVehicleDef(EventIdAshDome, line.vehicleKey);
+                    remaining[line.id] = Mathf.FloorToInt(SandboxSavedLineCapacity(line, st) / 24f * AshRouteEfficiency(line) * (lastTrain ? 2f : 1f));
+                }
+            for (int pass = 0; pass < 2; pass++)
+                for (int n = 0; n < segments.Count; n++)
+                {
+                    var seg = segments[n]; var line = owners[n];
+                    bool direct = seg.Exists(i => AshSandboxStations[i].isSpecialA);
+                    if ((pass == 0) != direct || remaining[line.id] <= 0) continue;
+                    int destination = -1;
+                    if (!direct)
+                        foreach (int hub in seg)
+                        {
+                            for (int k = 0; k < segments.Count; k++)
+                                if (owners[k].id != line.id && segments[k].Contains(hub) && segments[k].Exists(i => AshSandboxStations[i].isSpecialA)) { destination = hub; break; }
+                            if (destination >= 0) break;
+                        }
+                    if (!direct && destination < 0) continue;
+                    foreach (int origin in seg)
+                    {
+                        if (remaining[line.id] <= 0) break;
+                        if (origin == destination || AshSandboxStations[origin].isSpecialA || st.stationPop[origin] <= 0) continue;
+                        if (direct) destination = seg.Find(i => AshSandboxStations[i].isSpecialA);
+                        int moved = Mathf.Min(remaining[line.id], st.stationPop[origin]);
+                        if (!direct && HasSandboxTreeNode(EventIdAshDome, "ash_res_2")) moved = Mathf.Min(st.stationPop[origin], Mathf.FloorToInt(remaining[line.id] * 1.2f));
+                        if (moved <= 0) continue;
+                        remaining[line.id] -= !direct && HasSandboxTreeNode(EventIdAshDome, "ash_res_2") ? Mathf.CeilToInt(moved / 1.2f) : moved; st.stationPop[origin] -= moved;
+                        if (direct) rescued += moved;
+                        else st.stationPop[destination] += moved;
+                        float rate; ashLineRate.TryGetValue(line.id, out rate); ashLineRate[line.id] = rate + moved;
+                        float outflow; ashStationOutflow.TryGetValue(origin, out outflow); ashStationOutflow[origin] = outflow + moved;
+                        if (st.stationPop[origin] == 0 && !st.ashClearedStations.Contains(origin))
+                        { st.ashClearedStations.Add(origin); Toast($"{AshSandboxStations[origin].name} 居民已全部转运"); }
+                    }
+                }
+            st.progress += rescued;
+            if (rescued > 0) { st.totalDelivered += rescued; SyncAshSkinMilestones(st); }
+            if (rescued > 0 && st.missedPop == 0 && st.stationPop.TrueForAll(pop => pop <= 0))
+                GrantSandboxCompletionRewards(EventIdAshDome);
+                GrantAshTokens(st, rescued / 250f);
+            double reward = Math.Round(rescued * 20.0 * GetAshOverflowScale() * SandboxDirectiveCoinMult(st) * (lastTrain ? 2f : 1f));
+            coins += reward; st.ashCycleRewards += reward;
         }
-        long prev = st.progress;
-        st.progress += rescued;
-        st.tokens += Mathf.Max(0, (int)(st.progress / 100L) - (int)(prev / 100L));
-        double reward = Math.Round(rescued * 2.0 * CoTechRevenueMult() * ResearchFactor(ResearchEffect.Revenue) * GetAshOverflowScale() * SandboxDirectiveCoinMult(st));
-        coins += reward; st.ashCycleRewards += reward;
-
-        EvaluateSandboxAchievements(EventIdAshDome);
-        RefreshHUD();
-        RefreshEventBadge();
+        st.eventClock = savedClock;
+        if (hrs > 0) SyncAshFallenStations(st);
+        if (hrs > 0) { EvaluateSandboxAchievements(EventIdAshDome); RefreshHUD(); RefreshEventBadge(); }
     }
 
     void TickNeonSandbox(SavedEventSandbox st, float hoursDelta)
@@ -399,19 +467,28 @@ public partial class DemoBootstrap
         st.eventDay = 1;
         st.eventClock = eventId == EventIdNeonNight ? (GameDaySeconds * 0.30f) : 90f;
         st.progress = 0;
-        if (eventId == EventIdAshDome) { st.stationPop = new List<int>(); st.missedPop = 0; st.ashClearedStations = new List<int>(); st.ashCycleRewards = 0; EnsureAshStationPopInitialized(st); ashSandboxHourAccum = 0f; }
-        st.activeBranch = -1;
-        st.treeNodes.Clear();
+        if (eventId == EventIdAshDome)
+        {
+            coins += GetAshStartFundsBonus();
+            st.stationPop = new List<int>(); st.missedPop = 0; st.ashClearedStations = new List<int>(); st.ashCycleRewards = 0;
+            st.tokens = 0; st.nextLineId = 1; st.ownedVehicles = new List<string> { "veh_ash_scavenger", "veh_ash_scavenger" };
+            EnsureAshStationPopInitialized(st); ashSandboxHourAccum = st.eventClock / GameDaySeconds * 24f % 1f;
+        }
+        else { st.activeBranch = -1; st.treeNodes.Clear(); }
         st.lines.Clear();
         st.extraA = eventId == EventIdNeonNight ? 450 : 1;
         st.extraB = 0;
-        st.tokens = Mathf.Max(st.tokens, 0) + Mathf.Max(12, st.cycleCount * 6);
+        if (eventId != EventIdAshDome) st.tokens = Mathf.Max(st.tokens, 0) + Mathf.Max(12, st.cycleCount * 6);
         ashFallenStations.Clear();
-        ashHalfDayDelayUsed = 0;
+        st.ashDelayHours = 0f; st.ashTokenCredit = 0f; st.ashCountedFallenStations = new List<int>(); st.ashFallenMaskInitialized = true;
         sandboxTaxiOrders.Clear();
         if (activeSandboxEventId == eventId)
         {
-            if (eventId == EventIdAshDome) SyncAshFallenStations(st);
+            if (eventId == EventIdAshDome)
+            {
+                lines.Clear();
+                SyncAshFallenStations(st);
+            }
             else RebuildSandboxStationVisuals();
             RebuildSandboxLines();
             UpdateSandboxTraffic(st);
@@ -419,6 +496,11 @@ public partial class DemoBootstrap
         }
         SaveSandboxStorage();
         var spec = GetEventSpec(eventId);
-        Toast($"已开启新一轮执勤（第 {st.cycleCount} 轮）  获赠 {Mathf.Max(12, st.cycleCount * 6)} {spec?.tokenName ?? "代币"}");
+        Toast(eventId == EventIdAshDome ? $"已回到第 {st.cycleCount} 轮清晨六点" : $"已开启新一轮执勤（第 {st.cycleCount} 轮）  获赠 {Mathf.Max(12, st.cycleCount * 6)} {spec?.tokenName ?? "代币"}");
+        if (activeSandboxEventId == eventId && eventId == EventIdAshDome)
+        {
+            ClosePage(true); ClosePanel(true); CloseLineBubble();
+            OpenSandboxOnboardingStory(eventId, 0);
+        }
     }
 }

@@ -122,7 +122,7 @@ public partial class DemoBootstrap
             int ha = hHit.line.st[hHit.seg], hb = hHit.line.st[hHit.seg + 1];
             float load = SegmentLoadRatio(hHit.line, ha, hb);
             bool showBoost = IsInEventSandbox() || load >= 0.72f;
-            heights[i] = showBoost ? 236f : 172f;
+            heights[i] = IsInEventSandbox() ? 280f : showBoost ? 236f : 172f;
             total += heights[i];
         }
         float x = Mathf.Clamp(at.x - bw / 2f, 16f, W - bw - 16f);
@@ -146,16 +146,23 @@ public partial class DemoBootstrap
             var card = Rect("LBubble" + line.id, lineBubbleRoot.transform, x, y, bw, bh);
             Rounded(card, new Color(1f, 0.985f, 0.95f, 0.985f)); SoftShadow(card);
             Img(Rect("Accent", card.transform, 0, 12, 6, bh - 24), line.color, spriteRound).raycastTarget = false;
-            Txt(card.transform, line.name, 28, Ink, 20, bh - 54, 170, 38, TextAnchor.MiddleLeft);
-            Txt(card.transform, StationDisplayName(a, currentRegion) + " ⇄ " + StationDisplayName(b, currentRegion), 23, InkSoft, 194, bh - 52, 342, 36, TextAnchor.MiddleLeft);
+            FitSingleLine(Txt(card.transform, line.name, 28, Ink, 20, bh - 54, 170, 38, TextAnchor.MiddleLeft), 28);
+            FitSingleLine(Txt(card.transform, StationDisplayName(a, currentRegion) + " ⇄ " + StationDisplayName(b, currentRegion), 23, InkSoft, 194, bh - 52, 342, 36, TextAnchor.MiddleLeft), 23);
 
             if (IsInEventSandbox())
             {
                 var saved = FindSandboxLine(line);
                 var vehicle = saved != null ? GetSandboxVehicleDef(activeSandboxEventId, saved.vehicleKey) : null;
                 string status = load >= 0.95f ? "爆满拥挤" : load >= 0.72f ? "运力吃紧" : "运行通畅";
-                Txt(card.transform, $"运力 {Mathf.RoundToInt(SandboxSavedLineCapacity(saved, GetOrCreateEventSandbox(activeSandboxEventId)))} 人/日  负荷 {Mathf.RoundToInt(load * 100f)}%  {status}", 20, load >= 0.95f ? Vermilion : load >= 0.72f ? Gold : Matcha, 20, 115, 516, 30, TextAnchor.MiddleLeft);
-                Txt(card.transform, $"{(vehicle != null ? vehicle.name : "基础车型")}  载客 ×{(vehicle != null ? vehicle.capMult : 1f):0.##}  速度 ×{(vehicle != null ? vehicle.speedMult : 1f):0.##}", 18, InkSoft, 20, 90, 516, 25, TextAnchor.MiddleLeft);
+                if (activeSandboxEventId == EventIdAshDome)
+                {
+                    int rate = Mathf.RoundToInt(GetAshLineHourlyRate(line));
+                    string ashStatus = rate > 0 ? $"每小时撤离 {rate} 人  配车 {line.trains} 辆" : "未接通避风港或中转站  暂未转运";
+                    FitSingleLine(Txt(card.transform, ashStatus, 20, rate > 0 ? Matcha : Vermilion, 20, 166, 516, 32, TextAnchor.MiddleLeft), 20);
+                }
+                else
+                    FitSingleLine(Txt(card.transform, $"运力 {Mathf.RoundToInt(SandboxSavedLineCapacity(saved, GetOrCreateEventSandbox(activeSandboxEventId)))} 人/日  负荷 {Mathf.RoundToInt(load * 100f)}%  {status}", 20, load >= 0.95f ? Vermilion : load >= 0.72f ? Gold : Matcha, 20, 166, 516, 32, TextAnchor.MiddleLeft), 20);
+                FitSingleLine(Txt(card.transform, $"{(vehicle != null ? vehicle.name : "基础车型")}  载客 ×{(vehicle != null ? vehicle.capMult : 1f):0.##}  速度 ×{(vehicle != null ? vehicle.speedMult : 1f):0.##}", 18, InkSoft, 20, 121, 516, 30, TextAnchor.MiddleLeft), 18);
             }
             else if (showBoost)
             {
@@ -212,6 +219,7 @@ public partial class DemoBootstrap
     {
         if (line == null || !lines.Contains(line) || seg < 0 || seg >= line.st.Count - 1) return;
         int n = line.st.Count;
+        if (activeSandboxEventId == EventIdAshDome && !IsLoop(line.st) && n > 3 && seg > 0 && seg < n - 2 && GetAshFreeVehicles(GetOrCreateEventSandbox(EventIdAshDome)) < 1) { Toast(AshNoVehiclesToast); return; }
         if (IsInEventSandbox() && !IsLoop(line.st) && n > 3 && seg > 0 && seg < n - 2 && lines.Count >= LineLimit()) { Toast("航线已达上限，无法拆分该段"); return; }
         if (!IsInEventSandbox() && !IsLoop(line.st) && n > 3 && seg > 0 && seg < n - 2) {
             var head = line.st.GetRange(0, seg + 1); var tailPath = line.st.GetRange(seg + 1, n - seg - 1);
@@ -383,19 +391,36 @@ public partial class DemoBootstrap
         var vehicle = saved != null ? GetSandboxVehicleDef(activeSandboxEventId, saved.vehicleKey) : null;
         float load = line.st.Count > 1 ? SegmentLoadRatio(line, line.st[Mathf.Clamp(seg, 0, line.st.Count - 2)], line.st[Mathf.Clamp(seg, 0, line.st.Count - 2) + 1]) : 0f;
         string status = load >= 0.95f ? "爆满拥挤" : load >= 0.72f ? "运力吃紧" : "运行通畅";
-        Txt(p.transform, $"车辆 {line.trains}  运力 {Mathf.RoundToInt(SandboxSavedLineCapacity(saved, st))} 人/日  负荷 {Mathf.RoundToInt(load * 100f)}%  {status}", 22, Ink, 36, 292, 860, 38, TextAnchor.MiddleLeft);
-        Txt(p.transform, $"{(vehicle != null ? vehicle.name : "基础车型")}  载客 ×{(vehicle != null ? vehicle.capMult : 1f):0.##}  速度 ×{(vehicle != null ? vehicle.speedMult : 1f):0.##}    {spec.tokenName}：{st.tokens}", 20, Indigo, 36, 258, 860, 32, TextAnchor.MiddleLeft);
+        if (activeSandboxEventId == EventIdAshDome)
+        {
+            int rate = Mathf.RoundToInt(GetAshLineHourlyRate(line));
+            float efficiency = saved != null ? AshRouteEfficiency(saved) : 0f;
+            Txt(p.transform, $"预计撤离效率：{rate} 人/小时  线路长度效率 {efficiency * 100f:0}%", 22, Ink, 36, 292, 860, 38, TextAnchor.MiddleLeft);
+            Txt(p.transform, $"一车一线  当前配属：{(vehicle != null ? vehicle.name : "基础车型")}", 20, Indigo, 36, 258, 860, 32, TextAnchor.MiddleLeft);
+        }
+        else
+        {
+            Txt(p.transform, $"车辆 {line.trains}  运力 {Mathf.RoundToInt(SandboxSavedLineCapacity(saved, st))} 人/日  负荷 {Mathf.RoundToInt(load * 100f)}%  {status}", 22, Ink, 36, 292, 860, 38, TextAnchor.MiddleLeft);
+            Txt(p.transform, $"{(vehicle != null ? vehicle.name : "基础车型")}  载客 ×{(vehicle != null ? vehicle.capMult : 1f):0.##}  速度 ×{(vehicle != null ? vehicle.speedMult : 1f):0.##}    {spec.tokenName}：{st.tokens}", 20, Indigo, 36, 258, 860, 32, TextAnchor.MiddleLeft);
+        }
+        if (activeSandboxEventId != EventIdAshDome) {
         var add = Btn(p.transform, "AddCar", "+1 辆（4 券）", 24, 36, 200, 210, 65, Matcha, () => {
-            if (line.trains >= 4) { Toast("车辆已满"); return; }
-            if (st.tokens < 4) { Toast(spec.tokenName + "不足"); return; }
-            st.tokens -= 4; line.trains++; CreateLineVisuals(); SyncMainLinesToSandbox(); RefreshSandboxHudText(); SaveSandboxStorage();
+            if (activeSandboxEventId != EventIdAshDome && line.trains >= 4) { Toast("车辆已满"); return; }
+            if (activeSandboxEventId == EventIdAshDome && GetAshFreeVehicles(st) < 1) { Toast(AshNoVehiclesToast); return; }
+            if (activeSandboxEventId != EventIdAshDome && st.tokens < 4) { Toast(spec.tokenName + "不足"); return; }
+            if (activeSandboxEventId != EventIdAshDome) st.tokens -= 4; line.trains++; CreateLineVisuals(); SyncMainLinesToSandbox(); RefreshSandboxHudText(); SaveSandboxStorage();
             ClosePanel(true); OpenMainSandboxLineInfo(line, seg);
         }); TInk(add, Color.white);
         var remove = Btn(p.transform, "RemoveCar", "减少车辆", 24, 260, 200, 210, 65, Vermilion, () => {
             if (line.trains <= 1) { Toast("至少保留 1 辆车"); return; }
-            line.trains--; CreateLineVisuals(); SyncMainLinesToSandbox(); SaveSandboxStorage();
+            line.trains--; CreateLineVisuals(); SyncMainLinesToSandbox(); RefreshSandboxHudText(); SaveSandboxStorage();
             ClosePanel(true); OpenMainSandboxLineInfo(line, seg);
         }); TInk(remove, Color.white);
+        } else if (saved != null) {
+            int idx = st.lines.IndexOf(saved);
+            TInk(Btn(p.transform, "SwapVeh", "更换车型", 24, 36, 200, 210, 65, Indigo, () => OpenSandboxLineVehiclePicker(activeSandboxEventId, idx)), Color.white);
+            FitSingleLine(Txt(p.transform, $"火种券 {st.tokens}", 21, Indigo, 680, 205, 240, 48, TextAnchor.MiddleRight), 21);
+        }
         for (int i = 0; i < LineColors.Length; i++) {
             Color color = LineColors[i];
             var button = Btn(p.transform, "Color" + i, "", 20, 36 + i * 100, 115, 80, 60, color, () => {

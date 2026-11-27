@@ -15,6 +15,8 @@ public partial class DemoBootstrap
     }
     MainSessionSnapshot mainSnapshot;
     RawImage sandboxMapRaw;
+    Image sandboxBackdropImg;
+    readonly Dictionary<GameObject, bool> sandboxHiddenMapObjects = new Dictionary<GameObject, bool>();
     RawImage ashVignette;
     Texture2D ashVignetteTexture;
     readonly List<RectTransform> ashDust = new List<RectTransform>();
@@ -27,7 +29,7 @@ public partial class DemoBootstrap
     void ClearStageViews()
     {
         CancelDraft(); ClearStationOdArcs(); ClearFloaters();
-        lineVisuals.Clear(); stationImgs.Clear(); stationLabels.Clear();
+        lineVisuals.Clear(); stationImgs.Clear(); stationLabels.Clear(); stationLabelPills.Clear();
         stationDestinations.Clear(); stationLeaders.Clear(); pressRings.Clear(); stationRings.Clear();
         foreach (var layer in new[] { lineLayer, stationLayer, trainLayer, odArcLayer })
             if (layer) for (int i = layer.childCount - 1; i >= 0; i--) { var child = layer.GetChild(i).gameObject; child.SetActive(false); Destroy(child); }
@@ -80,31 +82,13 @@ public partial class DemoBootstrap
             bgRaw.color = active ? new Color(1f, 1f, 1f, 0.90f) : new Color(0.75f, 0.73f, 0.70f, 0.50f);
         }
 
-        var banner = Rect("TitleBanner", artClip.transform, (artW - 560f) * 0.5f, (artH - 130f) * 0.55f, 560f, 130f);
-        Rounded(banner, new Color(0.08f, 0.10f, 0.14f, 0.74f));
-        banner.GetComponent<Image>().raycastTarget = false;
-        Txt(banner.transform, spec.displayTitle, 54, Color.white, 0f, 44f, 560f, 76f, TextAnchor.MiddleCenter).raycastTarget = false;
-        Txt(banner.transform, spec.subtitle, 22, new Color(0.92f, 0.94f, 0.96f), 12f, 8f, 536f, 34f, TextAnchor.MiddleCenter).raycastTarget = false;
+        var banner = Rect("TitleBanner", artClip.transform, 0f, 0f, artW, 84f);
+        Img(banner, new Color(0.06f, 0.08f, 0.12f, 0.68f)).raycastTarget = false;
+        Txt(banner.transform, spec.displayTitle, 44, Color.white, 0f, 0f, artW, 84f, TextAnchor.MiddleCenter).raycastTarget = false;
 
-        var badge = Rect("Badge", artClip.transform, artW - 258f, artH - 68f, 236f, 46f);
-        Rounded(badge, active ? spec.accentColor : new Color(0.45f, 0.43f, 0.39f, 0.88f));
-        badge.GetComponent<Image>().raycastTarget = false;
-        Txt(badge.transform, active ? $"进行中  余 {EventRemainingDays(spec.id)} 天" : "已结束", 19, Color.white, 0, 0, 236f, 46f, TextAnchor.MiddleCenter).raycastTarget = false;
-
-        string infoText = spec.id == EventIdAshDome
-            ? $"第 {Mathf.Max(1, st.cycleCount)} 轮  第 {Mathf.Min(st.eventDay, AshSandboxTotalDays)}/{AshSandboxTotalDays} 日  撤离 {st.progress:N0}  {spec.tokenName} {st.tokens}"
-            : $"第 {Mathf.Max(1, st.cycleCount)} 轮  第 {st.eventDay} 夜  订单 {st.progress:N0}  {spec.tokenName} {st.tokens}";
-        var pill = Rect("StatusPill", artClip.transform, 24f, 22f, 480f, 54f);
-        Rounded(pill, new Color(0.99f, 0.975f, 0.945f, 0.94f));
-        pill.GetComponent<Image>().raycastTarget = false;
-        FitSingleLine(Txt(pill.transform, infoText, 22, Ink, 16f, 0f, 448f, 54f, TextAnchor.MiddleLeft), 22);
-
-        float qBtnW = 114f, qGap = 10f, qStartX = artW - 24f - qBtnW * 3f - qGap * 2f;
-        TInk(Btn(artClip.transform, "TreeBtn", "专精树", 21, qStartX, 22f, qBtnW, 54f, Indigo, () => OpenSandboxTreeScreen(spec.id)), Color.white);
-        TInk(Btn(artClip.transform, "CmdBtn", "指挥部", 21, qStartX + qBtnW + qGap, 22f, qBtnW, 54f, Matcha, () => OpenSandboxCommandScreen(spec.id)), Color.white);
-        int claimable = CountClaimableSandboxAchievements(spec.id);
-        TInk(Btn(artClip.transform, "AchBtn", claimable > 0 ? $"成就({claimable})" : "成就", 21, qStartX + (qBtnW + qGap) * 2f, 22f, qBtnW, 54f,
-            claimable > 0 ? Vermilion : new Color(0.76f, 0.50f, 0.16f), () => OpenSandboxAchievementsScreen(spec.id)), Color.white);
+        var helpBtn = Btn(artClip.transform, "HelpBadge", "?", 28, artW - 76f, artH - 76f, 56f, 56f, new Color(0.985f, 0.975f, 0.945f, 0.92f), () => OpenEventHelpPopup(spec));
+        TInk(helpBtn, Ink);
+        SoftShadow(helpBtn.gameObject);
 
         var btn = card.AddComponent<Button>(); btn.targetGraphic = card.GetComponent<Image>();
         btn.onClick.AddListener(() => {
@@ -113,6 +97,21 @@ public partial class DemoBootstrap
         });
         if (!card.GetComponent<FleetPressFeedback>()) card.AddComponent<FleetPressFeedback>();
         card.AddComponent<FleetCardEntrance>().delay = index * 0.035f;
+    }
+
+    void OpenEventHelpPopup(EventSpec spec)
+    {
+        if (spec == null) return;
+        string body = spec.id == EventIdAshDome
+            ? "【核心目标】\n在7天沙尘暴倒计时内开通撤离专线，将老城居民安全转运至避风港。\n\n【一线一车与取舍】\n每条线路固定配属1辆救援车。各站均有封控倒计时与待撤人数，运力有限时需权衡线路取舍。\n\n【火种券与轮回重生】\n每转运250人获得1枚火种券。40节点专精树永久保留；重开轮次时车辆、线路与余券清零。\n\n【主线回馈】\n每转运1人基础反哺主线 ¥20；累计每满1,000人解锁1款主线车皮（纯外观）；全城撤空可得 ¥25,000 + 60钻石。"
+            : "【核心目标】\n在每夜 20:00 至次日 06:00 调度夜班车队，接送澄海夜归人。\n\n【车队与专精】\n完成夜间订单赚取里程券，用于扩编车队与点亮夜间专精分支。\n\n【主线回馈】\n夜间营收按比例反哺主线公司，并解锁专属主线车皮与涂装。";
+        float popH = spec.id == EventIdAshDome ? 920f : 720f;
+        float textH = popH - 224f;
+        var panel = OpenPopup(spec.displayTitle + "  玩法说明", popH, 780f);
+        if (!panel) return;
+        var txt = Txt(panel.transform, body, 22, Ink, 36f, 120f, 708f, textH, TextAnchor.UpperLeft);
+        txt.horizontalOverflow = HorizontalWrapMode.Wrap; txt.verticalOverflow = VerticalWrapMode.Overflow; txt.lineSpacing = 1.20f;
+        TInk(Btn(panel.transform, "Close", "知道了", 22, 240f, 32f, 300f, 66f, Matcha, () => ClosePanel(true)), Color.white);
     }
 
     void OpenEventSandbox(string eventId)
@@ -128,9 +127,25 @@ public partial class DemoBootstrap
         ClosePage(true); ClosePanel(true); CloseLineBubble();
         ClearStageViews();
         var state = GetOrCreateEventSandbox(eventId);
+        if (eventId == EventIdAshDome) SyncAshSkinMilestones(state, false);
+        else if (eventId == EventIdNeonNight && (state.ownedVehicles.Contains("veh_neon_amethyst") || state.ownedVehicles.Contains("veh_neon_zero") || state.ownedVehicles.Contains("veh_neon_owl"))) UnlockMainTrainSkin(5, false);
         activeSandboxEventId = eventId; currentRegion = eventId;
         traffic = new TrafficResult();
-        if (eventId == EventIdAshDome) { ashSandboxHourAccum = state.eventClock / GameDaySeconds * 24f % 1f; EnsureAshStationPopInitialized(state); SyncAshFallenStations(state); }
+        if (eventId == EventIdAshDome) {
+            int remainingVehicles = GetAshTotalVehiclePool(state);
+            bool trimmedLines = state.lines.Count > remainingVehicles;
+            for (int i = state.lines.Count - 1; i >= 0; i--) if (state.lines[i] == null) state.lines.RemoveAt(i);
+            while (state.lines.Count > remainingVehicles) state.lines.RemoveAt(state.lines.Count - 1);
+            var assigned = new List<SavedEventLine>();
+            for (int i = 0; i < state.lines.Count; i++) {
+                var line = state.lines[i]; line.cars = 1; line.dispatch = NormalizeSandboxDispatch(line.dispatch, 1);
+                if (AshUsedCount(assigned, line.vehicleKey) >= AshOwnedCount(state, line.vehicleKey)) line.vehicleKey = FindAshIdleVehicle(state, assigned);
+                if (line.vehicleKey == null) { state.lines.RemoveAt(i--); trimmedLines = true; continue; }
+                assigned.Add(line);
+            }
+            SaveSandboxStorage();
+            if (trimmedLines) Toast("旧存档线路超过救援车总数，已撤回末尾超额线路");
+            ashSandboxHourAccum = state.eventClock / GameDaySeconds * 24f % 1f; EnsureAshStationPopInitialized(state); SyncAshFallenStations(state); }
         stations = new List<Station>();
         foreach (var def in GetSandboxStationDefs(eventId))
         {
@@ -138,16 +153,22 @@ public partial class DemoBootstrap
             stations.Add(new Station(def.name, p.x, p.y) { id = stations.Count, region = eventId, built = true,
                 closed = eventId == EventIdAshDome && def.isSpecialB, portal = def.isSpecialA });
         }
-        for (int i = 0; i < stations.Count; i++)
+        for (int i = 0; eventId == EventIdNeonNight && i < stations.Count; i++)
             if (state.stationLevels != null && i < state.stationLevels.Count) stations[i].level = Mathf.Clamp(state.stationLevels[i], 1, 5);
         LoadSandboxLines(state);
         foreach (var art in regionMapArts.Values) if (art) art.SetActive(false);
         if (moonNearMapArt) moonNearMapArt.SetActive(false);
         if (moonFarMapArt) moonFarMapArt.SetActive(false);
         if (marsWestMapArt) marsWestMapArt.SetActive(false);
+        sandboxHiddenMapObjects.Clear();
+        foreach (var graphic in new Graphic[] { moonNearMapRaw, moonFarMapRaw, marsWestMapRaw, planetBackdropRaw, backdropGraphic })
+            if (graphic && !sandboxHiddenMapObjects.ContainsKey(graphic.gameObject))
+            { sandboxHiddenMapObjects.Add(graphic.gameObject, graphic.gameObject.activeSelf); graphic.gameObject.SetActive(false); }
+        sandboxBackdropImg = Img(Rect("SandboxPaperBackdrop", mapRect, -W, -H, 3f * W, 3f * H), Paper);
+        sandboxBackdropImg.raycastTarget = false; sandboxBackdropImg.transform.SetAsFirstSibling();
         sandboxMapRaw = Rect("SandboxMapArt", mapRect, 0, 0, W, H).AddComponent<RawImage>();
         sandboxMapRaw.texture = Resources.Load<Texture2D>(spec.mapTexResource);
-        sandboxMapRaw.raycastTarget = false; sandboxMapRaw.transform.SetAsFirstSibling();
+        sandboxMapRaw.raycastTarget = false; sandboxMapRaw.transform.SetSiblingIndex(1);
         mainHudObjects.Clear();
         foreach (Transform child in root)
         {
@@ -164,9 +185,11 @@ public partial class DemoBootstrap
         BuildStationViews(); RefreshStationDots(); RebuildSandboxStationVisuals();
         CreateLineVisuals();
         UpdateSandboxTraffic(state);
-        mapRect.localScale = Vector3.one * 1.05f;
-        mapRect.anchoredPosition = mapWheelZoom ? mapWheelZoom.CenterPosition(1.05f) : Vector2.zero;
-        UpdateRegionalMarkers(true); RefreshSandboxHudText();
+        float fitW = root ? (root.rect.width / W) : 1.0f;
+        float initScale = Mathf.Clamp(Mathf.Max(fitW * 1.05f, 1.06f), 1.05f, 1.20f);
+        mapRect.localScale = Vector3.one * initScale;
+        mapRect.anchoredPosition = mapWheelZoom ? mapWheelZoom.CenterPosition(initScale) : Vector2.zero;
+        UpdateRegionalMarkers(true); timeSpeed = 1; RefreshSandboxHudText();
         if (eventId == EventIdAshDome) UpdateAshAtmosphere(state, 0f);
         TriggerSandboxEntryStoryIfNeeded(eventId);
     }
@@ -178,6 +201,9 @@ public partial class DemoBootstrap
         ClosePage(true); ClosePanel(true); CloseLineBubble(); ClearStageViews();
         if (eventSandboxRoot) { eventSandboxRoot.SetActive(false); Destroy(eventSandboxRoot); }
         if (sandboxMapRaw) { sandboxMapRaw.gameObject.SetActive(false); Destroy(sandboxMapRaw.gameObject); }
+        if (sandboxBackdropImg) { sandboxBackdropImg.gameObject.SetActive(false); Destroy(sandboxBackdropImg.gameObject); sandboxBackdropImg = null; }
+        foreach (var entry in sandboxHiddenMapObjects) if (entry.Key) entry.Key.SetActive(entry.Value);
+        sandboxHiddenMapObjects.Clear();
         if (ashVignetteTexture) Destroy(ashVignetteTexture);
         ashVignetteTexture = null; ashVignette = null;
         ashDust.Clear(); ashDustImages.Clear(); ashStationEffects.Clear(); ashEffectTime = 0f;
@@ -274,19 +300,28 @@ public partial class DemoBootstrap
         TInk(Btn(topBar.transform, "BackMain", "← 星图", 21, 16f, 44f, 118f, 64f, Paper2, CloseEventSandbox), Ink);
 
         float titleX = 148f;
-        Txt(topBar.transform, spec.displayTitle, 32, Ink, titleX, 92f, 290f, 44f, TextAnchor.MiddleLeft);
+        FitSingleLine(Txt(topBar.transform, spec.displayTitle, 30, Ink, titleX, 92f, Mathf.Max(70f, barW - titleX - 420f), 44f, TextAnchor.MiddleLeft), 30);
 
-        var clockPill = Rect("ClockPill", topBar.transform, titleX + 270f, 95f, 120f, 38f);
+        float clockX = spec.id == EventIdAshDome ? (barW - 404f) : (barW - 270f);
+        var clockPill = Rect("ClockPill", topBar.transform, clockX, 94f, 118f, 40f);
         Rounded(clockPill, Color.Lerp(Paper2, Indigo, 0.12f));
-        sandboxClockTxt = Txt(clockPill.transform, "06:00", 24, Indigo, 0f, 0f, 120f, 38f, TextAnchor.MiddleCenter);
+        sandboxClockTxt = Txt(clockPill.transform, "06:00", 24, Indigo, 0f, 0f, 118f, 40f, TextAnchor.MiddleCenter);
 
-        sandboxDayTxt = Txt(topBar.transform, "第 1 日", 21, InkSoft, titleX, 50f, barW - titleX - 150f, 34f, TextAnchor.MiddleLeft);
-        sandboxStatusTxt = Txt(topBar.transform, "", 20, Ink, titleX, 12f, barW - titleX - 150f, 34f, TextAnchor.MiddleLeft);
+        float infoRightPad = spec.id == EventIdAshDome ? 286f : 150f;
+        sandboxDayTxt = Txt(topBar.transform, "第 1 日", 21, InkSoft, titleX, 50f, barW - titleX - infoRightPad, 34f, TextAnchor.MiddleLeft);
+        FitSingleLine(sandboxDayTxt, 21);
+        sandboxStatusTxt = Txt(topBar.transform, "", 20, Ink, titleX, 12f, barW - titleX - infoRightPad, 34f, TextAnchor.MiddleLeft);
+        sandboxStatusTxt.resizeTextForBestFit = true; sandboxStatusTxt.resizeTextMinSize = 12; sandboxStatusTxt.resizeTextMaxSize = 20;
         FitSingleLine(sandboxStatusTxt, 20);
 
-        // 右侧：倍率按钮（文案即当前倍率）
+        // 右侧：立即结算 + 倍率按钮横向并排（手机端大触控区）
+        if (spec.id == EventIdAshDome)
+        {
+            TInk(Btn(topBar.transform, "SettleNow", "立即结算", 20, barW - 268f, 44f, 124f, 64f, spec.accentColor, ConfirmAshEarlySettlementPopup), Color.white);
+        }
+
         var spdBtn = Btn(topBar.transform, "Speed", timeSpeed == 0 ? "暂停" : $"{timeSpeed}×", 24, barW - 134f, 44f, 118f, 64f, Matcha, () => {
-            timeSpeed = timeSpeed == 0 ? 1 : timeSpeed == 1 ? 2 : timeSpeed == 2 ? 3 : 0;
+            timeSpeed = timeSpeed == 0 ? 1 : timeSpeed == 1 ? 8 : timeSpeed == 8 ? 16 : 0;
             Toast(timeSpeed == 0 ? "列车暂时停靠" : $"运行倍率 {timeSpeed}×");
             RefreshSandboxHudText();
         });
@@ -324,6 +359,15 @@ public partial class DemoBootstrap
             else OpenSandboxStoryScreen(EventIdAshDome);
         });
 
+        var rewardRail = Rect("RewardRail", eventSandboxRoot.transform, safeL + 16f, leftRailTop - 232f, 116f, 102f);
+        Rounded(rewardRail, CardBg); SoftShadow(rewardRail);
+        Txt(rewardRail.transform, "奖励", 26, Ink, 6f, 48f, 104f, 42f, TextAnchor.MiddleCenter).raycastTarget = false;
+        var rewardTag = Rect("Tag", rewardRail.transform, 14f, 12f, 88f, 28f);
+        Rounded(rewardTag, new Color(Paper2.r, Paper2.g, Paper2.b, 0.78f)); rewardTag.GetComponent<Image>().raycastTarget = false;
+        Txt(rewardTag.transform, "车皮", 19, InkSoft, 0, 0, 88f, 28f, TextAnchor.MiddleCenter).raycastTarget = false;
+        var rewardBtn = rewardRail.AddComponent<Button>(); rewardBtn.targetGraphic = rewardRail.GetComponent<Image>();
+        rewardBtn.onClick.AddListener(() => OpenSandboxRewardsScreen(activeSandboxEventId));
+
         // 3. 底栏（严格贴齐 safeB 上方，4 个大按钮对齐主线底栏）
         var botBar = Rect("BotBar", eventSandboxRoot.transform, barX, safeB + 18f, barW, 148f);
         Rounded(botBar, CardBg); SoftShadow(botBar);
@@ -337,24 +381,71 @@ public partial class DemoBootstrap
         TInk(Btn(botBar.transform, "CmdBtn", "指挥部", 23, 22f + (bw + 12f) * 3f, 16f, bw, 62f, new Color(0.56f, 0.40f, 0.24f), () => OpenSandboxCommandScreen(activeSandboxEventId)), Color.white);
     }
 
+    string sandboxVisualEvent = "";
+    int sandboxVisualHour = int.MinValue;
+    int sandboxVisualLayer = int.MinValue;
+    readonly List<int> sandboxVisualPopulation = new List<int>();
+    readonly HashSet<int> sandboxVisualFallen = new HashSet<int>();
+    readonly List<float> sandboxVisualOutflow = new List<float>();
+    readonly List<float> sandboxVisualWaiting = new List<float>();
+    UnityEngine.UI.Image sandboxVisualFirstStation;
+
     void RebuildSandboxStationVisuals()
     {
         if (string.IsNullOrEmpty(activeSandboxEventId)) return;
         var defs = GetSandboxStationDefs(activeSandboxEventId);
         var st = GetOrCreateEventSandbox(activeSandboxEventId);
         int dangerLayer = Mathf.Clamp((int)(st.extraA & 0xFF), 1, 7);
+        if (activeSandboxEventId == EventIdAshDome)
+        {
+            stationImgs.TryGetValue(0, out var firstStation);
+            int hour = st.eventDay * 24 + Mathf.FloorToInt(st.eventClock / GameDaySeconds * 24f);
+            bool changed = sandboxVisualEvent != activeSandboxEventId || sandboxVisualFirstStation != firstStation
+                || sandboxVisualHour != hour || sandboxVisualLayer != dangerLayer
+                || sandboxVisualPopulation.Count != st.stationPop.Count || !sandboxVisualFallen.SetEquals(ashFallenStations)
+                || sandboxVisualOutflow.Count != defs.Length;
+            for (int i = 0; !changed && i < st.stationPop.Count; i++)
+                changed = sandboxVisualPopulation[i] != st.stationPop[i];
+            for (int i = 0; !changed && i < defs.Length; i++)
+                changed = sandboxVisualOutflow[i] != GetAshStationHourlyOutflow(i);
+            if (!changed) return;
+            sandboxVisualEvent = activeSandboxEventId; sandboxVisualFirstStation = firstStation;
+            sandboxVisualHour = hour; sandboxVisualLayer = dangerLayer;
+            sandboxVisualPopulation.Clear(); sandboxVisualPopulation.AddRange(st.stationPop);
+            sandboxVisualFallen.Clear(); sandboxVisualFallen.UnionWith(ashFallenStations);
+            sandboxVisualOutflow.Clear();
+            for (int i = 0; i < defs.Length; i++) sandboxVisualOutflow.Add(GetAshStationHourlyOutflow(i));
+        }
+        else
+        {
+            stationImgs.TryGetValue(0, out var firstStation);
+            int hour = st.eventDay * 24 + Mathf.FloorToInt(st.eventClock / GameDaySeconds * 24f);
+            bool changed = sandboxVisualEvent != activeSandboxEventId || sandboxVisualFirstStation != firstStation
+                || sandboxVisualHour != hour || sandboxVisualWaiting.Count != stations.Count;
+            for (int i = 0; !changed && i < stations.Count; i++)
+                changed = (sandboxVisualWaiting[i] >= 3f) != (stations[i].waiting >= 3f);
+            if (!changed) return;
+            sandboxVisualEvent = activeSandboxEventId; sandboxVisualFirstStation = firstStation; sandboxVisualHour = hour;
+            sandboxVisualWaiting.Clear();
+            foreach (var station in stations) sandboxVisualWaiting.Add(station.waiting);
+        }
         for (int i = 0; i < defs.Length; i++)
         {
             if (!stationImgs.TryGetValue(i, out var img)) continue;
             if (!img) continue;
             if (activeSandboxEventId == EventIdAshDome)
             {
+                float urgency = GetAshStationUrgencyHours(i);
+                float outflow = GetAshStationHourlyOutflow(i);
+                bool hasResidents = i < st.stationPop.Count && st.stationPop[i] > 0;
+                bool atRisk = !defs[i].isSpecialA && !defs[i].isSpecialB && !ashFallenStations.Contains(i)
+                    && hasResidents && urgency < 999f && (outflow <= 0.1f || st.stationPop[i] / outflow > urgency);
                 if (defs[i].isSpecialB) img.color = Color.black;
                 else if (defs[i].isSpecialA) img.color = Matcha;
                 else if (ashFallenStations.Contains(i)) img.color = new Color(0.45f, 0.45f, 0.45f, 0.85f);
                 else if (i < st.stationPop.Count && st.stationPop[i] == 0) img.color = new Color(0.58f, 0.76f, 0.72f, 0.88f);
-                else if (defs[i].tierOrKind == dangerLayer) img.color = Vermilion;
-                else img.color = new Color(0.24f, 0.40f, 0.65f, 1f);
+                else if (atRisk && urgency <= 24f) img.color = Vermilion;
+                else img.color = Ink;
                 bool fallen = ashFallenStations.Contains(i);
                 bool danger = defs[i].tierOrKind == dangerLayer && !fallen && !defs[i].isSpecialA && !defs[i].isSpecialB;
                 if (!ashStationEffects.TryGetValue(i, out var effect) || !effect)
@@ -370,15 +461,38 @@ public partial class DemoBootstrap
                 effect.sprite = danger ? spriteRing : spriteCircle;
                 if (fallen) { effect.color = new Color(0.48f, 0.47f, 0.44f, 0.24f); effect.rectTransform.localScale = Vector3.one; }
                 if (stationLabels.TryGetValue(i, out var label) && label)
-                    label.color = fallen ? new Color(0.68f, 0.66f, 0.62f, 0.9f) : Color.white;
+                {
+                    bool hideLabel = !defs[i].isSpecialA && !defs[i].isSpecialB && (fallen || !hasResidents);
+                    label.gameObject.SetActive(!hideLabel);
+                    if (stationLabelPills.TryGetValue(i, out var pill) && pill) pill.gameObject.SetActive(!hideLabel);
+                    if (!hideLabel)
+                    {
+                        label.verticalOverflow = VerticalWrapMode.Overflow;
+                        label.lineSpacing = 1.02f;
+                        label.resizeTextForBestFit = false;
+                        label.color = Ink;
+                        if (defs[i].isSpecialB || defs[i].isSpecialA) label.text = defs[i].name;
+                        else label.text = $"{st.stationPop[i]}" + (urgency < 900f ? $"  {Mathf.CeilToInt(urgency)}h" : "");
+                    }
+                }
             }
             else
             {
                 img.color = defs[i].isSpecialA ? Indigo : new Color(0.92f, 0.52f, 0.16f, 1f);
             }
-            if (!defs[i].isSpecialA && !defs[i].isSpecialB && (activeSandboxEventId != EventIdAshDome || !ashFallenStations.Contains(i)) && i < stations.Count && (activeSandboxEventId == EventIdNeonNight ? stations[i].waiting >= 3f : stations[i].waiting >= 2500f))
+            if (activeSandboxEventId == EventIdNeonNight && !defs[i].isSpecialA && !defs[i].isSpecialB && i < stations.Count && stations[i].waiting >= 3f)
                 img.color = Color.Lerp(img.color, Vermilion, 0.3f);
         }
+        LayoutStationLabels();
+    }
+
+    bool ShouldHideAshStationLabel(int idx)
+    {
+        var defs = AshSandboxStations;
+        if (idx < 0 || idx >= defs.Length) return false;
+        if (defs[idx].isSpecialA || defs[idx].isSpecialB) return false;
+        var st = GetOrCreateEventSandbox(EventIdAshDome);
+        return ashFallenStations.Contains(idx) || idx >= st.stationPop.Count || st.stationPop[idx] <= 0;
     }
 
     void RebuildSandboxLines()
@@ -386,6 +500,12 @@ public partial class DemoBootstrap
         if (!IsInEventSandbox()) return;
         LoadSandboxLines(GetOrCreateEventSandbox(activeSandboxEventId));
         CreateLineVisuals();
+        RefreshSandboxHudText();
+    }
+
+    void SetSandboxHudText(Text target, string value)
+    {
+        if (target && target.text != value) target.text = value;
     }
 
     void RefreshSandboxHudText()
@@ -394,23 +514,23 @@ public partial class DemoBootstrap
         var st = GetOrCreateEventSandbox(activeSandboxEventId);
         int mins = Mathf.FloorToInt(st.eventClock / GameDaySeconds * 1440f);
         int hh = (mins / 60) % 24, mm = mins % 60;
-        if (sandboxClockTxt) sandboxClockTxt.text = $"{hh:00}:{mm:00}";
-        if (sandboxSpeedTxt) sandboxSpeedTxt.text = timeSpeed == 0 ? "暂停" : $"{timeSpeed}×";
+        SetSandboxHudText(sandboxClockTxt, $"{hh:00}:{mm:00}");
+        SetSandboxHudText(sandboxSpeedTxt, timeSpeed == 0 ? "暂停" : $"{timeSpeed}×");
         if (sandboxAchBadgeGo) sandboxAchBadgeGo.SetActive(CountClaimableSandboxAchievements(activeSandboxEventId) > 0);
         if (sandboxOrderBadgeGo) sandboxOrderBadgeGo.SetActive(activeSandboxEventId == EventIdNeonNight && sandboxTaxiOrders.Count > 0);
         if (sandboxDayTxt)
         {
             if (activeSandboxEventId == EventIdAshDome)
-                sandboxDayTxt.text = $"第 {Mathf.Max(1, st.cycleCount)} 轮   第 {Mathf.Min(st.eventDay, AshSandboxTotalDays)} / {AshSandboxTotalDays} 日";
+                SetSandboxHudText(sandboxDayTxt, $"第 {Mathf.Max(1, st.cycleCount)} 轮   第 {Mathf.Min(st.eventDay, AshSandboxTotalDays)} / {AshSandboxTotalDays} 日");
             else
-                sandboxDayTxt.text = $"第 {Mathf.Max(1, st.cycleCount)} 轮   第 {st.eventDay} 夜   " + ((hh >= 20 || hh < 6) ? "营业中" : "交班中");
+                SetSandboxHudText(sandboxDayTxt, $"第 {Mathf.Max(1, st.cycleCount)} 轮   第 {st.eventDay} 夜   " + ((hh >= 20 || hh < 6) ? "营业中" : "交班中"));
         }
         if (sandboxStatusTxt)
         {
             if (activeSandboxEventId == EventIdAshDome)
-                sandboxStatusTxt.text = $"警戒区 L{Mathf.Clamp((int)(st.extraA & 0xFF), 1, 7)}   已转运 {st.progress:N0} 人   火种券 {st.tokens}   滞留车 {st.extraB}";
+                SetSandboxHudText(sandboxStatusTxt, $"可用车辆 {GetAshFreeVehicles(st)}/{GetAshTotalVehiclePool(st)}  已转运 {st.progress:N0}  火种券 {st.tokens}");
             else
-                sandboxStatusTxt.text = $"候车 {sandboxTaxiOrders.Count} 单   载客 {st.progress:N0}   口碑 {st.extraA / 100f:0.0}★   里程券 {st.tokens}";
+                SetSandboxHudText(sandboxStatusTxt, $"候车 {sandboxTaxiOrders.Count} 单   载客 {st.progress:N0}   口碑 {st.extraA / 100f:0.0}★   里程券 {st.tokens}");
         }
     }
 

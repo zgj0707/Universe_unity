@@ -937,7 +937,16 @@ public partial class DemoBootstrap
 
     float StationWaitRatio(int index)
     {
-        if (traffic == null || index < 0 || index >= stations.Count) return 0f;
+        if (traffic == null || stations == null || index < 0 || index >= stations.Count || stations[index] == null) return 0f;
+        if (traffic.demand == null || index >= traffic.demand.Length)
+        {
+            if (IsInEventSandbox())
+            {
+                float sandboxCap = StationCapacity(index);
+                return sandboxCap > 0f ? stations[index].waiting / sandboxCap : 0f;
+            }
+            return 0f;
+        }
         float cap = StationCapacity(index);
         return cap > 0f ? traffic.demand[index] / cap : 0f;
     }
@@ -1183,9 +1192,9 @@ public partial class DemoBootstrap
 
         if (traffic != null && StationLineCount(index) > 0)
         {
-            float crowd = traffic.stationCrowdLost != null ? traffic.stationCrowdLost[index] : 0f;
-            float unreached = traffic.stationUnreached != null ? traffic.stationUnreached[index] : 0f;
-            float elastic = traffic.stationElasticLost != null ? traffic.stationElasticLost[index] : 0f;
+            float crowd = traffic.stationCrowdLost != null && index < traffic.stationCrowdLost.Length ? traffic.stationCrowdLost[index] : 0f;
+            float unreached = traffic.stationUnreached != null && index < traffic.stationUnreached.Length ? traffic.stationUnreached[index] : 0f;
+            float elastic = traffic.stationElasticLost != null && index < traffic.stationElasticLost.Length ? traffic.stationElasticLost[index] : 0f;
             if (crowd >= 20f && crowd >= unreached * 0.5f)
             {
                 float waitR = StationWaitRatio(index);
@@ -1204,8 +1213,8 @@ public partial class DemoBootstrap
         }
         return linesOut.ToString();
     }
-    float StationPassengerFlow(int index) { return traffic == null ? 0 : traffic.served[index]; }
-    float StationRequestedFlow(int index) { return traffic == null ? 0 : traffic.demand[index]; }
+    float StationPassengerFlow(int index) { return traffic == null || traffic.served == null || index < 0 || index >= traffic.served.Length ? 0f : traffic.served[index]; }
+    float StationRequestedFlow(int index) { return traffic == null || traffic.demand == null || index < 0 || index >= traffic.demand.Length ? 0f : traffic.demand[index]; }
     float LinePassengerFlow(Line line) { return traffic != null && traffic.lineServed.TryGetValue(line,out float value) ? value : 0f; }
     float LinePeakSectionDemand(Line line) { return traffic != null && traffic.linePeakDemand.TryGetValue(line,out float value) ? value : 0f; }
     sealed class LineForecastData { public float gross, vehicle, track, tax; public float Profit { get { return gross - vehicle - track - tax; } } }
